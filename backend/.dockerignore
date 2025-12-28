@@ -1,0 +1,31 @@
+# Build artifacts
+target/
+*.rs.bk
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Tests
+tests/
+
+# Development files
+.env
+.env.*
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+logs/

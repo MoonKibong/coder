@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <!-- Commands -->
+   <extension point="org.eclipse.ui.commands">
+      <category
+            id="com.softbase.xframe5.codegen.commands.category"
+            name="xFrame5 Code Generator">
+      </category>
+      <category
+            id="com.softbase.xframe5.codegen.commands.springCategory"
+            name="Spring Code Generator">
+      </category>
+      <!-- xFrame5 Commands -->
+      <command
+            categoryId="com.softbase.xframe5.codegen.commands.category"
+            id="com.softbase.xframe5.codegen.commands.generateFromSchema"
+            name="Generate from DB Schema">
+      </command>
+      <command
+            categoryId="com.softbase.xframe5.codegen.commands.category"
+            id="com.softbase.xframe5.codegen.commands.generateFromQuery"
+            name="Generate from Query Sample">
+      </command>
+      <command
+            categoryId="com.softbase.xframe5.codegen.commands.category"
+            id="com.softbase.xframe5.codegen.commands.generateFromNL"
+            name="Generate from Description">
+      </command>
+      <!-- Spring Commands -->
+      <command
+            categoryId="com.softbase.xframe5.codegen.commands.springCategory"
+            id="com.softbase.xframe5.codegen.commands.springGenerateFromSchema"
+            name="Generate Spring Backend from DB Schema">
+      </command>
+      <command
+            categoryId="com.softbase.xframe5.codegen.commands.springCategory"
+            id="com.softbase.xframe5.codegen.commands.springGenerateFromQuery"
+            name="Generate Spring Backend from Query Sample">
+      </command>
+      <command
+            categoryId="com.softbase.xframe5.codegen.commands.springCategory"
+            id="com.softbase.xframe5.codegen.commands.springGenerateFromNL"
+            name="Generate Spring Backend from Description">
+      </command>
+   </extension>
+
+   <!-- Handlers -->
+   <extension point="org.eclipse.ui.handlers">
+      <!-- xFrame5 Handlers -->
+      <handler
+            class="com.softbase.xframe5.codegen.handlers.GenerateFromSchemaHandler"
+            commandId="com.softbase.xframe5.codegen.commands.generateFromSchema">
+      </handler>
+      <handler
+            class="com.softbase.xframe5.codegen.handlers.GenerateFromQueryHandler"
+            commandId="com.softbase.xframe5.codegen.commands.generateFromQuery">
+      </handler>
+      <handler
+            class="com.softbase.xframe5.codegen.handlers.GenerateFromNLHandler"
+            commandId="com.softbase.xframe5.codegen.commands.generateFromNL">
+      </handler>
+      <!-- Spring Handlers -->
+      <handler
+            class="com.softbase.xframe5.codegen.handlers.SpringGenerateFromSchemaHandler"
+            commandId="com.softbase.xframe5.codegen.commands.springGenerateFromSchema">
+      </handler>
+      <handler
+            class="com.softbase.xframe5.codegen.handlers.SpringGenerateFromQueryHandler"
+            commandId="com.softbase.xframe5.codegen.commands.springGenerateFromQuery">
+      </handler>
+      <handler
+            class="com.softbase.xframe5.codegen.handlers.SpringGenerateFromNLHandler"
+            commandId="com.softbase.xframe5.codegen.commands.springGenerateFromNL">
+      </handler>
+   </extension>
+
+   <!-- Main Menu -->
+   <extension point="org.eclipse.ui.menus">
+      <!-- xFrame5 Main Menu -->
+      <menuContribution
+            allPopups="false"
+            locationURI="menu:org.eclipse.ui.main.menu?after=additions">
+         <menu
+               id="com.softbase.xframe5.codegen.menus.mainMenu"
+               label="xFrame5"
+               mnemonic="X">
+            <command
+                  commandId="com.softbase.xframe5.codegen.commands.generateFromSchema"
+                  label="Generate from DB Schema..."
+                  mnemonic="S"
+                  style="push">
+            </command>
+            <command
+                  commandId="com.softbase.xframe5.codegen.commands.generateFromQuery"
+                  label="Generate from Query Sample..."
+                  mnemonic="Q"
+                  style="push">
+            </command>
+            <command
+                  commandId="com.softbase.xframe5.codegen.commands.generateFromNL"
+                  label="Generate from Description..."
+                  mnemonic="D"
+                  style="push">
+            </command>
+            <separator
+                  name="com.softbase.xframe5.codegen.menus.separator1"
+                  visible="true">
+            </separator>
+            <command
+                  commandId="org.eclipse.ui.window.preferences"
+                  label="Preferences..."
+                  mnemonic="P"
+                  style="push">
+               <parameter
+                     name="preferencePageId"
+                     value="com.softbase.xframe5.codegen.preferences.MainPreferencePage">
+               </parameter>
+            </command>
+         </menu>
+      </menuContribution>
+
+      <!-- Spring Main Menu -->
+      <menuContribution
+            allPopups="false"
+            locationURI="menu:org.eclipse.ui.main.menu?after=additions">
+         <menu
+               id="com.softbase.xframe5.codegen.menus.springMainMenu"
+               label="Spring"
+               mnemonic="R">
+            <command
+                  commandId="com.softbase.xframe5.codegen.commands.springGenerateFromSchema"
+                  label="Generate Backend from DB Schema..."
+                  mnemonic="S"
+                  style="push">
+            </command>
+            <command
+                  commandId="com.softbase.xframe5.codegen.commands.springGenerateFromQuery"
+                  label="Generate Backend from Query Sample..."
+                  mnemonic="Q"
+                  style="push">
+            </command>
+            <command
+                  commandId="com.softbase.xframe5.codegen.commands.springGenerateFromNL"
+                  label="Generate Backend from Description..."
+                  mnemonic="D"
+                  style="push">
+            </command>
+            <separator
+                  name="com.softbase.xframe5.codegen.menus.springSeparator1"
+                  visible="true">
+            </separator>
+            <command
+                  commandId="org.eclipse.ui.window.preferences"
+                  label="Preferences..."
+                  mnemonic="P"
+                  style="push">
+               <parameter
+                     name="preferencePageId"
+                     value="com.softbase.xframe5.codegen.preferences.MainPreferencePage">
+               </parameter>
+            </command>
+         </menu>
+      </menuContribution>
+
+      <!-- Context Menu for Project Explorer - xFrame5 -->
+      <menuContribution
+            allPopups="false"
+            locationURI="popup:org.eclipse.ui.popup.any?after=additions">
+         <menu
+               id="com.softbase.xframe5.codegen.menus.popupMenu"
+               label="xFrame5 Generate">
+            <visibleWhen checkEnabled="false">
+               <with variable="selection">
+                  <iterate ifEmpty="false">
+                     <adapt type="org.eclipse.core.resources.IResource"/>
+                  </iterate>
+               </with>
+            </visibleWhen>
+            <command
+                  commandId="com.softbase.xframe5.codegen.commands.generateFromSchema"
+                  label="From DB Schema..."
+                  style="push">
+            </command>
+            <command
+                  commandId="com.softbase.xframe5.codegen.commands.generateFromQuery"
+                  label="From Query Sample..."
+                  style="push">
+            </command>
+            <command
+                  commandId="com.softbase.xframe5.codegen.commands.generateFromNL"
+                  label="From Description..."
+                  style="push">
+            </command>
+         </menu>
+      </menuContribution>
+
+      <!-- Context Menu for Project Explorer - Spring -->
+      <menuContribution
+            allPopups="false"
+            locationURI="popup:org.eclipse.ui.popup.any?after=additions">
+         <menu
+               id="com.softbase.xframe5.codegen.menus.springPopupMenu"
+               label="Spring Generate">
+            <visibleWhen checkEnabled="false">
+               <with variable="selection">
+                  <iterate ifEmpty="false">
+                     <adapt type="org.eclipse.core.resources.IResource"/>
+                  </iterate>
+               </with>
+            </visibleWhen>
+            <command
+                  commandId="com.softbase.xframe5.codegen.commands.springGenerateFromSchema"
+                  label="From DB Schema..."
+                  style="push">
+            </command>
+            <command
+                  commandId="com.softbase.xframe5.codegen.commands.springGenerateFromQuery"
+                  label="From Query Sample..."
+                  style="push">
+            </command>
+            <command
+                  commandId="com.softbase.xframe5.codegen.commands.springGenerateFromNL"
+                  label="From Description..."
+                  style="push">
+            </command>
+         </menu>
+      </menuContribution>
+   </extension>
+
+   <!-- Preference Pages -->
+   <extension point="org.eclipse.ui.preferencePages">
+      <page
+            class="com.softbase.xframe5.codegen.preferences.MainPreferencePage"
+            id="com.softbase.xframe5.codegen.preferences.MainPreferencePage"
+            name="xFrame5 Code Generator">
+      </page>
+   </extension>
+
+   <!-- Preference Initializer -->
+   <extension point="org.eclipse.core.runtime.preferences">
+      <initializer class="com.softbase.xframe5.codegen.preferences.PreferenceInitializer"/>
+   </extension>
+</plugin>

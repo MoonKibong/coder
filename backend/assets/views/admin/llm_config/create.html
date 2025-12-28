@@ -1,0 +1,136 @@
+<!-- Create LLM Config Modal -->
+<div class="fixed inset-0 z-50 bg-black/50" onclick="if(event.target === this) this.remove()">
+    <div class="fixed inset-y-0 right-0 w-full max-w-2xl bg-background shadow-xl overflow-hidden flex flex-col"
+         onclick="event.stopPropagation()">
+        <!-- Header -->
+        <div class="flex items-center justify-between px-6 py-4 border-b">
+            <h2 class="text-lg font-semibold">New LLM Configuration</h2>
+            <button onclick="this.closest('.fixed').remove()"
+                class="inline-flex items-center justify-center rounded-md h-8 w-8 hover:bg-accent">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Form -->
+        <form hx-post="/admin/llm-configs" hx-target="#search-result" hx-swap="outerHTML"
+              hx-on::after-request="if(event.detail.successful) this.closest('.fixed').remove()"
+              class="flex-1 overflow-y-auto p-6">
+            <div class="space-y-6">
+                <!-- Name -->
+                <div class="space-y-2">
+                    <label for="name" class="text-sm font-medium">Name</label>
+                    <input type="text" id="name" name="name" required
+                        class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm
+                               placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        placeholder="e.g., Production Ollama Server" />
+                </div>
+
+                <!-- Description -->
+                <div class="space-y-2">
+                    <label for="description" class="text-sm font-medium">Description (Optional)</label>
+                    <textarea id="description" name="description" rows="2"
+                        class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm
+                               placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring
+                               resize-y"
+                        placeholder="Brief description of this configuration..."></textarea>
+                </div>
+
+                <!-- Provider -->
+                <div class="space-y-2">
+                    <label for="provider" class="text-sm font-medium">Provider</label>
+                    <select id="provider" name="provider" required
+                        class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm
+                               focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                        <option value="">Select provider...</option>
+                        <option value="ollama">Ollama</option>
+                        <option value="llama_cpp">llama.cpp</option>
+                        <option value="openai">OpenAI Compatible</option>
+                    </select>
+                </div>
+
+                <!-- Endpoint URL -->
+                <div class="space-y-2">
+                    <label for="endpoint_url" class="text-sm font-medium">Endpoint URL</label>
+                    <input type="url" id="endpoint_url" name="endpoint_url" required
+                        class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm font-mono
+                               placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        placeholder="http://localhost:11434" />
+                    <p class="text-xs text-muted-foreground">
+                        The LLM server endpoint. Must be accessible from this server.
+                    </p>
+                </div>
+
+                <!-- Model Name -->
+                <div class="space-y-2">
+                    <label for="model_name" class="text-sm font-medium">Model Name</label>
+                    <input type="text" id="model_name" name="model_name" required
+                        class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm font-mono
+                               placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        placeholder="e.g., codellama:13b" />
+                    <p class="text-xs text-muted-foreground">
+                        Model identifier as expected by the provider.
+                    </p>
+                </div>
+
+                <!-- API Key (Optional) -->
+                <div class="space-y-2">
+                    <label for="api_key" class="text-sm font-medium">API Key (Optional)</label>
+                    <input type="password" id="api_key" name="api_key"
+                        class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm font-mono
+                               placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        placeholder="sk-..." />
+                    <p class="text-xs text-muted-foreground">
+                        API key if required by the provider.
+                    </p>
+                </div>
+
+                <!-- Generation Parameters -->
+                <div class="space-y-4 p-4 rounded-lg border bg-muted/30">
+                    <h3 class="text-sm font-medium">Generation Parameters</h3>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <!-- Temperature -->
+                        <div class="space-y-2">
+                            <label for="temperature" class="text-sm font-medium">Temperature</label>
+                            <input type="number" id="temperature" name="temperature" value="0.7" min="0" max="2" step="0.1"
+                                class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm
+                                       focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+                        </div>
+
+                        <!-- Max Tokens -->
+                        <div class="space-y-2">
+                            <label for="max_tokens" class="text-sm font-medium">Max Tokens</label>
+                            <input type="number" id="max_tokens" name="max_tokens" value="4096" min="256" max="32768"
+                                class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm
+                                       focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Is Active -->
+                <div class="flex items-center space-x-2">
+                    <input type="checkbox" id="is_active" name="is_active" value="true"
+                        class="h-4 w-4 rounded border-input" />
+                    <label for="is_active" class="text-sm font-medium">Active</label>
+                </div>
+            </div>
+        </form>
+
+        <!-- Footer -->
+        <div class="flex items-center justify-end gap-2 px-6 py-4 border-t bg-muted/30">
+            <button onclick="this.closest('.fixed').remove()"
+                class="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-4 py-2
+                       border bg-background shadow-sm hover:bg-accent hover:text-accent-foreground">
+                Cancel
+            </button>
+            <button type="submit"
+                onclick="this.closest('.fixed').querySelector('form').requestSubmit()"
+                class="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-4 py-2
+                       bg-primary text-primary-foreground shadow-sm hover:bg-primary/90">
+                Create Configuration
+            </button>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,190 @@
+<!-- View Generation Log Modal -->
+<div class="fixed inset-0 z-50 bg-black/50" onclick="if(event.target === this) this.remove()">
+    <div class="fixed inset-y-0 right-0 w-full max-w-3xl bg-background shadow-xl overflow-hidden flex flex-col"
+         onclick="event.stopPropagation()">
+        <!-- Header -->
+        <div class="flex items-center justify-between px-6 py-4 border-b">
+            <div class="flex items-center gap-3">
+                <h2 class="text-lg font-semibold">Generation Log Details</h2>
+                {% if item.status == "success" %}
+                <span class="inline-flex items-center gap-1 rounded-full bg-green-500/10 px-2 py-1 text-xs font-medium text-green-600">
+                    <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                    Success
+                </span>
+                {% elif item.status == "error" %}
+                <span class="inline-flex items-center gap-1 rounded-full bg-red-500/10 px-2 py-1 text-xs font-medium text-red-600">
+                    <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    Error
+                </span>
+                {% else %}
+                <span class="inline-flex items-center gap-1 rounded-full bg-yellow-500/10 px-2 py-1 text-xs font-medium text-yellow-600">
+                    <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                    </svg>
+                    Partial
+                </span>
+                {% endif %}
+            </div>
+            <button onclick="this.closest('.fixed').remove()"
+                class="inline-flex items-center justify-center rounded-md h-8 w-8 hover:bg-accent">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Content -->
+        <div class="flex-1 overflow-y-auto p-6">
+            <div class="space-y-6">
+                <!-- Meta Info -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="space-y-1">
+                        <dt class="text-sm font-medium text-muted-foreground">User</dt>
+                        <dd class="text-sm">
+                            <div class="flex items-center gap-2">
+                                <div class="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
+                                    <span class="text-xs font-medium text-primary">{{ item.user_name | first | upper }}</span>
+                                </div>
+                                <span>{{ item.user_name }}</span>
+                            </div>
+                        </dd>
+                    </div>
+                    <div class="space-y-1">
+                        <dt class="text-sm font-medium text-muted-foreground">Timestamp</dt>
+                        <dd class="text-sm text-muted-foreground">{{ item.created_at }}</dd>
+                    </div>
+                    <div class="space-y-1">
+                        <dt class="text-sm font-medium text-muted-foreground">Duration</dt>
+                        <dd class="text-sm">{{ item.duration_ms }}ms</dd>
+                    </div>
+                    <div class="space-y-1">
+                        <dt class="text-sm font-medium text-muted-foreground">Token Usage</dt>
+                        <dd class="text-sm">{{ item.token_count | default(value="N/A") }}</dd>
+                    </div>
+                </div>
+
+                <!-- Request Info -->
+                <div class="space-y-4 p-4 rounded-lg border bg-muted/30">
+                    <h3 class="text-sm font-medium">Request Information</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <div class="space-y-1">
+                            <dt class="text-xs font-medium text-muted-foreground">Product</dt>
+                            <dd class="text-sm">
+                                <span class="inline-flex items-center rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
+                                    {{ item.product }}
+                                </span>
+                            </dd>
+                        </div>
+                        <div class="space-y-1">
+                            <dt class="text-xs font-medium text-muted-foreground">Screen Type</dt>
+                            <dd class="text-sm">
+                                <span class="inline-flex items-center rounded-md bg-secondary px-2 py-1 text-xs font-medium">
+                                    {{ item.screen_type }}
+                                </span>
+                            </dd>
+                        </div>
+                        <div class="space-y-1">
+                            <dt class="text-xs font-medium text-muted-foreground">Input Type</dt>
+                            <dd class="text-sm">{{ item.input_type }}</dd>
+                        </div>
+                        <div class="space-y-1">
+                            <dt class="text-xs font-medium text-muted-foreground">Template Used</dt>
+                            <dd class="text-sm">{{ item.template_name | default(value="Default") }}</dd>
+                        </div>
+                        <div class="space-y-1">
+                            <dt class="text-xs font-medium text-muted-foreground">LLM Config</dt>
+                            <dd class="text-sm">{{ item.llm_config_name | default(value="Default") }}</dd>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Note: Input data is NOT stored for privacy -->
+                <div class="flex items-start gap-2 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                    <svg class="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                    </svg>
+                    <p class="text-xs text-yellow-700">
+                        <strong>Privacy Notice:</strong> Input data is not stored for privacy compliance. Only metadata and generated output are logged.
+                    </p>
+                </div>
+
+                <!-- Generated Output -->
+                {% if item.status != "error" %}
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-sm font-medium">Generated Output</h3>
+                        <div class="flex items-center gap-2">
+                            <button onclick="navigator.clipboard.writeText(document.getElementById('output-xml').textContent)"
+                                class="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground px-2 py-1 rounded hover:bg-accent">
+                                Copy XML
+                            </button>
+                            <button onclick="navigator.clipboard.writeText(document.getElementById('output-js').textContent)"
+                                class="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground px-2 py-1 rounded hover:bg-accent">
+                                Copy JS
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Tabs for XML/JS -->
+                    <div x-data="{ tab: 'xml' }">
+                        <div class="flex border-b">
+                            <button @click="tab = 'xml'" :class="tab === 'xml' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'"
+                                class="px-4 py-2 text-sm font-medium border-b-2 -mb-px">
+                                XML Output
+                            </button>
+                            <button @click="tab = 'js'" :class="tab === 'js' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'"
+                                class="px-4 py-2 text-sm font-medium border-b-2 -mb-px">
+                                JavaScript Output
+                            </button>
+                        </div>
+                        <div class="mt-4">
+                            <pre x-show="tab === 'xml'" id="output-xml"
+                                class="w-full rounded-md border bg-muted/50 p-4 text-xs font-mono whitespace-pre-wrap break-words overflow-x-auto max-h-96">{{ item.output_xml | default(value="No XML output") }}</pre>
+                            <pre x-show="tab === 'js'" id="output-js"
+                                class="w-full rounded-md border bg-muted/50 p-4 text-xs font-mono whitespace-pre-wrap break-words overflow-x-auto max-h-96">{{ item.output_js | default(value="No JavaScript output") }}</pre>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Error Message (if error) -->
+                {% if item.status == "error" and item.error_message %}
+                <div class="space-y-2">
+                    <h3 class="text-sm font-medium text-destructive">Error Details</h3>
+                    <pre class="w-full rounded-md border border-destructive/20 bg-destructive/5 p-4 text-sm font-mono whitespace-pre-wrap break-words overflow-x-auto text-destructive">{{ item.error_message }}</pre>
+                </div>
+                {% endif %}
+
+                <!-- Warnings -->
+                {% if item.warnings %}
+                <div class="space-y-2">
+                    <h3 class="text-sm font-medium text-yellow-600">Warnings</h3>
+                    <ul class="space-y-1">
+                        {% for warning in item.warnings %}
+                        <li class="flex items-start gap-2 text-sm text-yellow-600">
+                            <svg class="h-4 w-4 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                            </svg>
+                            {{ warning }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="flex items-center justify-end px-6 py-4 border-t bg-muted/30">
+            <button onclick="this.closest('.fixed').remove()"
+                class="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-4 py-2
+                       border bg-background shadow-sm hover:bg-accent hover:text-accent-foreground">
+                Close
+            </button>
+        </div>
+    </div>
+</div>

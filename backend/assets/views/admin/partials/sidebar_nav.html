@@ -1,0 +1,71 @@
+<!-- Desktop Sidebar Navigation -->
+<div class="space-y-1">
+    <!-- Dashboard -->
+    <button hx-get="/admin" hx-target="#content-body" hx-swap="innerHTML" hx-push-url="true"
+        class="group flex items-center gap-3 w-full px-3 py-2 text-sm font-medium rounded-md
+               text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground
+               {% if current_page == 'dashboard' %}bg-sidebar-accent text-sidebar-accent-foreground{% endif %}">
+        <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+        </svg>
+        Dashboard
+    </button>
+</div>
+
+<div class="pt-4">
+    <p class="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+        Configuration
+    </p>
+    <div class="mt-2 space-y-1">
+        <!-- Prompt Templates -->
+        <button hx-get="/admin/prompt-templates" hx-target="#content-body" hx-swap="innerHTML" hx-push-url="true"
+            class="group flex items-center gap-3 w-full px-3 py-2 text-sm font-medium rounded-md
+                   text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground
+                   {% if current_page == 'prompt_templates' %}bg-sidebar-accent text-sidebar-accent-foreground{% endif %}">
+            <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+            </svg>
+            Prompt Templates
+        </button>
+
+        <!-- Company Rules -->
+        <button hx-get="/admin/company-rules" hx-target="#content-body" hx-swap="innerHTML" hx-push-url="true"
+            class="group flex items-center gap-3 w-full px-3 py-2 text-sm font-medium rounded-md
+                   text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground
+                   {% if current_page == 'company_rules' %}bg-sidebar-accent text-sidebar-accent-foreground{% endif %}">
+            <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
+            </svg>
+            Company Rules
+        </button>
+
+        <!-- LLM Config -->
+        <button hx-get="/admin/llm-configs" hx-target="#content-body" hx-swap="innerHTML" hx-push-url="true"
+            class="group flex items-center gap-3 w-full px-3 py-2 text-sm font-medium rounded-md
+                   text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground
+                   {% if current_page == 'llm_configs' %}bg-sidebar-accent text-sidebar-accent-foreground{% endif %}">
+            <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 15.5m14.8-.2a2.25 2.25 0 00.681-1.591V8.25a2.25 2.25 0 00-.659-1.591L15.75 3M5 14.5l-.08.02A2.25 2.25 0 003 16.72v.03c0 1.181.91 2.166 2.086 2.243l.924.074a24.427 24.427 0 0011.98 0l.924-.074A2.25 2.25 0 0021 16.75v-.03a2.25 2.25 0 00-1.92-2.201L19 14.5" />
+            </svg>
+            LLM Config
+        </button>
+    </div>
+</div>
+
+<div class="pt-4">
+    <p class="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+        Monitoring
+    </p>
+    <div class="mt-2 space-y-1">
+        <!-- Generation Logs -->
+        <button hx-get="/admin/generation-logs" hx-target="#content-body" hx-swap="innerHTML" hx-push-url="true"
+            class="group flex items-center gap-3 w-full px-3 py-2 text-sm font-medium rounded-md
+                   text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground
+                   {% if current_page == 'generation_logs' %}bg-sidebar-accent text-sidebar-accent-foreground{% endif %}">
+            <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+            </svg>
+            Generation Logs
+        </button>
+    </div>
+</div>

@@ -1,0 +1,55 @@
+<!-- Company Rules List -->
+<div id="search-result" class="bg-card rounded-xl border shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="border-b bg-muted/50">
+                <tr>
+                    <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Name</th>
+                    <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Category</th>
+                    <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground hidden sm:table-cell">Priority</th>
+                    <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Status</th>
+                    <th class="h-10 px-4 text-right align-middle font-medium text-muted-foreground">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if items %}
+                    {% for item in items %}
+                    {% include "admin/company_rule/row.html" %}
+                    {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="5" class="p-8 text-center text-muted-foreground">
+                        <svg class="mx-auto h-12 w-12 text-muted-foreground/50" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
+                        </svg>
+                        <p class="mt-2">No company rules found</p>
+                        <button hx-get="/admin/company-rules/new" hx-target="#modal-container" hx-swap="innerHTML"
+                            class="mt-4 inline-flex items-center gap-2 text-sm text-primary hover:underline">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                            </svg>
+                            Create your first rule
+                        </button>
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <div class="flex items-center justify-between px-4 py-3 border-t">
+        <div class="text-sm text-muted-foreground">
+            Page {{ page }} of {{ total_pages }}
+        </div>
+        <div class="flex items-center gap-2">
+            <input type="number" value="{{ page }}" min="1" max="{{ total_pages }}" name="page"
+                   form="search-form"
+                   hx-get="/admin/company-rules/list" hx-target="#search-result" hx-swap="outerHTML"
+                   hx-trigger="input changed delay:500ms"
+                   class="w-16 h-8 text-center rounded-md border border-input bg-background text-sm" />
+        </div>
+    </div>
+    {% endif %}
+</div>

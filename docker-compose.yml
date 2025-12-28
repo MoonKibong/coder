@@ -1,0 +1,137 @@
+# xFrame5 Code Generator - Docker Compose Configuration
+#
+# This compose file sets up the complete on-premise deployment:
+# - Agent Server (Rust/Loco.rs)
+# - PostgreSQL Database
+# - Ollama LLM Runtime
+#
+# IMPORTANT: This is for ON-PREMISE deployment only.
+# No external network calls are made (금융권 보안 요구사항).
+
+version: '3.8'
+
+services:
+  # ============================================
+  # Agent Server - Main Application
+  # ============================================
+  agent-server:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: xframe5-agent
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    environment:
+      - LOCO_ENV=production
+      - RUST_LOG=${RUST_LOG:-info}
+      - DATABASE_URL=postgres://${POSTGRES_USER:-coder}:${POSTGRES_PASSWORD:-coder_password}@postgres:5432/${POSTGRES_DB:-coder_production}
+      # LLM Configuration
+      - LLM_PROVIDER=${LLM_PROVIDER:-ollama}
+      - LLM_ENDPOINT=http://ollama:11434
+      - LLM_MODEL=${LLM_MODEL:-codellama:13b}
+      - LLM_TIMEOUT_SECONDS=${LLM_TIMEOUT:-120}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/agent/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - xframe5-network
+    volumes:
+      - agent-logs:/app/logs
+
+  # ============================================
+  # PostgreSQL Database
+  # ============================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: xframe5-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-coder}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-coder_password}
+      - POSTGRES_DB=${POSTGRES_DB:-coder_production}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./backend/scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-coder} -d ${POSTGRES_DB:-coder_production}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - xframe5-network
+    # Do not expose port externally for security
+    # ports:
+    #   - "5432:5432"
+
+  # ============================================
+  # Ollama LLM Runtime
+  # ============================================
+  ollama:
+    image: ollama/ollama:latest
+    container_name: xframe5-ollama
+    restart: unless-stopped
+    volumes:
+      - ollama-data:/root/.ollama
+    networks:
+      - xframe5-network
+    # GPU support (uncomment if NVIDIA GPU available)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+    # Do not expose port externally for security
+    # ports:
+    #   - "11434:11434"
+
+  # ============================================
+  # Ollama Model Initialization
+  # ============================================
+  ollama-init:
+    image: ollama/ollama:latest
+    container_name: xframe5-ollama-init
+    depends_on:
+      - ollama
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo "Waiting for Ollama to start..."
+        sleep 10
+        echo "Pulling model: ${LLM_MODEL:-codellama:13b}"
+        ollama pull ${LLM_MODEL:-codellama:13b}
+        echo "Model pulled successfully"
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+    networks:
+      - xframe5-network
+
+# ============================================
+# Networks
+# ============================================
+networks:
+  xframe5-network:
+    driver: bridge
+    # Internal network - no external access
+    internal: false
+
+# ============================================
+# Volumes
+# ============================================
+volumes:
+  postgres-data:
+    driver: local
+  ollama-data:
+    driver: local
+  agent-logs:
+    driver: local

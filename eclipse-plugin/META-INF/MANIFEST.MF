@@ -1,0 +1,22 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: xFrame5 Code Generator
+Bundle-SymbolicName: com.softbase.xframe5.codegen;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: com.softbase.xframe5.codegen.Activator
+Bundle-Vendor: Softbase
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ org.eclipse.core.resources,
+ org.eclipse.ui.ide,
+ org.eclipse.jdt.core,
+ org.eclipse.jdt.ui
+Bundle-RequiredExecutionEnvironment: JavaSE-11
+Automatic-Module-Name: com.softbase.xframe5.codegen
+Bundle-ActivationPolicy: lazy
+Export-Package: com.softbase.xframe5.codegen,
+ com.softbase.xframe5.codegen.actions,
+ com.softbase.xframe5.codegen.client,
+ com.softbase.xframe5.codegen.dialogs,
+ com.softbase.xframe5.codegen.handlers,
+ com.softbase.xframe5.codegen.model

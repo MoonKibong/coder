@@ -1,0 +1,56 @@
+<!-- LLM Configs List -->
+<div id="search-result" class="bg-card rounded-xl border shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="border-b bg-muted/50">
+                <tr>
+                    <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Name</th>
+                    <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Backend Type</th>
+                    <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground hidden sm:table-cell">Endpoint</th>
+                    <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground hidden md:table-cell">Model</th>
+                    <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Status</th>
+                    <th class="h-10 px-4 text-right align-middle font-medium text-muted-foreground">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if items %}
+                    {% for item in items %}
+                    {% include "admin/llm_config/row.html" %}
+                    {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="6" class="p-8 text-center text-muted-foreground">
+                        <svg class="mx-auto h-12 w-12 text-muted-foreground/50" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611l-.628.105a9.077 9.077 0 01-2.507 0l-.628-.105c-1.717-.293-2.299-2.379-1.067-3.611L16.8 15.3m-3.6 0l-1.402 1.402c-1.232 1.232-.65 3.318 1.067 3.611l.628.105c.835.14 1.672.14 2.507 0l.628-.105c1.717-.293 2.299-2.379 1.067-3.611L16.8 15.3" />
+                        </svg>
+                        <p class="mt-2">No LLM configurations found</p>
+                        <button hx-get="/admin/llm-configs/new" hx-target="#modal-container" hx-swap="innerHTML"
+                            class="mt-4 inline-flex items-center gap-2 text-sm text-primary hover:underline">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                            </svg>
+                            Create your first configuration
+                        </button>
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <div class="flex items-center justify-between px-4 py-3 border-t">
+        <div class="text-sm text-muted-foreground">
+            Page {{ page }} of {{ total_pages }}
+        </div>
+        <div class="flex items-center gap-2">
+            <input type="number" value="{{ page }}" min="1" max="{{ total_pages }}" name="page"
+                   form="search-form"
+                   hx-get="/admin/llm-configs/list" hx-target="#search-result" hx-swap="outerHTML"
+                   hx-trigger="input changed delay:500ms"
+                   class="w-16 h-8 text-center rounded-md border border-input bg-background text-sm" />
+        </div>
+    </div>
+    {% endif %}
+</div>

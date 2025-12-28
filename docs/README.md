@@ -9,7 +9,8 @@ docs/
 ├── README.md              # This file
 ├── requirements.md        # Project requirements and PoC scope
 ├── implementation/        # Implementation guides
-│   └── IMPLEMENTATION_PLAN.md  # Phase-by-phase plan with AI prompts
+│   ├── IMPLEMENTATION_PLAN.md           # Backend phase-by-phase plan
+│   └── FRONTEND_IMPLEMENTATION_PLAN.md  # Admin panel (React+Vite)
 ├── patterns/              # Implementation patterns
 │   ├── LLM_BACKEND_ABSTRACTION.md
 │   ├── PROMPT_COMPILER.md

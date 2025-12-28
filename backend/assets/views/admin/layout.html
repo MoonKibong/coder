@@ -1,0 +1,104 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+<div class="flex min-h-screen">
+    <!-- Desktop Sidebar (hidden on mobile) -->
+    <aside class="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 z-50">
+        <div class="flex flex-col flex-grow bg-sidebar border-r border-sidebar-border overflow-y-auto">
+            <!-- Logo/Brand -->
+            <div class="flex items-center h-16 px-4 border-b border-sidebar-border">
+                <a href="/admin" class="flex items-center gap-2">
+                    <svg class="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
+                    </svg>
+                    <span class="text-lg font-semibold text-sidebar-foreground">xFrame5 Admin</span>
+                </a>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="flex-1 px-2 py-4 space-y-1">
+                {% include "admin/partials/sidebar_nav.html" %}
+            </nav>
+
+            <!-- Footer -->
+            <div class="flex-shrink-0 p-4 border-t border-sidebar-border">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                        <svg class="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                        </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-sidebar-foreground truncate">Admin User</p>
+                        <p class="text-xs text-muted-foreground truncate">v1.0.0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Mobile Header (hidden on desktop) -->
+    <header class="md:hidden fixed inset-x-0 top-0 z-50 bg-background border-b border-border">
+        <div class="flex items-center justify-between h-14 px-4">
+            <a href="/admin" class="flex items-center gap-2">
+                <svg class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
+                </svg>
+                <span class="text-lg font-semibold">xFrame5 Admin</span>
+            </a>
+            <button type="button" onclick="toggleMobileMenu()"
+                class="inline-flex items-center justify-center rounded-md p-2 text-foreground hover:bg-accent">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Mobile Slide-over Menu -->
+    <div id="mobile-menu" class="hidden md:hidden fixed inset-0 z-50">
+        <div class="fixed inset-0 bg-black/50" onclick="toggleMobileMenu()"></div>
+        <div class="fixed inset-y-0 left-0 w-full max-w-xs bg-sidebar overflow-y-auto">
+            <div class="flex items-center justify-between h-14 px-4 border-b border-sidebar-border">
+                <span class="text-lg font-semibold text-sidebar-foreground">xFrame5 Admin</span>
+                <button type="button" onclick="toggleMobileMenu()"
+                    class="rounded-md p-2 text-sidebar-foreground hover:bg-sidebar-accent">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <nav class="px-2 py-4 space-y-1">
+                {% include "admin/partials/sidebar_nav_mobile.html" %}
+            </nav>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 md:ml-64">
+        <div class="pt-14 md:pt-0 min-h-screen">
+            <div id="content-body" class="p-4 md:p-6">
+                {% block main %}{% endblock main %}
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Container -->
+    <div id="modal-container"></div>
+</div>
+
+<script>
+function toggleMobileMenu() {
+    const menu = document.getElementById('mobile-menu');
+    menu.classList.toggle('hidden');
+}
+
+// Close mobile menu on HTMX request
+document.body.addEventListener('htmx:beforeRequest', function(evt) {
+    const menu = document.getElementById('mobile-menu');
+    if (!menu.classList.contains('hidden')) {
+        menu.classList.add('hidden');
+    }
+});
+</script>
+{% endblock content %}

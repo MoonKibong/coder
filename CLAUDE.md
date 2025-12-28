@@ -53,8 +53,9 @@ xFrame5 프론트엔드 개발 자동화 도구 - On-premise code assistant for 
 | Component | Path | Stack |
 |-----------|------|-------|
 | Agent Server | `backend/` | Rust + Loco.rs + SeaORM + PostgreSQL |
+| Admin Panel | `backend/assets/views/admin/` | HTMX + Tera (Loco.rs built-in) |
 | Eclipse Plugin | `eclipse-plugin/` | Java + Eclipse PDE |
-| LLM Runtime | (external) | Ollama / llama.cpp (configurable) |
+| LLM Runtime | (external) | Ollama / llama.cpp / vLLM |
 | Docs | `docs/` | Shared documentation |
 
 ---
@@ -344,6 +345,7 @@ mvn test
 3. **XFRAME5_VALIDATION.md** - XML/JS validation rules
 4. **AUDIT_LOGGING.md** - Generation request logging
 5. **LOCO_MIGRATION_PATTERNS.md** - Database migration patterns
+6. **ADMIN_PANEL.md** - HTMX admin panel architecture and patterns
 
 ### Feature Documentation (docs/features/)
 1. **SCREEN_GENERATION.md** - List/Detail screen generation

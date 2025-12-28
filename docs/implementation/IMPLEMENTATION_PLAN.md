@@ -9,17 +9,29 @@
 
 ## Overview
 
-On-premise code assistant for xFrame5 frontend development automation. Generates XML view files and JavaScript event handlers from DB schema or query samples.
+On-premise code assistant for enterprise development automation. Generates both frontend (xFrame5) and backend (Spring Framework) code from DB schema or query samples.
+
+### Supported Products
+
+| Product | Type | Output | Status |
+|---------|------|--------|--------|
+| **xFrame5 UI** | Frontend | XML views + JavaScript handlers | PoC Complete |
+| **Spring Framework** | Backend | Controller, Service, DTO, Mapper | Planned |
 
 ### Key Objectives
-1. Generate xFrame5 XML views from DB schema/query samples
-2. Generate JavaScript event handlers following company standards
-3. Reduce frontend development time by 50%+ for standard screens
+1. **xFrame5 Frontend**: Generate XML views and JavaScript handlers from DB schema
+2. **Spring Backend**: Generate Controller, Service, DTO, and MyBatis Mapper from DB schema
+3. Reduce development time by 50%+ for standard CRUD operations
 4. Zero external data transmission (금융권 보안 요구사항)
+5. Follow company coding standards for both frontend and backend
 
-### PoC Scope
+### PoC Scope (Phase 1 - xFrame5)
 - **Target**: 회원 목록 + 조회 + 상세 팝업 화면
-- **Excludes**: Backend generation, full automation, runtime intervention
+- **Output**: xFrame5 XML + JavaScript
+
+### Future Scope (Phase 2 - Spring Framework)
+- **Target**: 회원 CRUD API
+- **Output**: Controller, Service, ServiceImpl, DTO, Mapper XML
 
 ### Development Approach
 - **AI-Augmented Engineering**: Leverage AI agents for rapid development
@@ -61,9 +73,72 @@ On-premise code assistant for xFrame5 frontend development automation. Generates
 
 ---
 
-### Phase 1: Database & Backend Foundation
+### Phase 1: Database & Backend Foundation ✅ COMPLETED
 **Duration**: 2 days
-**Status**: 📋 Planned
+**Status**: ✅ Done
+
+- [x] Loco.rs project initialized with PostgreSQL
+- [x] prompt_templates table scaffolded
+- [x] company_rules table scaffolded
+- [x] generation_logs table scaffolded (with user FK)
+- [x] llm_configs table scaffolded (for admin panel)
+- [x] Database indexes created
+- [x] All 31 tests passing
+
+**Deliverables**:
+- ✅ backend/ - Loco.rs project
+- ✅ 5 database tables with indexes
+- ✅ CRUD API endpoints for all tables
+- ✅ Test suite passing
+
+---
+
+### Phase 2: LLM Backend Abstraction ✅ COMPLETED
+**Duration**: 2 days
+**Status**: ✅ Done
+
+- [x] LlmBackend trait created
+- [x] OllamaBackend implementation
+- [x] LlamaCppBackend implementation
+- [x] VllmBackend implementation
+- [x] GroqBackend implementation (remote testing)
+- [x] OpenAIBackend implementation (remote testing)
+- [x] AnthropicBackend implementation (remote testing)
+- [x] Factory pattern with env var configuration
+- [x] 16 LLM-specific tests passing
+
+**Deliverables**:
+- ✅ src/llm/ module with 6 provider backends
+- ✅ create_backend_from_env() factory function
+- ✅ Environment variable configuration
+- ✅ Health check for all providers
+
+---
+
+### Phase 3: Prompt Compiler ✅ COMPLETED
+**Duration**: 1 day
+**Status**: ✅ Done
+
+- [x] UiIntent DSL created (ScreenType, DatasetIntent, ColumnIntent, GridIntent, ActionIntent)
+- [x] Input types defined (GenerateInput, SchemaInput, QuerySampleInput, NaturalLanguageInput)
+- [x] NormalizerService implemented (Schema → UiIntent, Query → UiIntent, NL → UiIntent)
+- [x] PromptCompiler implemented (UiIntent → CompiledPrompt)
+- [x] TemplateService for DB template loading
+- [x] Korean label inference for common column names
+- [x] 27 new tests passing (74 total)
+
+**Deliverables**:
+- ✅ src/domain/ module with DSL types
+- ✅ src/services/ module with normalizer, compiler, template services
+- ✅ Type inference (VARCHAR→Input, TEXT→TextArea, DATE→DatePicker, etc.)
+- ✅ Default Korean labels for common fields
+- ✅ Company rules injection into prompts
+
+---
+
+### Phase 1 (Original): Database & Backend Foundation
+**Duration**: 2 days
+**Status**: ✅ Completed (see above)
 
 #### 1.1 Loco.rs Project Setup
 
@@ -875,15 +950,312 @@ services:
 | Phase | Status | Duration |
 |-------|--------|----------|
 | Phase 0: Foundation Setup | ✅ Complete | 1 day |
-| Phase 1: Database & Backend Foundation | 📋 Planned | 2 days |
-| Phase 2: LLM Backend Abstraction | 📋 Planned | 2 days |
-| Phase 3: Prompt Compiler | 📋 Planned | 3 days |
-| Phase 4: API & Validation | 📋 Planned | 2 days |
-| Phase 5: Eclipse Plugin | 📋 Planned | 5 days |
-| Phase 6: Testing & Integration | 📋 Planned | 3 days |
-| Phase 7: Deployment | 📋 Planned | 2 days |
+| Phase 1: Database & Backend Foundation | ✅ Complete | 1 day |
+| Phase 2: LLM Backend Abstraction | ✅ Complete | 1 day |
+| Phase 3: Prompt Compiler | ✅ Complete | 1 day |
+| Phase 4: API & Validation | ✅ Complete | 1 day |
+| Phase 5: Eclipse Plugin | ✅ Complete | 1 day |
+| Phase 6: Testing & Integration | ✅ Complete | 1 day |
+| Phase 7: Deployment | ✅ Complete | 1 day |
+| Phase 8: Admin Panel (HTMX) | ✅ Complete | 1 day |
+| Phase 9: Spring Framework Support | 📋 Planned | 5 days |
 
-**Total Estimated Duration**: ~20 working days (4 weeks)
+**Total Duration**: 14 days (9 complete + 5 planned)
+
+---
+
+### Phase 8: Admin Panel (HTMX)
+**Duration**: 3 days
+**Status**: 📋 Planned
+
+#### Technology Decision
+
+**Chosen**: HTMX + Tera templates (served from Loco.rs)
+
+**Rationale**:
+- **Simpler Deployment**: No separate frontend build/deploy, served directly from agent server
+- **CRUD Focus**: Admin panel is primarily CRUD operations (templates, rules, logs) - ideal for HTMX
+- **Loco.rs Integration**: Built-in Tera template support, no additional framework
+- **Primary Focus**: Eclipse plugin is the main user interface; admin panel is secondary
+- **Reference Implementation**: HTMX patterns from yatclub project
+
+**Alternatives Considered**:
+- React + Vite: Better UX for complex interactions, but adds deployment complexity
+- Vue + Vite: Same trade-offs as React
+
+#### 8.1 Admin Views Structure
+
+```
+backend/assets/views/admin/
+├── layout.html                    # Base layout with navigation
+├── prompt_template/
+│   ├── main.html                  # Container with search form
+│   ├── list.html                  # Table with HTMX pagination
+│   ├── row.html                   # Single row template
+│   ├── create.html                # Create form modal
+│   ├── edit.html                  # Edit form modal
+│   └── show.html                  # View details
+├── company_rule/
+│   ├── main.html
+│   ├── list.html
+│   ├── row.html
+│   ├── create.html
+│   └── edit.html
+├── generation_log/
+│   ├── main.html                  # Audit log viewer
+│   ├── list.html
+│   └── show.html                  # Log detail view
+└── llm_config/
+    ├── main.html
+    ├── list.html
+    └── edit.html
+```
+
+#### 8.2 HTMX Patterns
+
+**AI Prompt** 🤖:
+```
+Act as a Loco.rs + HTMX developer.
+
+CONTEXT:
+- Read docs/patterns/ADMIN_PANEL.md
+- Reference: yatclub repo HTMX examples
+
+TASK:
+Implement admin panel using HTMX for prompt template management.
+
+KEY PATTERNS:
+1. Search form with hx-trigger="submit, load"
+2. Partial table updates with hx-target="#list-container"
+3. Modal dialogs with hx-target="#editor-container"
+4. Inline row updates after edit
+5. Pagination with hx-trigger="input changed delay:0.5s"
+
+DELIVERABLES:
+- Tera templates with HTMX attributes
+- Loco.rs view controllers
+- CSS using Tailwind
+```
+
+#### 8.3 Admin Controllers
+
+```rust
+// backend/src/controllers/admin/mod.rs
+mod prompt_templates;
+mod company_rules;
+mod generation_logs;
+mod llm_configs;
+
+pub fn routes() -> Routes {
+    Routes::new()
+        .prefix("admin")
+        .add("/prompt-templates", prompt_templates::routes())
+        .add("/company-rules", company_rules::routes())
+        .add("/generation-logs", generation_logs::routes())
+        .add("/llm-configs", llm_configs::routes())
+}
+```
+
+#### 8.4 Admin Features
+
+| Feature | Description | Priority |
+|---------|-------------|----------|
+| Prompt Template CRUD | Create, edit, activate/deactivate templates | P0 |
+| Company Rules CRUD | Manage customer-specific coding rules | P0 |
+| Generation Logs Viewer | Search and view audit trail | P0 |
+| LLM Config Management | Update model settings (admin only) | P1 |
+| Template Version History | View and rollback template versions | P2 |
+| User Management | Manage system users (optional) | P2 |
+
+---
+
+### Phase 9: Spring Framework Support
+**Duration**: 5 days
+**Status**: 📋 Planned
+
+#### Overview
+
+Extend code generation to support Spring Framework backend development. Generate Controller, Service, DTO, and MyBatis Mapper files from DB schema.
+
+#### 9.1 Spring DSL Extension
+
+**New Domain Types**:
+```rust
+// backend/src/domain/spring_intent.rs
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SpringIntent {
+    pub entity_name: String,           // e.g., "Member"
+    pub table_name: String,            // e.g., "TB_MEMBER"
+    pub package_base: String,          // e.g., "com.company.project"
+    pub columns: Vec<ColumnIntent>,
+    pub crud_operations: Vec<CrudOperation>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum CrudOperation {
+    Create,
+    Read,
+    ReadList,
+    Update,
+    Delete,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SpringArtifacts {
+    pub controller: String,            // MemberController.java
+    pub service_interface: String,     // MemberService.java
+    pub service_impl: String,          // MemberServiceImpl.java
+    pub dto: String,                   // MemberDTO.java
+    pub mapper_interface: String,      // MemberMapper.java
+    pub mapper_xml: String,            // MemberMapper.xml
+}
+```
+
+#### 9.2 Spring Prompt Templates
+
+**New Templates (stored in DB)**:
+
+| Template Name | Product | Screen Type | Description |
+|--------------|---------|-------------|-------------|
+| spring-controller | spring-backend | crud | REST Controller with annotations |
+| spring-service | spring-backend | crud | Service interface + implementation |
+| spring-dto | spring-backend | crud | DTO with validation annotations |
+| spring-mybatis-mapper | spring-backend | crud | MyBatis Mapper interface + XML |
+
+**Example System Prompt**:
+```
+You are a Spring Framework code generator.
+
+RULES:
+1. Use @RestController with @RequestMapping
+2. Use @Service and @Autowired annotations
+3. DTO fields should use @NotNull, @Size validations
+4. MyBatis Mapper should use #{} parameter binding
+5. Follow company naming conventions
+
+COMPANY RULES:
+{{company_rules}}
+
+OUTPUT FORMAT:
+--- CONTROLLER ---
+[Controller code here]
+--- SERVICE ---
+[Service interface here]
+--- SERVICE_IMPL ---
+[Service implementation here]
+--- DTO ---
+[DTO class here]
+--- MAPPER ---
+[Mapper interface here]
+--- MAPPER_XML ---
+[Mapper XML here]
+```
+
+#### 9.3 Spring Validation
+
+**backend/src/services/spring_validator.rs**:
+```rust
+pub struct SpringValidator;
+
+impl SpringValidator {
+    pub fn validate(artifacts: &SpringArtifacts, intent: &SpringIntent) -> Result<Vec<String>> {
+        let mut warnings = vec![];
+
+        // 1. Validate Controller
+        Self::validate_controller(&artifacts.controller, intent)?;
+
+        // 2. Validate Service matches interface
+        Self::validate_service_impl(&artifacts.service_impl, &artifacts.service_interface)?;
+
+        // 3. Validate DTO has all columns
+        Self::validate_dto(&artifacts.dto, &intent.columns)?;
+
+        // 4. Validate Mapper XML syntax
+        Self::validate_mapper_xml(&artifacts.mapper_xml)?;
+
+        Ok(warnings)
+    }
+}
+```
+
+#### 9.4 API Extension
+
+**New Endpoint**:
+```
+POST /agent/generate
+
+{
+  "product": "spring-backend",    // NEW: Spring Framework support
+  "inputType": "db-schema",
+  "input": {
+    "table": "TB_MEMBER",
+    "columns": [...]
+  },
+  "context": {
+    "project": "member-service",
+    "output": ["controller", "service", "dto", "mapper"]
+  }
+}
+```
+
+**Response**:
+```json
+{
+  "status": "success",
+  "artifacts": {
+    "controller": "package com.company...",
+    "service_interface": "package com.company...",
+    "service_impl": "package com.company...",
+    "dto": "package com.company...",
+    "mapper_interface": "package com.company...",
+    "mapper_xml": "<?xml version=\"1.0\"..."
+  },
+  "warnings": [],
+  "meta": {
+    "generator": "spring-backend-v1",
+    "timestamp": "2025-xx-xx"
+  }
+}
+```
+
+#### 9.5 Eclipse Plugin Extension
+
+**New Menu Options**:
+- xFrame5 > Generate Frontend Code (existing)
+- Spring > Generate Backend Code (new)
+
+**File Output**:
+```
+src/
+├── main/
+│   ├── java/
+│   │   └── com/company/project/
+│   │       ├── controller/
+│   │       │   └── MemberController.java
+│   │       ├── service/
+│   │       │   ├── MemberService.java
+│   │       │   └── impl/
+│   │       │       └── MemberServiceImpl.java
+│   │       ├── dto/
+│   │       │   └── MemberDTO.java
+│   │       └── mapper/
+│   │           └── MemberMapper.java
+│   └── resources/
+│       └── mapper/
+│           └── MemberMapper.xml
+```
+
+#### 9.6 Deliverables
+
+| Deliverable | Description |
+|-------------|-------------|
+| SpringIntent DSL | Domain types for Spring code generation |
+| Spring Prompt Templates | 4 new templates in database |
+| SpringValidator | Validation for generated Java/XML |
+| API Extension | Support "spring-backend" product |
+| Eclipse Plugin Update | New menu for Spring generation |
+| Tests | Unit tests for Spring generation flow |
 
 ---
 

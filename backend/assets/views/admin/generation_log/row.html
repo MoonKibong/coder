@@ -1,0 +1,64 @@
+<!-- Generation Log Row -->
+<tr class="border-b transition-colors hover:bg-muted/50">
+    <td class="p-4 align-middle">
+        <div class="text-sm">{{ item.created_at | date(format="%Y-%m-%d") }}</div>
+        <div class="text-xs text-muted-foreground">{{ item.created_at | date(format="%H:%M:%S") }}</div>
+    </td>
+    <td class="p-4 align-middle">
+        <div class="flex items-center gap-2">
+            <div class="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center">
+                <span class="text-xs font-medium text-primary">{{ item.user_name | first | upper }}</span>
+            </div>
+            <div>
+                <div class="font-medium text-sm">{{ item.user_name }}</div>
+                {% if item.user_email %}
+                <div class="text-xs text-muted-foreground">{{ item.user_email }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </td>
+    <td class="p-4 align-middle hidden sm:table-cell">
+        <span class="inline-flex items-center rounded-md bg-secondary px-2 py-1 text-xs font-medium">
+            {{ item.screen_type }}
+        </span>
+    </td>
+    <td class="p-4 align-middle hidden md:table-cell">
+        <span class="text-sm text-muted-foreground">{{ item.input_type }}</span>
+    </td>
+    <td class="p-4 align-middle">
+        {% if item.status == "success" %}
+        <span class="inline-flex items-center gap-1 rounded-full bg-green-500/10 px-2 py-1 text-xs font-medium text-green-600">
+            <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+            </svg>
+            Success
+        </span>
+        {% elif item.status == "error" %}
+        <span class="inline-flex items-center gap-1 rounded-full bg-red-500/10 px-2 py-1 text-xs font-medium text-red-600">
+            <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            Error
+        </span>
+        {% else %}
+        <span class="inline-flex items-center gap-1 rounded-full bg-yellow-500/10 px-2 py-1 text-xs font-medium text-yellow-600">
+            <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+            </svg>
+            Partial
+        </span>
+        {% endif %}
+    </td>
+    <td class="p-4 align-middle hidden lg:table-cell">
+        <span class="text-sm text-muted-foreground">{{ item.duration_ms }}ms</span>
+    </td>
+    <td class="p-4 align-middle text-right">
+        <button hx-get="/admin/generation-logs/{{ item.id }}" hx-target="#modal-container" hx-swap="innerHTML"
+            class="inline-flex items-center justify-center rounded-md h-8 w-8 hover:bg-accent" title="View Details">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+        </button>
+    </td>
+</tr>
