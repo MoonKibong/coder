@@ -55,6 +55,7 @@ impl Hooks for App {
             .add_route(controllers::home::routes())
             // API routes
             .add_route(controllers::generate::routes())
+            .add_route(controllers::jobs::routes())
             .add_route(controllers::llm_config::routes())
             .add_route(controllers::generation_log::routes())
             .add_route(controllers::company_rule::routes())
@@ -70,6 +71,7 @@ impl Hooks for App {
 
     #[allow(unused_variables)]
     fn register_tasks(tasks: &mut Tasks) {
+        tasks.register(tasks::QueueProcessorTask);
         // tasks-inject (do not remove)
     }
     async fn truncate(ctx: &AppContext) -> Result<()> {

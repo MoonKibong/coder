@@ -3,13 +3,18 @@
 #![allow(clippy::unused_async)]
 
 use axum::debug_handler;
+use axum::extract::Query;
 use loco_rs::prelude::*;
+use sea_orm::{ActiveModelTrait, Set};
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 use crate::domain::{
     GenerateInput, GenerateOptions, GenerateResponse, GenerateStatus, RequestContext,
 };
+use crate::models::_entities::generation_logs;
 use crate::services::{GenerationService, SpringGenerationService};
+use crate::workers::generation::GenerateJobRequest;
 
 /// API request for code generation
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -27,6 +32,35 @@ pub struct GenerateApiRequest {
     /// Request context
     #[serde(default)]
     pub context: RequestContext,
+
+    /// Priority for async processing (1=high, 5=low, default=3)
+    #[serde(default = "default_priority")]
+    pub priority: i32,
+}
+
+fn default_priority() -> i32 {
+    3
+}
+
+/// Query parameters for generate endpoint
+#[derive(Debug, Deserialize)]
+pub struct GenerateQuery {
+    /// If true, process asynchronously and return job_id
+    #[serde(default)]
+    pub r#async: bool,
+}
+
+/// Async generation response
+#[derive(Debug, Serialize)]
+pub struct AsyncGenerateResponse {
+    /// Job ID for polling
+    pub job_id: String,
+    /// Initial status
+    pub status: String,
+    /// URL to poll for status
+    pub status_url: String,
+    /// Message
+    pub message: String,
 }
 
 /// Health check response
@@ -40,6 +74,7 @@ pub struct HealthResponse {
 /// Generate endpoint - main entry point for code generation
 ///
 /// POST /agent/generate
+/// POST /agent/generate?async=true (async mode)
 ///
 /// Request:
 /// ```json
@@ -57,29 +92,34 @@ pub struct HealthResponse {
 ///   "context": {
 ///     "project": "xframe5",
 ///     "output": ["xml", "javascript"]
-///   }
+///   },
+///   "priority": 3
 /// }
 /// ```
 ///
-/// Response:
+/// Sync Response:
 /// ```json
 /// {
 ///   "status": "success",
-///   "artifacts": {
-///     "xml": "<Dataset...>",
-///     "javascript": "this.fn_search = function()..."
-///   },
+///   "artifacts": { ... },
 ///   "warnings": [],
-///   "meta": {
-///     "generator": "xframe5-ui-v1",
-///     "timestamp": "2025-01-01T00:00:00Z",
-///     "generation_time_ms": 1234
-///   }
+///   "meta": { ... }
+/// }
+/// ```
+///
+/// Async Response:
+/// ```json
+/// {
+///   "job_id": "uuid",
+///   "status": "queued",
+///   "status_url": "/agent/jobs/uuid",
+///   "message": "Job queued for processing"
 /// }
 /// ```
 #[debug_handler]
 pub async fn generate(
     State(ctx): State<AppContext>,
+    Query(query): Query<GenerateQuery>,
     Json(req): Json<GenerateApiRequest>,
 ) -> Result<Response> {
     // Validate product
@@ -98,8 +138,77 @@ pub async fn generate(
     }
 
     // TODO: Extract user ID from JWT token when auth is integrated
-    let user_id: Option<i32> = None;
+    let user_id: i32 = 1; // Default to system user for now
 
+    // Check if async mode is requested
+    if query.r#async {
+        return enqueue_job(&ctx, &req, user_id).await;
+    }
+
+    // Synchronous processing (legacy mode)
+    process_sync(&ctx, req, user_id).await
+}
+
+/// Enqueue a job for async processing
+async fn enqueue_job(
+    ctx: &AppContext,
+    req: &GenerateApiRequest,
+    user_id: i32,
+) -> Result<Response> {
+    let job_id = Uuid::new_v4().to_string();
+    let now = chrono::Utc::now();
+
+    // Determine input type for logging
+    let input_type = match &req.input {
+        GenerateInput::DbSchema(_) => "db_schema",
+        GenerateInput::QuerySample(_) => "query_sample",
+        GenerateInput::NaturalLanguage(_) => "natural_language",
+    };
+
+    // Create job payload
+    let payload = GenerateJobRequest {
+        product: req.product.clone(),
+        input: req.input.clone(),
+        options: req.options.clone(),
+        context: req.context.clone(),
+    };
+
+    let payload_json = serde_json::to_string(&payload)
+        .map_err(|e| Error::string(&format!("Failed to serialize payload: {}", e)))?;
+
+    // Create generation log entry as queued
+    let new_job = generation_logs::ActiveModel {
+        job_id: Set(Some(job_id.clone())),
+        product: Set(req.product.clone()),
+        input_type: Set(input_type.to_string()),
+        ui_intent: Set("pending".to_string()), // Will be populated during processing
+        template_version: Set(1),
+        status: Set("queued".to_string()),
+        request_payload: Set(Some(payload_json)),
+        queued_at: Set(Some(now.into())),
+        priority: Set(req.priority.clamp(1, 5)),
+        user_id: Set(user_id),
+        ..Default::default()
+    };
+
+    new_job.insert(&ctx.db).await?;
+
+    tracing::info!("Job {} queued for {} generation", job_id, req.product);
+
+    format::json(AsyncGenerateResponse {
+        job_id: job_id.clone(),
+        status: "queued".to_string(),
+        status_url: format!("/agent/jobs/{}", job_id),
+        message: "Job queued for processing. Poll status_url for updates.".to_string(),
+    })
+}
+
+/// Process request synchronously (legacy mode)
+async fn process_sync(
+    ctx: &AppContext,
+    req: GenerateApiRequest,
+    user_id: i32,
+) -> Result<Response> {
     // Route based on product type
     match req.product.as_str() {
         "spring-backend" => {
@@ -109,7 +218,7 @@ pub async fn generate(
                 req.input,
                 &req.options,
                 &req.context,
-                user_id,
+                Some(user_id),
             )
             .await;
 
@@ -139,7 +248,7 @@ pub async fn generate(
                 &req.product,
                 &req.options,
                 &req.context,
-                user_id,
+                Some(user_id),
             )
             .await;
 
@@ -215,8 +324,8 @@ pub async fn list_products(State(_ctx): State<AppContext>) -> Result<Response> {
 /// Routes for the agent API
 pub fn routes() -> Routes {
     Routes::new()
-        .prefix("agent")
-        .add("/generate", post(generate))
-        .add("/health", get(health))
-        .add("/products", get(list_products))
+        .prefix("agent/")
+        .add("generate", post(generate))
+        .add("health", get(health))
+        .add("products", get(list_products))
 }

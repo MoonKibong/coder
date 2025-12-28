@@ -24,6 +24,19 @@ pub struct Model {
     pub error_message: Option<String>,
     pub generation_time_ms: Option<i32>,
     pub user_id: i32,
+    /// Unique job ID for client polling (UUID)
+    pub job_id: Option<String>,
+    /// Original request payload for async processing
+    #[sea_orm(column_type = "Text", nullable)]
+    pub request_payload: Option<String>,
+    /// When the job was queued
+    pub queued_at: Option<DateTimeWithTimeZone>,
+    /// When processing started
+    pub started_at: Option<DateTimeWithTimeZone>,
+    /// When processing completed
+    pub completed_at: Option<DateTimeWithTimeZone>,
+    /// Priority (1=high, 5=low, default=3)
+    pub priority: i32,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

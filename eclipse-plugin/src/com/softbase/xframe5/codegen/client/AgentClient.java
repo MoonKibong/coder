@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+
 import com.softbase.xframe5.codegen.model.GenerateRequest;
 import com.softbase.xframe5.codegen.model.GenerateResponse;
 import com.softbase.xframe5.codegen.model.SpringGenerateResponse;
@@ -113,6 +115,274 @@ public class AgentClient {
         } catch (IOException e) {
             throw new AgentClientException("Failed to get products: " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * Submit a generation request asynchronously.
+     *
+     * @param request The generation request
+     * @return AsyncJobResponse with job ID for polling
+     * @throws AgentClientException if the request fails
+     */
+    public AsyncJobResponse generateAsync(GenerateRequest request) throws AgentClientException {
+        try {
+            String json = mapToJson(request.toMap());
+            String responseBody = post("/agent/generate?async=true", json);
+            return parseAsyncJobResponse(responseBody);
+        } catch (IOException e) {
+            throw new AgentClientException("Failed to submit async job: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Get job status by ID.
+     *
+     * @param jobId The job ID to check
+     * @return JobStatusResponse with current status
+     * @throws AgentClientException if the request fails
+     */
+    public JobStatusResponse getJobStatus(String jobId) throws AgentClientException {
+        try {
+            String responseBody = get("/agent/jobs/" + jobId);
+            return parseJobStatusResponse(responseBody);
+        } catch (IOException e) {
+            throw new AgentClientException("Failed to get job status: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Poll for job completion with progress reporting.
+     *
+     * @param jobId The job ID to poll
+     * @param monitor Progress monitor for UI updates (can be null)
+     * @param pollIntervalMs Polling interval in milliseconds
+     * @param maxWaitMs Maximum wait time in milliseconds
+     * @return JobStatusResponse when completed or failed
+     * @throws AgentClientException if polling fails or times out
+     */
+    public JobStatusResponse pollUntilComplete(
+            String jobId,
+            IProgressMonitor monitor,
+            long pollIntervalMs,
+            long maxWaitMs) throws AgentClientException {
+
+        long startTime = System.currentTimeMillis();
+
+        while (true) {
+            // Check for cancellation
+            if (monitor != null && monitor.isCanceled()) {
+                throw new AgentClientException("Operation cancelled by user");
+            }
+
+            // Check timeout
+            if (System.currentTimeMillis() - startTime > maxWaitMs) {
+                throw new AgentClientException("Job timed out after " + (maxWaitMs / 1000) + " seconds");
+            }
+
+            // Get status
+            JobStatusResponse status = getJobStatus(jobId);
+
+            // Update progress
+            if (monitor != null) {
+                if (status.getQueuePosition() != null) {
+                    monitor.subTask("Position in queue: " + status.getQueuePosition());
+                } else if ("processing".equals(status.getStatus())) {
+                    monitor.subTask("Generating code...");
+                }
+            }
+
+            // Check if done
+            if (!status.isPending()) {
+                return status;
+            }
+
+            // Wait before next poll
+            try {
+                Thread.sleep(pollIntervalMs);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new AgentClientException("Polling interrupted");
+            }
+        }
+    }
+
+    /**
+     * Generate code asynchronously with automatic polling.
+     * This is the recommended method for UI handlers.
+     *
+     * @param request The generation request
+     * @param monitor Progress monitor for UI updates
+     * @return GenerateResponse when completed
+     * @throws AgentClientException if generation fails
+     */
+    public GenerateResponse generateWithPolling(GenerateRequest request, IProgressMonitor monitor)
+            throws AgentClientException {
+        // Submit async job
+        if (monitor != null) {
+            monitor.subTask("Submitting job to queue...");
+        }
+        AsyncJobResponse asyncResponse = generateAsync(request);
+
+        if (monitor != null) {
+            monitor.subTask("Job queued: " + asyncResponse.getJobId());
+        }
+
+        // Poll until complete
+        JobStatusResponse status = pollUntilComplete(
+                asyncResponse.getJobId(),
+                monitor,
+                2000,  // Poll every 2 seconds
+                timeout  // Use configured timeout
+        );
+
+        // Convert to GenerateResponse
+        if (status.isCompleted()) {
+            GenerateResponse response = new GenerateResponse();
+            response.setStatus("success");
+            if (status.getArtifacts() != null) {
+                GenerateResponse.Artifacts artifacts = parseArtifacts(status.getArtifacts());
+                response.setArtifacts(artifacts);
+            }
+            return response;
+        } else {
+            GenerateResponse response = new GenerateResponse();
+            response.setStatus("error");
+            response.setError(status.getError() != null ? status.getError() : "Job failed");
+            return response;
+        }
+    }
+
+    /**
+     * Generate Spring code asynchronously with automatic polling.
+     *
+     * @param request The generation request
+     * @param monitor Progress monitor for UI updates
+     * @return SpringGenerateResponse when completed
+     * @throws AgentClientException if generation fails
+     */
+    public SpringGenerateResponse generateSpringWithPolling(GenerateRequest request, IProgressMonitor monitor)
+            throws AgentClientException {
+        request.setProduct("spring-backend");
+
+        // Submit async job
+        if (monitor != null) {
+            monitor.subTask("Submitting Spring generation job...");
+        }
+        AsyncJobResponse asyncResponse = generateAsync(request);
+
+        if (monitor != null) {
+            monitor.subTask("Job queued: " + asyncResponse.getJobId());
+        }
+
+        // Poll until complete
+        JobStatusResponse status = pollUntilComplete(
+                asyncResponse.getJobId(),
+                monitor,
+                2000,
+                timeout
+        );
+
+        // Convert to SpringGenerateResponse
+        if (status.isCompleted()) {
+            SpringGenerateResponse response = new SpringGenerateResponse();
+            response.setStatus("success");
+            if (status.getArtifacts() != null) {
+                SpringGenerateResponse.Artifacts artifacts = parseSpringArtifacts(status.getArtifacts());
+                response.setArtifacts(artifacts);
+            }
+            return response;
+        } else {
+            SpringGenerateResponse response = new SpringGenerateResponse();
+            response.setStatus("error");
+            response.setError(status.getError() != null ? status.getError() : "Job failed");
+            return response;
+        }
+    }
+
+    private GenerateResponse.Artifacts parseArtifacts(String json) {
+        GenerateResponse.Artifacts artifacts = new GenerateResponse.Artifacts();
+        artifacts.setXml(extractJsonString(json, "xml"));
+        artifacts.setJavascript(extractJsonString(json, "javascript"));
+        return artifacts;
+    }
+
+    private SpringGenerateResponse.Artifacts parseSpringArtifacts(String json) {
+        SpringGenerateResponse.Artifacts artifacts = new SpringGenerateResponse.Artifacts();
+        artifacts.setController(extractJsonString(json, "controller"));
+        artifacts.setServiceInterface(extractJsonString(json, "service_interface"));
+        artifacts.setServiceImpl(extractJsonString(json, "service_impl"));
+        artifacts.setDto(extractJsonString(json, "dto"));
+        artifacts.setSearchDto(extractJsonString(json, "search_dto"));
+        artifacts.setMapperInterface(extractJsonString(json, "mapper_interface"));
+        artifacts.setMapperXml(extractJsonString(json, "mapper_xml"));
+        return artifacts;
+    }
+
+    private AsyncJobResponse parseAsyncJobResponse(String json) {
+        AsyncJobResponse response = new AsyncJobResponse();
+        response.setJobId(extractJsonString(json, "job_id"));
+        response.setStatus(extractJsonString(json, "status"));
+        response.setStatusUrl(extractJsonString(json, "status_url"));
+        response.setMessage(extractJsonString(json, "message"));
+        return response;
+    }
+
+    private JobStatusResponse parseJobStatusResponse(String json) {
+        JobStatusResponse response = new JobStatusResponse();
+        response.setJobId(extractJsonString(json, "job_id"));
+        response.setStatus(extractJsonString(json, "status"));
+        response.setError(extractJsonString(json, "error"));
+        response.setProduct(extractJsonString(json, "product"));
+        response.setArtifacts(extractJsonObject(json, "artifacts"));
+
+        String queuePos = extractJsonString(json, "queue_position");
+        if (queuePos != null) {
+            try {
+                response.setQueuePosition(Long.parseLong(queuePos));
+            } catch (NumberFormatException e) {
+                // Ignore
+            }
+        }
+
+        String genTime = extractJsonString(json, "generation_time_ms");
+        if (genTime != null) {
+            try {
+                response.setGenerationTimeMs(Integer.parseInt(genTime));
+            } catch (NumberFormatException e) {
+                // Ignore
+            }
+        }
+
+        return response;
+    }
+
+    private String extractJsonObject(String json, String key) {
+        String searchKey = "\"" + key + "\"";
+        int keyStart = json.indexOf(searchKey);
+        if (keyStart < 0) {
+            return null;
+        }
+
+        int colonPos = json.indexOf(":", keyStart + searchKey.length());
+        if (colonPos < 0) {
+            return null;
+        }
+
+        // Skip whitespace
+        int valueStart = colonPos + 1;
+        while (valueStart < json.length() && Character.isWhitespace(json.charAt(valueStart))) {
+            valueStart++;
+        }
+
+        if (valueStart >= json.length() || json.charAt(valueStart) != '{') {
+            return null;
+        }
+
+        int objEnd = findMatchingBrace(json, valueStart);
+        if (objEnd > valueStart) {
+            return json.substring(valueStart, objEnd + 1);
+        }
+        return null;
     }
 
     private String post(String path, String body) throws IOException {
