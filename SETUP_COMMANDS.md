@@ -148,10 +148,29 @@ docker compose logs -f ollama
 ```
 
 ### 4.2: Access Services
-- **PostgreSQL**: `localhost:5432`
-- **Ollama API**: `localhost:11434`
 - **Backend Server**: `localhost:3000` (when running)
 - **Admin Panel**: `localhost:3000/admin/` (when running)
+
+**Note**: PostgreSQL and Ollama ports are NOT exposed externally for security.
+To access them, use `docker compose exec`:
+```bash
+# PostgreSQL CLI
+docker compose exec postgres psql -U coder -d coder_development
+
+# Ollama API
+docker compose exec ollama ollama list
+```
+
+For **local development without Docker**, expose ports by uncommenting in `docker-compose.yml`:
+```yaml
+# PostgreSQL
+ports:
+  - "5432:5432"
+
+# Ollama
+ports:
+  - "11434:11434"
+```
 
 ---
 
@@ -170,7 +189,7 @@ Key settings in `.env`:
 LLM_PROVIDER=ollama
 
 # Database
-DATABASE_URL=postgres://codegen_user:codegen_password@localhost:5432/codegen_development
+DATABASE_URL=postgres://coder:coder_password@localhost:5432/coder_development
 
 # JWT (CHANGE IN PRODUCTION!)
 JWT_SECRET=your-secret-key-change-this-in-production
