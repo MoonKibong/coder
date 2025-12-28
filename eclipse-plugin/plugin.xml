@@ -5,7 +5,7 @@
    <extension point="org.eclipse.ui.commands">
       <category
             id="com.softbase.xframe5.codegen.commands.category"
-            name="xFrame5 Code Generator">
+            name="xFrame5 UI Generator">
       </category>
       <category
             id="com.softbase.xframe5.codegen.commands.springCategory"
@@ -233,7 +233,7 @@
       <page
             class="com.softbase.xframe5.codegen.preferences.MainPreferencePage"
             id="com.softbase.xframe5.codegen.preferences.MainPreferencePage"
-            name="xFrame5 Code Generator">
+            name="Code Generator">
       </page>
    </extension>
 

@@ -9,8 +9,8 @@
     <version>1.0.0-SNAPSHOT</version>
     <packaging>eclipse-plugin</packaging>
 
-    <name>xFrame5 Code Generator Eclipse Plugin</name>
-    <description>Eclipse plugin for generating xFrame5 UI code from DB schema, queries, or natural language.</description>
+    <name>Enterprise Code Generator Eclipse Plugin</name>
+    <description>Eclipse plugin for generating code from DB schema, queries, or natural language. Supports xFrame5 UI and Spring Framework.</description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

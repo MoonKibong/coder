@@ -1,4 +1,4 @@
-# xFrame5 Code Generator - Docker Compose Configuration
+# Enterprise Code Generator - Docker Compose Configuration
 #
 # This compose file sets up the complete on-premise deployment:
 # - Agent Server (Rust/Loco.rs)
@@ -18,7 +18,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: xframe5-agent
+    container_name: codegen-agent
     restart: unless-stopped
     ports:
       - "${APP_PORT:-3000}:3000"
@@ -43,7 +43,7 @@ services:
       retries: 3
       start_period: 10s
     networks:
-      - xframe5-network
+      - codegen-network
     volumes:
       - agent-logs:/app/logs
 
@@ -52,7 +52,7 @@ services:
   # ============================================
   postgres:
     image: postgres:16-alpine
-    container_name: xframe5-postgres
+    container_name: codegen-postgres
     restart: unless-stopped
     environment:
       - POSTGRES_USER=${POSTGRES_USER:-coder}
@@ -67,7 +67,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - xframe5-network
+      - codegen-network
     # Do not expose port externally for security
     # ports:
     #   - "5432:5432"
@@ -77,12 +77,12 @@ services:
   # ============================================
   ollama:
     image: ollama/ollama:latest
-    container_name: xframe5-ollama
+    container_name: codegen-ollama
     restart: unless-stopped
     volumes:
       - ollama-data:/root/.ollama
     networks:
-      - xframe5-network
+      - codegen-network
     # GPU support (uncomment if NVIDIA GPU available)
     # deploy:
     #   resources:
@@ -100,7 +100,7 @@ services:
   # ============================================
   ollama-init:
     image: ollama/ollama:latest
-    container_name: xframe5-ollama-init
+    container_name: codegen-ollama-init
     depends_on:
       - ollama
     entrypoint: ["/bin/sh", "-c"]
@@ -114,13 +114,13 @@ services:
     environment:
       - OLLAMA_HOST=http://ollama:11434
     networks:
-      - xframe5-network
+      - codegen-network
 
 # ============================================
 # Networks
 # ============================================
 networks:
-  xframe5-network:
+  codegen-network:
     driver: bridge
     # Internal network - no external access
     internal: false

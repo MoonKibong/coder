@@ -1,6 +1,6 @@
 # Documentation
 
-> **Source of Truth** for xFrame5 Code Assistant
+> **Source of Truth** for Enterprise Code Generator
 
 ## Monorepo Documentation Structure
 

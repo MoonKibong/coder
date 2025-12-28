@@ -23,7 +23,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **🟡 PREFER** (use unless specifically overridden):
 - Loco.rs patterns over custom implementations
 - Trait abstractions for all external dependencies (LLM, storage)
-- xFrame5 XML validation before returning artifacts
+- Product-specific validation before returning artifacts
 - Structured error responses over raw exceptions
 
 **🟢 REFERENCE** (for comprehensive details):
@@ -35,17 +35,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 
 ### Purpose
-xFrame5 프론트엔드 개발 자동화 도구 - On-premise code assistant for xFrame5 UI development
+Enterprise Code Generator - On-premise AI-powered code assistant for enterprise application development
 
 ### Key Goals
-1. Generate xFrame5 XML view files from DB schema/query samples
-2. Generate JavaScript event handler files following company standards
-3. Reduce frontend development time by 50%+ for standard screen types
+1. Generate code artifacts from DB schema/query samples/natural language
+2. Support multiple frameworks: Spring Boot, xFrame5, and more
+3. Reduce development time by 50%+ for standard patterns
 4. Zero external data transmission (금융권 보안 요구사항)
 
-### PoC Scope
-- **Target**: 회원 목록 + 조회 + 상세 팝업 화면
-- **Excludes**: Backend generation, full automation, runtime intervention
+### Supported Products
+- `spring-boot`: Spring Boot services (Controller, Service, Repository, Entity)
+- `xframe5-ui`: xFrame5 XML views and JavaScript handlers
+- More products can be added via prompt templates
 
 ---
 
@@ -105,7 +106,7 @@ Plugin Request
     ↓
 ③ LLM Generate (trait-based)
     ↓
-④ Parse & Validate (xFrame5 문법 검증)
+④ Parse & Validate (product-specific validation)
     ↓
 ⑤ Response (artifacts + warnings)
 ```
@@ -133,22 +134,23 @@ LLM receives structured intent, not raw input.
 
 ---
 
-## xFrame5 Code Generation
+## Code Generation Products
 
-### XML Structure
-- Dataset definitions with column bindings
+### Spring Boot (`spring-boot`)
+- Entity classes with JPA annotations
+- Repository interfaces with custom queries
+- Service classes with business logic
+- Controller classes with REST endpoints
+
+### xFrame5 (`xframe5-ui`)
+- XML Dataset definitions with column bindings
 - Grid components with header/data configurations
-- UI controls with Attribute Map properties
+- JavaScript transaction functions (`fn_search`, `fn_save`, etc.)
 
-### JavaScript Patterns
-- Transaction stub functions (`fn_search`, `fn_save`, etc.)
-- Dataset event handlers
-- Grid cell event handlers
-
-### Validation Rules
-- XML must parse without errors
-- Dataset/Grid bindings must match
+### Validation Rules (All Products)
+- Generated code must be syntactically valid
 - Missing info → `TODO` comments (never hide unknowns)
+- Product-specific validators ensure compliance
 
 ---
 
@@ -181,14 +183,14 @@ POST /agent/generate
 **Request**:
 ```json
 {
-  "product": "xframe5-ui",
+  "product": "spring-boot | xframe5-ui",
   "inputType": "db-schema | query-sample | natural-language",
   "input": { "payload": "..." },
   "options": { "language": "ko", "strictMode": true },
   "context": {
-    "project": "xframe5",
-    "target": "frontend",
-    "output": ["xml", "javascript"]
+    "project": "my-project",
+    "target": "backend | frontend",
+    "output": ["java", "xml", "javascript"]
   }
 }
 ```
@@ -198,12 +200,13 @@ POST /agent/generate
 {
   "status": "success | error",
   "artifacts": {
-    "xml": "<Dataset id=...>",
-    "javascript": "this.fn_search = function() {...}"
+    "entity": "public class Member {...}",
+    "repository": "public interface MemberRepository {...}",
+    "service": "public class MemberService {...}"
   },
   "warnings": ["API endpoint not defined yet"],
   "meta": {
-    "generator": "xframe5-ui-v1",
+    "generator": "spring-boot-v1",
     "timestamp": "2025-xx-xx"
   }
 }
@@ -225,7 +228,7 @@ backend/
 │   ├── domain/              # Request, Artifact, InputKind types
 │   ├── prompt/              # Prompt compiler + templates
 │   ├── llm/                 # LlmBackend trait + implementations
-│   └── validator/           # xFrame5 syntax validation
+│   └── validator/           # Product-specific syntax validation
 ```
 
 ### Controller/Service Separation
@@ -298,9 +301,9 @@ This proves proper abstraction.
 - **Testing**: Required for prompt compiler and validators
 
 ### LLM Prompt Development
-1. Start with actual xFrame5 XML samples (2-3)
+1. Start with actual code samples from target framework (2-3)
 2. Define clear RULES in system prompt
-3. Specify exact output format (--- XML --- / --- JS ---)
+3. Specify exact output format with clear delimiters
 4. Include fallback for missing information
 
 ### Financial Industry Compliance
@@ -357,11 +360,11 @@ mvn test
 ### Pattern Documentation (docs/patterns/)
 1. **LLM_BACKEND_ABSTRACTION.md** - Trait design and implementations
 2. **PROMPT_COMPILER.md** - DSL to prompt transformation
-3. **XFRAME5_VALIDATION.md** - XML/JS validation rules
+3. **PRODUCT_VALIDATION.md** - Product-specific validation rules
 4. **AUDIT_LOGGING.md** - Generation request logging
 5. **LOCO_MIGRATION_PATTERNS.md** - Database migration patterns
 6. **ADMIN_PANEL.md** - HTMX admin panel architecture
-7. **PAGINATION_PATTERN.md** - Pagination with service layer (from HWS)
+7. **PAGINATION_PATTERN.md** - Pagination with service layer
 8. **CONTROLLER_SERVICE_SEPARATION.md** - Thin controller, fat service pattern
 9. **COOKIE_AUTH.md** - Cookie-based JWT auth for admin pages
 

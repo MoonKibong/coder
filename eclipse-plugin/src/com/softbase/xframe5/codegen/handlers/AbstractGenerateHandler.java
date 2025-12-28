@@ -119,7 +119,7 @@ public abstract class AbstractGenerateHandler extends AbstractHandler {
     }
 
     private void runGeneration(Shell shell, IProject project, GenerateRequest request) {
-        Job job = new Job("Generating xFrame5 Code") {
+        Job job = new Job("Generating Code") {
             @Override
             protected IStatus run(IProgressMonitor monitor) {
                 try {

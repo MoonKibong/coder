@@ -1,10 +1,10 @@
-# xFrame5 Code Generator
+# Enterprise Code Generator
 
-On-premise code assistant for xFrame5 frontend development automation. Generates XML view files and JavaScript event handlers from DB schema, query samples, or natural language descriptions.
+On-premise AI-powered code assistant for enterprise application development. Generates code artifacts from DB schema, query samples, or natural language descriptions. Supports multiple frameworks including Spring Boot, xFrame5, and more.
 
 ## Features
 
-- **Code Generation**: Generate xFrame5 XML views and JavaScript handlers
+- **Code Generation**: Generate backend services, XML views, JavaScript handlers
 - **Multiple Input Types**: DB schema, SQL queries, or natural language
 - **LLM Abstraction**: Supports Ollama, vLLM, llama.cpp, and cloud providers
 - **Eclipse Plugin**: Integrated development experience
@@ -64,7 +64,7 @@ coder/
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/agent/generate` | POST | Generate xFrame5 code |
+| `/agent/generate` | POST | Generate code artifacts |
 | `/agent/health` | GET | Health check |
 | `/agent/products` | GET | List available generators |
 

@@ -18,7 +18,7 @@ import com.softbase.xframe5.codegen.model.GenerateResponse;
 import com.softbase.xframe5.codegen.model.SpringGenerateResponse;
 
 /**
- * HTTP client for communicating with the xFrame5 Code Generator agent server.
+ * HTTP client for communicating with the Enterprise Code Generator agent server.
  *
  * IMPORTANT: This client is intentionally "dumb" - it does NOT know:
  * - LLM model names (codellama, mistral, etc.)

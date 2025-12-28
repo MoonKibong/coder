@@ -1,5 +1,5 @@
 #!/bin/bash
-# xFrame5 Code Generator - Stop Script
+# Enterprise Code Generator - Stop Script
 
 set -e
 
@@ -8,7 +8,7 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
 cd "$PROJECT_ROOT"
 
-echo "[INFO] Stopping xFrame5 Code Generator..."
+echo "[INFO] Stopping Enterprise Code Generator..."
 
 docker compose down
 

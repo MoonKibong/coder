@@ -1,6 +1,6 @@
 # Loco.rs Migration Patterns
 
-**Purpose:** Database migrations guide for xFrame5 Code Assistant using SeaORM helpers
+**Purpose:** Database migrations guide for Enterprise Code Generator using SeaORM helpers
 
 ---
 

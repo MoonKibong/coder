@@ -1,6 +1,6 @@
 # Screen Generation Feature
 
-**Purpose:** xFrame5 화면(XML + JS) 자동 생성
+**Purpose:** UI 화면(XML + JS) 자동 생성 (xFrame5, 기타 프레임워크 지원)
 
 ---
 

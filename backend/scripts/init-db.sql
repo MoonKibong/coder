@@ -1,4 +1,4 @@
--- xFrame5 Code Generator - Database Initialization Script
+-- Enterprise Code Generator - Database Initialization Script
 --
 -- This script runs automatically when the PostgreSQL container starts.
 -- It creates the required extensions and initial data.

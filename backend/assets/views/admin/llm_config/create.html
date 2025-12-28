@@ -44,10 +44,21 @@
                         class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm
                                focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
                         <option value="">Select provider...</option>
-                        <option value="ollama">Ollama</option>
-                        <option value="llama_cpp">llama.cpp</option>
-                        <option value="openai">OpenAI Compatible</option>
+                        <optgroup label="On-Premise (Production)">
+                            <option value="ollama">Ollama</option>
+                            <option value="llama_cpp">llama.cpp Server (HTTP)</option>
+                            <option value="local_llama_cpp">llama.cpp Native (In-Process)</option>
+                            <option value="vllm">vLLM</option>
+                        </optgroup>
+                        <optgroup label="Remote (Development)">
+                            <option value="openai">OpenAI Compatible</option>
+                            <option value="groq">Groq</option>
+                            <option value="anthropic">Anthropic</option>
+                        </optgroup>
                     </select>
+                    <p class="text-xs text-muted-foreground">
+                        For production, use on-premise providers. "llama.cpp Native" runs models in-process without a separate server.
+                    </p>
                 </div>
 
                 <!-- Endpoint URL -->

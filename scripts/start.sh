@@ -1,5 +1,5 @@
 #!/bin/bash
-# xFrame5 Code Generator - Startup Script
+# Enterprise Code Generator - Startup Script
 #
 # Usage:
 #   ./scripts/start.sh           # Start all services
@@ -70,7 +70,7 @@ if [ "$DEV_MODE" = true ]; then
     log_info "Starting backend server..."
     LOCO_ENV=development cargo loco start
 else
-    log_info "Starting xFrame5 Code Generator..."
+    log_info "Starting Enterprise Code Generator..."
 
     # Start all services
     docker compose up -d $BUILD_FLAG
@@ -89,7 +89,7 @@ else
 
     log_info ""
     log_info "============================================"
-    log_info "xFrame5 Code Generator is starting up!"
+    log_info "Enterprise Code Generator is starting up!"
     log_info "============================================"
     log_info ""
     log_info "Services:"

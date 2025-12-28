@@ -1,4 +1,4 @@
-# xFrame5 Code Generator - Backend Dockerfile
+# Enterprise Code Generator - Backend Dockerfile
 # Multi-stage build for optimized production image
 
 # ============================================

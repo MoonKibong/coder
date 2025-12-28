@@ -44,10 +44,21 @@
                         class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm
                                focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
                         <option value="">Select provider...</option>
-                        <option value="ollama" {% if item.provider == "ollama" %}selected{% endif %}>Ollama</option>
-                        <option value="llama_cpp" {% if item.provider == "llama_cpp" %}selected{% endif %}>llama.cpp</option>
-                        <option value="openai" {% if item.provider == "openai" %}selected{% endif %}>OpenAI Compatible</option>
+                        <optgroup label="On-Premise (Production)">
+                            <option value="ollama" {% if item.provider == "ollama" %}selected{% endif %}>Ollama</option>
+                            <option value="llama_cpp" {% if item.provider == "llama_cpp" %}selected{% endif %}>llama.cpp Server (HTTP)</option>
+                            <option value="local_llama_cpp" {% if item.provider == "local_llama_cpp" %}selected{% endif %}>llama.cpp Native (In-Process)</option>
+                            <option value="vllm" {% if item.provider == "vllm" %}selected{% endif %}>vLLM</option>
+                        </optgroup>
+                        <optgroup label="Remote (Development)">
+                            <option value="openai" {% if item.provider == "openai" %}selected{% endif %}>OpenAI Compatible</option>
+                            <option value="groq" {% if item.provider == "groq" %}selected{% endif %}>Groq</option>
+                            <option value="anthropic" {% if item.provider == "anthropic" %}selected{% endif %}>Anthropic</option>
+                        </optgroup>
                     </select>
+                    <p class="text-xs text-muted-foreground">
+                        For production, use on-premise providers. "llama.cpp Native" runs models in-process without a separate server.
+                    </p>
                 </div>
 
                 <!-- Endpoint URL -->

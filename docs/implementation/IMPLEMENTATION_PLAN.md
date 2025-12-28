@@ -1,4 +1,4 @@
-# xFrame5 Code Assistant - Implementation Plan
+# Enterprise Code Generator - Implementation Plan
 
 **Date:** 2025-12-28
 **Status:** 📋 Planning
@@ -152,7 +152,7 @@ Act as a DevOps & Backend Architect for a Rust/Loco.rs project.
 3. Follow Loco.rs conventions strictly
 
 TASK:
-Initialize Loco.rs backend project for xFrame5 Code Assistant.
+Initialize Loco.rs backend project for Enterprise Code Generator.
 
 EXECUTION STEPS:
 1. Create backend directory and initialize Loco project

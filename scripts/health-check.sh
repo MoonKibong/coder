@@ -1,11 +1,11 @@
 #!/bin/bash
-# xFrame5 Code Generator - Health Check Script
+# Enterprise Code Generator - Health Check Script
 
 set -e
 
 ENDPOINT="${1:-http://localhost:3000}"
 
-echo "Checking xFrame5 Code Generator health..."
+echo "Checking Enterprise Code Generator health..."
 echo ""
 
 # Check agent server

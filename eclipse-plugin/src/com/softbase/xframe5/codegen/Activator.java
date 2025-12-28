@@ -5,7 +5,7 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
 /**
- * xFrame5 Code Generator Plugin Activator
+ * Enterprise Code Generator Plugin Activator
  *
  * This plugin is intentionally "dumb" - it knows nothing about LLM models,
  * prompts, or AI configuration. It only knows:

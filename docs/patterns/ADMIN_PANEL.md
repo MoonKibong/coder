@@ -423,7 +423,7 @@ Reference: `yatclub/assets/views/home/adminhome.html` for HTMX structure, `stars
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{% block title %}{% endblock title %} - xFrame5 Admin</title>
+    <title>{% block title %}{% endblock title %} - Code Generator Admin</title>
 
     <!-- HTMX -->
     <script src="https://unpkg.com/htmx.org@2.0.0/dist/htmx.min.js"></script>
@@ -541,7 +541,7 @@ Reference: `yatclub/assets/views/home/adminhome.html` for HTMX structure, `stars
         <div class="flex flex-col flex-grow bg-sidebar border-r border-sidebar-border overflow-y-auto">
             <!-- Logo/Brand -->
             <div class="flex items-center h-16 px-4 border-b border-sidebar-border">
-                <span class="text-xl font-semibold text-sidebar-foreground">xFrame5 Admin</span>
+                <span class="text-xl font-semibold text-sidebar-foreground">Code Generator Admin</span>
             </div>
 
             <!-- Navigation -->
@@ -567,7 +567,7 @@ Reference: `yatclub/assets/views/home/adminhome.html` for HTMX structure, `stars
     <!-- Mobile Header (hidden on desktop) -->
     <header class="md:hidden fixed inset-x-0 top-0 z-50 bg-background border-b border-border">
         <div class="flex items-center justify-between h-14 px-4">
-            <span class="text-lg font-semibold">xFrame5 Admin</span>
+            <span class="text-lg font-semibold">Code Generator Admin</span>
             <button type="button" onclick="toggleMobileMenu()"
                 class="inline-flex items-center justify-center rounded-md p-2 text-foreground hover:bg-accent">
                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -582,7 +582,7 @@ Reference: `yatclub/assets/views/home/adminhome.html` for HTMX structure, `stars
         <div class="fixed inset-0 bg-black/50" onclick="toggleMobileMenu()"></div>
         <div class="fixed inset-y-0 left-0 w-full max-w-xs bg-sidebar">
             <div class="flex items-center justify-between h-14 px-4 border-b border-sidebar-border">
-                <span class="text-lg font-semibold text-sidebar-foreground">xFrame5 Admin</span>
+                <span class="text-lg font-semibold text-sidebar-foreground">Code Generator Admin</span>
                 <button type="button" onclick="toggleMobileMenu()"
                     class="rounded-md p-2 text-sidebar-foreground hover:bg-sidebar-accent">
                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">

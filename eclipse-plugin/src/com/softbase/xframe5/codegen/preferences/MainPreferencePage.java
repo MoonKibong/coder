@@ -11,7 +11,7 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
 import com.softbase.xframe5.codegen.Activator;
 
 /**
- * Preference page for xFrame5 Code Generator.
+ * Preference page for Enterprise Code Generator.
  *
  * Note: This page intentionally does NOT include any LLM configuration options
  * (model selection, temperature, etc.) because:
@@ -24,7 +24,7 @@ public class MainPreferencePage extends FieldEditorPreferencePage implements IWo
     public MainPreferencePage() {
         super(GRID);
         setPreferenceStore(Activator.getDefault().getPreferenceStore());
-        setDescription("Configure the xFrame5 Code Generator plugin.");
+        setDescription("Configure the Code Generator plugin.");
     }
 
     @Override

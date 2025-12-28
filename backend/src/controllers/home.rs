@@ -1,6 +1,6 @@
 //! Home Controller
 //!
-//! Landing page and auth pages for xFrame5 Code Generator
+//! Landing page and auth pages for Enterprise Code Generator
 
 use axum::debug_handler;
 use loco_rs::prelude::*;

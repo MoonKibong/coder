@@ -1,6 +1,6 @@
-# xFrame5 Code Generator - Deployment Guide
+# Enterprise Code Generator - Deployment Guide
 
-This guide covers the deployment of the xFrame5 Code Generator for on-premise environments.
+This guide covers the deployment of the Enterprise Code Generator for on-premise environments.
 
 ## Prerequisites
 

@@ -1,9 +1,9 @@
-# xFrame5 Code Assistant - Requirements
+# Enterprise Code Generator - Requirements
 
 ## 1. 프로젝트 개요
 
 ### 1.1 목표
-xFrame5 프론트엔드 개발 자동화 PoC - 기존 개발 프로세스를 바꾸지 않는 코드 생성 도구
+엔터프라이즈 개발 자동화 PoC - 기존 개발 프로세스를 바꾸지 않는 코드 생성 도구 (xFrame5, Spring Boot 등 지원)
 
 ### 1.2 핵심 원칙
 - "AI", "지능형", "Copilot" 용어 의도적 배제

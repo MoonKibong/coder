@@ -1,7 +1,7 @@
 {
   "name": "coder-assets",
   "version": "1.0.0",
-  "description": "Static assets for xFrame5 Code Generator",
+  "description": "Static assets for Enterprise Code Generator",
   "scripts": {
     "build:css": "npx tailwindcss -i ./src/input.css -o ./static/css/tailwind.css --minify",
     "watch:css": "npx tailwindcss -i ./src/input.css -o ./static/css/tailwind.css --watch"

@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: xFrame5 Code Generator
+Bundle-Name: Enterprise Code Generator
 Bundle-SymbolicName: com.softbase.xframe5.codegen;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Bundle-Activator: com.softbase.xframe5.codegen.Activator
