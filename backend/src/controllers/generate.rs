@@ -45,9 +45,15 @@ fn default_priority() -> i32 {
 /// Query parameters for generate endpoint
 #[derive(Debug, Deserialize)]
 pub struct GenerateQuery {
-    /// If true, process asynchronously and return job_id
+    /// Processing mode: "async" for queue-based, omit for sync
     #[serde(default)]
-    pub r#async: bool,
+    pub mode: Option<String>,
+}
+
+impl GenerateQuery {
+    pub fn is_async(&self) -> bool {
+        self.mode.as_ref().map_or(false, |v| v == "async")
+    }
 }
 
 /// Async generation response
@@ -74,7 +80,7 @@ pub struct HealthResponse {
 /// Generate endpoint - main entry point for code generation
 ///
 /// POST /agent/generate
-/// POST /agent/generate?async=true (async mode)
+/// POST /agent/generate?mode=async (async mode)
 ///
 /// Request:
 /// ```json
@@ -141,11 +147,14 @@ pub async fn generate(
     let user_id: i32 = 1; // Default to system user for now
 
     // Check if async mode is requested
-    if query.r#async {
+    tracing::debug!("Query params: {:?}, is_async: {}", query, query.is_async());
+    if query.is_async() {
+        tracing::info!("Async mode requested, enqueueing job");
         return enqueue_job(&ctx, &req, user_id).await;
     }
 
     // Synchronous processing (legacy mode)
+    tracing::info!("Sync mode, processing immediately");
     process_sync(&ctx, req, user_id).await
 }
 

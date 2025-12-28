@@ -127,7 +127,7 @@ public class AgentClient {
     public AsyncJobResponse generateAsync(GenerateRequest request) throws AgentClientException {
         try {
             String json = mapToJson(request.toMap());
-            String responseBody = post("/agent/generate?async=true", json);
+            String responseBody = post("/agent/generate?mode=async", json);
             return parseAsyncJobResponse(responseBody);
         } catch (IOException e) {
             throw new AgentClientException("Failed to submit async job: " + e.getMessage(), e);
