@@ -4,6 +4,7 @@
 //! Thin controller - delegates to PromptTemplateService.
 
 use axum::extract::Multipart;
+use axum::http::HeaderMap;
 use loco_rs::prelude::*;
 
 use crate::middleware::cookie_auth::AuthUser;
@@ -12,21 +13,31 @@ use crate::services::admin::prompt_template::{
 };
 use crate::services::{ImportOptions, TemplateImporter};
 
-/// Main page - renders full layout with list
+/// Main page - renders full layout for direct access, partial for HTMX
 #[debug_handler]
 pub async fn main(
-    _auth_user: AuthUser,
+    auth_user: AuthUser,
+    headers: HeaderMap,
     ViewEngine(v): ViewEngine<TeraView>,
     State(ctx): State<AppContext>,
 ) -> Result<Response> {
     let params = QueryParams::default();
     let response = PromptTemplateService::search(&ctx.db, &params).await?;
 
+    // Check if this is an HTMX request
+    let is_htmx = headers.get("HX-Request").is_some();
+    let template = if is_htmx {
+        "admin/prompt_template/main.html"
+    } else {
+        "admin/prompt_template/index.html"
+    };
+
     format::render().view(
         &v,
-        "admin/prompt_template/main.html",
+        template,
         data!({
             "current_page": "prompt_templates",
+            "user": auth_user,
             "items": response.items,
             "page": response.page,
             "page_size": response.page_size,

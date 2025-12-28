@@ -112,8 +112,8 @@
 
             <!-- Metadata -->
             <div class="flex items-center justify-between text-xs text-muted-foreground">
-                <div>Version: {{ item.version or 1 }}</div>
-                <div>Last updated: {{ item.updated_at | date(format="%Y-%m-%d %H:%M") }}</div>
+                <div>Version: {{ item.version | default(value=1) }}</div>
+                <div>Last updated: {{ item.updated_at }}</div>
             </div>
         </div>
 

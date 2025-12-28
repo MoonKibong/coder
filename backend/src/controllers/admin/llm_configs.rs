@@ -3,6 +3,7 @@
 //! HTMX-based CRUD for LLM configurations.
 //! Thin controller - delegates to LlmConfigService.
 
+use axum::http::HeaderMap;
 use loco_rs::prelude::*;
 
 use crate::llm::OllamaBackend;
@@ -11,21 +12,31 @@ use crate::services::admin::llm_config::{
     CreateParams, LlmConfigService, QueryParams, UpdateParams,
 };
 
-/// Main page - renders full layout with list
+/// Main page - renders full layout for direct access, partial for HTMX
 #[debug_handler]
 pub async fn main(
-    _auth_user: AuthUser,
+    auth_user: AuthUser,
+    headers: HeaderMap,
     ViewEngine(v): ViewEngine<TeraView>,
     State(ctx): State<AppContext>,
 ) -> Result<Response> {
     let params = QueryParams::default();
     let response = LlmConfigService::search(&ctx.db, &params).await?;
 
+    // Check if this is an HTMX request
+    let is_htmx = headers.get("HX-Request").is_some();
+    let template = if is_htmx {
+        "admin/llm_config/main.html"
+    } else {
+        "admin/llm_config/index.html"
+    };
+
     format::render().view(
         &v,
-        "admin/llm_config/main.html",
+        template,
         data!({
             "current_page": "llm_configs",
+            "user": auth_user,
             "items": response.items,
             "page": response.page,
             "page_size": response.page_size,
@@ -69,6 +80,24 @@ pub async fn new_form(ViewEngine(v): ViewEngine<TeraView>) -> Result<Response> {
         "admin/llm_config/create.html",
         data!({
             "available_models": available_models,
+        }),
+    )
+}
+
+/// Show item details
+#[debug_handler]
+pub async fn show(
+    ViewEngine(v): ViewEngine<TeraView>,
+    Path(id): Path<i32>,
+    State(ctx): State<AppContext>,
+) -> Result<Response> {
+    let item = LlmConfigService::find_by_id(&ctx.db, id).await?;
+
+    format::render().view(
+        &v,
+        "admin/llm_config/show.html",
+        data!({
+            "item": item,
         }),
     )
 }

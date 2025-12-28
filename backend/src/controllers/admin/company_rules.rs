@@ -3,6 +3,7 @@
 //! HTMX-based CRUD for company rules.
 //! Thin controller - delegates to CompanyRuleService.
 
+use axum::http::HeaderMap;
 use loco_rs::prelude::*;
 
 use crate::middleware::cookie_auth::AuthUser;
@@ -10,21 +11,31 @@ use crate::services::admin::company_rule::{
     CompanyRuleService, CreateParams, QueryParams, UpdateParams,
 };
 
-/// Main page - renders full layout with list
+/// Main page - renders full layout for direct access, partial for HTMX
 #[debug_handler]
 pub async fn main(
-    _auth_user: AuthUser,
+    auth_user: AuthUser,
+    headers: HeaderMap,
     ViewEngine(v): ViewEngine<TeraView>,
     State(ctx): State<AppContext>,
 ) -> Result<Response> {
     let params = QueryParams::default();
     let response = CompanyRuleService::search(&ctx.db, &params).await?;
 
+    // Check if this is an HTMX request
+    let is_htmx = headers.get("HX-Request").is_some();
+    let template = if is_htmx {
+        "admin/company_rule/main.html"
+    } else {
+        "admin/company_rule/index.html"
+    };
+
     format::render().view(
         &v,
-        "admin/company_rule/main.html",
+        template,
         data!({
             "current_page": "company_rules",
+            "user": auth_user,
             "items": response.items,
             "page": response.page,
             "page_size": response.page_size,

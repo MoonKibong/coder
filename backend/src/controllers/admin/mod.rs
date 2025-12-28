@@ -60,6 +60,7 @@ pub fn routes() -> Routes {
         .add("llm-configs/list", get(llm_configs::list))
         .add("llm-configs/new", get(llm_configs::new_form))
         .add("llm-configs", post(llm_configs::create))
+        .add("llm-configs/{id}", get(llm_configs::show))
         .add("llm-configs/{id}/edit", get(llm_configs::edit_form))
         .add("llm-configs/{id}", patch(llm_configs::update))
         .add("llm-configs/{id}", delete(llm_configs::delete))

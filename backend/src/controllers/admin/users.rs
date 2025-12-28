@@ -3,6 +3,7 @@
 //! HTMX-based CRUD for user management.
 //! Thin controller - delegates to UserService.
 
+use axum::http::HeaderMap;
 use loco_rs::prelude::*;
 
 use crate::middleware::cookie_auth::AuthUser;
@@ -10,25 +11,31 @@ use crate::services::admin::user::{
     CreateParams, QueryParams, UpdateParams, UserService,
 };
 
-/// Main page - renders full layout with list
+/// Main page - renders full layout for direct access, partial for HTMX
 #[debug_handler]
 pub async fn main(
     auth_user: AuthUser,
+    headers: HeaderMap,
     ViewEngine(v): ViewEngine<TeraView>,
     State(ctx): State<AppContext>,
 ) -> Result<Response> {
     let params = QueryParams::default();
     let response = UserService::search(&ctx.db, &params).await?;
 
+    // Check if this is an HTMX request
+    let is_htmx = headers.get("HX-Request").is_some();
+    let template = if is_htmx {
+        "admin/user/main.html"
+    } else {
+        "admin/user/index.html"
+    };
+
     format::render().view(
         &v,
-        "admin/user/main.html",
+        template,
         data!({
             "current_page": "users",
-            "user": {
-                "name": auth_user.name,
-                "email": auth_user.email,
-            },
+            "user": auth_user,
             "items": response.items,
             "page": response.page,
             "page_size": response.page_size,
