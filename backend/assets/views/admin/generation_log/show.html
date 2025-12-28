@@ -63,7 +63,7 @@
                     </div>
                     <div class="space-y-1">
                         <dt class="text-sm font-medium text-muted-foreground">Template Version</dt>
-                        <dd class="text-sm">v{{ item.template_version | default(value="1") }}</dd>
+                        <dd class="text-sm">v{{ item.template_version }}</dd>
                     </div>
                 </div>
 
@@ -137,7 +137,7 @@
                 {% endif %}
 
                 <!-- Warnings -->
-                {% if item.warnings %}
+                {% if item.warnings | length > 0 %}
                 <div class="space-y-2">
                     <h3 class="text-sm font-medium text-yellow-600">Warnings</h3>
                     <ul class="space-y-1">

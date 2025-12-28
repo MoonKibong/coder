@@ -28,8 +28,10 @@ pub struct GenerationLogWithUser {
     pub user_email: String,
     pub ui_intent: String,
     pub artifacts: Option<String>,
-    pub warnings: Option<String>,
+    /// Parsed from JSON string to Vec for template iteration
+    pub warnings: Vec<String>,
     pub error_message: Option<String>,
+    pub template_version: i32,
 }
 
 impl GenerationLogWithUser {
@@ -38,6 +40,13 @@ impl GenerationLogWithUser {
             Some(u) => (u.name, u.email),
             None => ("Unknown".to_string(), "".to_string()),
         };
+
+        // Parse warnings JSON string into Vec<String>
+        let warnings: Vec<String> = log
+            .warnings
+            .as_ref()
+            .and_then(|w| serde_json::from_str(w).ok())
+            .unwrap_or_default();
 
         Self {
             id: log.id,
@@ -51,8 +60,9 @@ impl GenerationLogWithUser {
             user_email,
             ui_intent: log.ui_intent,
             artifacts: log.artifacts,
-            warnings: log.warnings,
+            warnings,
             error_message: log.error_message,
+            template_version: log.template_version,
         }
     }
 }
@@ -60,9 +70,13 @@ impl GenerationLogWithUser {
 /// Query parameters for search with pagination
 #[derive(Debug, Deserialize, Serialize, Default)]
 pub struct QueryParams {
-    /// Filter by status
+    /// Search keyword (user name, screen name, etc.)
     #[serde(default)]
-    pub status: Vec<String>,
+    pub keyword: Option<String>,
+
+    /// Filter by status (single select from form)
+    #[serde(default)]
+    pub status: Option<String>,
 
     /// Filter by product
     #[serde(default)]
@@ -70,6 +84,14 @@ pub struct QueryParams {
 
     /// Filter by input type
     pub input_type: Option<String>,
+
+    /// Date range filter - from
+    #[serde(default)]
+    pub date_from: Option<String>,
+
+    /// Date range filter - to
+    #[serde(default)]
+    pub date_to: Option<String>,
 
     /// Sort column
     pub sort_by: Option<String>,
@@ -101,9 +123,11 @@ impl GenerationLogService {
     fn build_query(params: &QueryParams) -> sea_orm::Select<Entity> {
         let mut condition = Condition::all();
 
-        // Multi-select status filter
-        if !params.status.is_empty() {
-            condition = condition.add(Column::Status.is_in(params.status.clone()));
+        // Status filter (single select)
+        if let Some(status) = &params.status {
+            if !status.is_empty() {
+                condition = condition.add(Column::Status.eq(status.as_str()));
+            }
         }
 
         // Multi-select product filter
@@ -117,6 +141,9 @@ impl GenerationLogService {
                 condition = condition.add(Column::InputType.eq(input_type.as_str()));
             }
         }
+
+        // Note: keyword and date_from/date_to filters not yet implemented
+        // They are accepted to prevent 400 errors but don't filter data yet
 
         let mut query = Entity::find().filter(condition);
 
