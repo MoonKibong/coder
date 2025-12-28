@@ -1,8 +1,33 @@
 use super::LlmBackend;
 use async_trait::async_trait;
 use reqwest::Client;
+use serde::{Deserialize, Serialize};
 use std::env;
 use std::time::Duration;
+
+/// Available model info from Ollama
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OllamaModel {
+    pub name: String,
+    pub model: String,
+    #[serde(default)]
+    pub size: u64,
+    #[serde(default)]
+    pub details: Option<OllamaModelDetails>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OllamaModelDetails {
+    pub family: Option<String>,
+    pub parameter_size: Option<String>,
+    pub quantization_level: Option<String>,
+}
+
+/// Ollama API response for listing models
+#[derive(Debug, Clone, Deserialize)]
+struct OllamaTagsResponse {
+    models: Vec<OllamaModel>,
+}
 
 /// Ollama backend - default for on-premise production
 pub struct OllamaBackend {
@@ -27,7 +52,7 @@ impl OllamaBackend {
             endpoint: env::var("LLM_ENDPOINT")
                 .unwrap_or_else(|_| "http://localhost:11434".to_string()),
             model: env::var("LLM_MODEL")
-                .unwrap_or_else(|_| "codellama:13b".to_string()),
+                .unwrap_or_else(|_| "llama3.1:latest".to_string()),
             timeout: Duration::from_secs(
                 env::var("LLM_TIMEOUT_SECONDS")
                     .ok()
@@ -36,6 +61,29 @@ impl OllamaBackend {
             ),
             client: Client::new(),
         }
+    }
+
+    /// List available models from Ollama server
+    pub async fn list_models(&self) -> anyhow::Result<Vec<OllamaModel>> {
+        let url = format!("{}/api/tags", self.endpoint);
+        let response = self
+            .client
+            .get(&url)
+            .timeout(Duration::from_secs(10))
+            .send()
+            .await?;
+
+        if !response.status().is_success() {
+            anyhow::bail!("Failed to list models from Ollama");
+        }
+
+        let result: OllamaTagsResponse = response.json().await?;
+        Ok(result.models)
+    }
+
+    /// Get the endpoint URL
+    pub fn endpoint(&self) -> &str {
+        &self.endpoint
     }
 }
 

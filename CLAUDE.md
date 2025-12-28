@@ -164,6 +164,7 @@ LLM receives structured intent, not raw input.
 | `prompt_templates` | LLM prompt templates (dynamic, no file storage) |
 | `company_rules` | Customer-specific coding rules |
 | `generation_logs` | Audit trail (who/when/output, NO input data) |
+| `knowledge_bases` | xFrame5 knowledge for selective prompt inclusion |
 
 ### Key Design: Templates in DB
 - Enables dynamic updates without redeployment
@@ -247,6 +248,13 @@ backend/
 - `config/production.yaml` - Customer LLM server settings
 - LLM endpoint/model configured here, NEVER in code
 - **Prompt templates stored in database** (not text files) for dynamic updates
+
+### Database Conventions
+- **Table Naming**: ALWAYS use plural form (e.g., `knowledge_bases`, NOT `knowledge_base`)
+- **Scaffolding**: Use `cargo loco generate scaffold` for new tables (creates migration, model, controller, tests)
+- **Seeding**: Use YAML fixtures in `src/fixtures/` (e.g., `knowledge_bases.yaml`)
+- **Migrations**: Never edit migrations directly after creation; create new migrations for changes
+- See `docs/KNOWLEDGE_BASE_SEEDING_GUIDE.md` for detailed seeding instructions
 
 ### Error Handling
 - XML parse failure → Prompt retry (max 2)
@@ -367,10 +375,15 @@ mvn test
 7. **PAGINATION_PATTERN.md** - Pagination with service layer
 8. **CONTROLLER_SERVICE_SEPARATION.md** - Thin controller, fat service pattern
 9. **COOKIE_AUTH.md** - Cookie-based JWT auth for admin pages
+10. **OPTIONALFIELD_PATTERN.md** - Proper PATCH updates with OptionalField<T>
 
 ### Feature Documentation (docs/features/)
 1. **SCREEN_GENERATION.md** - List/Detail screen generation
 2. **SCHEMA_INPUT.md** - DB schema input processing
+
+### Knowledge Base Documentation (docs/)
+1. **KNOWLEDGE_BASE_ARCHITECTURE.md** - Knowledge base system architecture and design
+2. **KNOWLEDGE_BASE_SEEDING_GUIDE.md** - How to seed and add knowledge entries via YAML fixtures
 
 ---
 

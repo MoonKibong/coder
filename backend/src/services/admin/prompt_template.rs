@@ -7,6 +7,7 @@ use sea_orm::{query::*, DatabaseConnection, PaginatorTrait};
 use serde::{Deserialize, Serialize};
 
 use crate::models::_entities::prompt_templates::{ActiveModel, Column, Entity, Model};
+use crate::utils::{bool_from_str_or_bool, OptionalField};
 
 const DEFAULT_PAGE_SIZE: u64 = 20;
 const MAX_PAGE_SIZE: u64 = 100;
@@ -45,18 +46,24 @@ pub struct CreateParams {
     pub screen_type: Option<String>,
     pub system_prompt: String,
     pub user_prompt_template: String,
+    #[serde(default, deserialize_with = "bool_from_str_or_bool")]
     pub is_active: Option<bool>,
 }
 
 /// Update parameters
 #[derive(Debug, Deserialize, Serialize)]
 pub struct UpdateParams {
+    // Required fields that can be updated
     pub name: Option<String>,
     pub product: Option<String>,
-    pub screen_type: Option<String>,
     pub system_prompt: Option<String>,
     pub user_prompt_template: Option<String>,
-    pub is_active: Option<bool>,
+
+    // Optional fields - use OptionalField for proper PATCH semantics
+    #[serde(default)]
+    pub screen_type: OptionalField<String>,
+    #[serde(default)]
+    pub is_active: OptionalField<bool>,
 }
 
 /// Paginated response
@@ -184,6 +191,7 @@ impl PromptTemplateService {
         let item = Self::find_by_id(db, id).await?;
         let mut item: ActiveModel = item.into();
 
+        // Required fields
         if let Some(name) = params.name {
             if name.trim().is_empty() {
                 return Err(Error::BadRequest("Name cannot be empty".to_string()));
@@ -193,17 +201,19 @@ impl PromptTemplateService {
         if let Some(product) = params.product {
             item.product = Set(product);
         }
-        if params.screen_type.is_some() {
-            item.screen_type = Set(params.screen_type);
-        }
         if let Some(system_prompt) = params.system_prompt {
             item.system_prompt = Set(system_prompt);
         }
         if let Some(user_prompt_template) = params.user_prompt_template {
             item.user_prompt_template = Set(user_prompt_template);
         }
-        if params.is_active.is_some() {
-            item.is_active = Set(params.is_active);
+
+        // Optional fields - only update if Present (not Missing)
+        if let OptionalField::Present(opt_value) = params.screen_type {
+            item.screen_type = Set(opt_value);
+        }
+        if let OptionalField::Present(opt_value) = params.is_active {
+            item.is_active = Set(opt_value);
         }
 
         // Increment version

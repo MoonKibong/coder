@@ -7,7 +7,7 @@ mod openai;
 mod anthropic;
 mod mock;
 
-pub use ollama::OllamaBackend;
+pub use ollama::{OllamaBackend, OllamaModel, OllamaModelDetails};
 pub use llama_cpp::LlamaCppBackend;
 pub use local_llama_cpp::LocalLlamaCppBackend;
 pub use vllm::VllmBackend;

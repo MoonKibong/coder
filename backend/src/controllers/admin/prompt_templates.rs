@@ -3,12 +3,14 @@
 //! HTMX-based CRUD for prompt templates.
 //! Thin controller - delegates to PromptTemplateService.
 
+use axum::extract::Multipart;
 use loco_rs::prelude::*;
 
 use crate::middleware::cookie_auth::AuthUser;
 use crate::services::admin::prompt_template::{
     CreateParams, PromptTemplateService, QueryParams, UpdateParams,
 };
+use crate::services::{ImportOptions, TemplateImporter};
 
 /// Main page - renders full layout with list
 #[debug_handler]
@@ -140,4 +142,142 @@ pub async fn update(
 pub async fn delete(Path(id): Path<i32>, State(ctx): State<AppContext>) -> Result<Response> {
     PromptTemplateService::delete(&ctx.db, id).await?;
     format::html("")
+}
+
+/// Import form
+#[debug_handler]
+pub async fn import_form(
+    ViewEngine(v): ViewEngine<TeraView>,
+    State(_ctx): State<AppContext>,
+    _auth_user: AuthUser,
+) -> Result<Response> {
+    format::render().view(&v, "admin/prompt_template/import.html", data!({}))
+}
+
+/// Import template from file
+#[debug_handler]
+pub async fn import(
+    State(ctx): State<AppContext>,
+    _auth_user: AuthUser,
+    mut multipart: Multipart,
+) -> Result<Response> {
+    let mut file_content: Option<String> = None;
+    let mut file_type: Option<String> = None;
+    let mut deactivate_old = true;
+    let mut set_active = true;
+
+    // Parse multipart form data
+    while let Some(field) = multipart.next_field().await.map_err(|e| {
+        Error::string(&format!("Failed to read multipart field: {}", e))
+    })? {
+        let name = field.name().unwrap_or("").to_string();
+
+        match name.as_str() {
+            "file" => {
+                let filename = field.file_name().unwrap_or("").to_string();
+                let data = field.bytes().await.map_err(|e| {
+                    Error::string(&format!("Failed to read file data: {}", e))
+                })?;
+
+                file_content = Some(String::from_utf8(data.to_vec()).map_err(|e| {
+                    Error::string(&format!("File is not valid UTF-8: {}", e))
+                })?);
+
+                // Detect file type from extension
+                if filename.ends_with(".yaml") || filename.ends_with(".yml") {
+                    file_type = Some("yaml".to_string());
+                } else if filename.ends_with(".json") {
+                    file_type = Some("json".to_string());
+                } else {
+                    return Err(Error::string("Unsupported file type. Please upload .yaml, .yml, or .json"));
+                }
+            }
+            "deactivate_old" => {
+                let value = field.text().await.map_err(|e| {
+                    Error::string(&format!("Failed to read field: {}", e))
+                })?;
+                deactivate_old = value == "true" || value == "on";
+            }
+            "set_active" => {
+                let value = field.text().await.map_err(|e| {
+                    Error::string(&format!("Failed to read field: {}", e))
+                })?;
+                set_active = value == "true" || value == "on";
+            }
+            _ => {}
+        }
+    }
+
+    // Validate we have a file
+    let content = file_content.ok_or_else(|| Error::string("No file uploaded"))?;
+    let ftype = file_type.ok_or_else(|| Error::string("Could not determine file type"))?;
+
+    // Import options
+    let options = ImportOptions {
+        deactivate_old,
+        force_version: None,
+        set_active,
+    };
+
+    // Import template
+    let result = if ftype == "yaml" {
+        TemplateImporter::import_from_yaml(&ctx.db, &content, options).await
+    } else {
+        TemplateImporter::import_from_json(&ctx.db, &content, options).await
+    };
+
+    match result {
+        Ok(import_result) => {
+            // Return success message
+            format::html(&format!(
+                r#"<div class="p-4 rounded-lg bg-green-500/10 border border-green-500/20">
+                    <p class="text-sm text-green-700 font-medium">{}</p>
+                    <p class="text-xs text-green-600 mt-1">Template ID: {} | Version: {}</p>
+                </div>
+                <script>
+                    setTimeout(() => {{
+                        document.getElementById('modal-container').innerHTML = '';
+                        htmx.trigger('#search-form', 'submit');
+                    }}, 2000);
+                </script>"#,
+                import_result.message,
+                import_result.template_id.unwrap_or(0),
+                import_result.version
+            ))
+        }
+        Err(e) => {
+            // Return error message
+            format::html(&format!(
+                r#"<div class="p-4 rounded-lg bg-red-500/10 border border-red-500/20">
+                    <p class="text-sm text-red-700 font-medium">Import Failed</p>
+                    <p class="text-xs text-red-600 mt-1">{}</p>
+                </div>"#,
+                e.to_string()
+            ))
+        }
+    }
+}
+
+/// Export template to YAML
+#[debug_handler]
+pub async fn export(
+    Path(id): Path<i32>,
+    State(ctx): State<AppContext>,
+    _auth_user: AuthUser,
+) -> Result<Response> {
+    let yaml_content = TemplateImporter::export_to_yaml(&ctx.db, id).await
+        .map_err(|e| Error::string(&format!("Export failed: {}", e)))?;
+
+    // Get template info for filename
+    let template = PromptTemplateService::find_by_id(&ctx.db, id).await?;
+    let filename = format!("{}-v{}.yaml", template.name, template.version);
+
+    // Return as downloadable file
+    let response = Response::builder()
+        .header("Content-Type", "application/x-yaml")
+        .header("Content-Disposition", format!("attachment; filename=\"{}\"", filename))
+        .body(yaml_content.into())
+        .map_err(|e| Error::string(&format!("Failed to build response: {}", e)))?;
+
+    Ok(response)
 }

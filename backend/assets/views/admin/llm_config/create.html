@@ -14,7 +14,7 @@
         </div>
 
         <!-- Form -->
-        <form hx-post="/admin/llm-configs" hx-target="#search-result" hx-swap="outerHTML"
+        <form hx-post="/admin/llm-configs" hx-ext="json-enc" hx-target="#search-result" hx-swap="outerHTML"
               hx-on::after-request="if(event.detail.successful) this.closest('.fixed').remove()"
               class="flex-1 overflow-y-auto p-6">
             <div class="space-y-6">
@@ -76,12 +76,16 @@
                 <!-- Model Name -->
                 <div class="space-y-2">
                     <label for="model_name" class="text-sm font-medium">Model Name</label>
-                    <input type="text" id="model_name" name="model_name" required
+                    <select id="model_name" name="model_name" required
                         class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm font-mono
-                               placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                        placeholder="e.g., codellama:13b" />
+                               focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                        <option value="">Select model...</option>
+                        {% for model in available_models %}
+                        <option value="{{ model.name }}">{{ model.name }}{% if model.details and model.details.parameter_size %} ({{ model.details.parameter_size }}){% endif %}</option>
+                        {% endfor %}
+                    </select>
                     <p class="text-xs text-muted-foreground">
-                        Model identifier as expected by the provider.
+                        Available models from the Ollama server.
                     </p>
                 </div>
 

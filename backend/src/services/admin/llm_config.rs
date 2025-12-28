@@ -7,6 +7,7 @@ use sea_orm::{query::*, DatabaseConnection, PaginatorTrait};
 use serde::{Deserialize, Serialize};
 
 use crate::models::_entities::llm_configs::{ActiveModel, Column, Entity, Model};
+use crate::utils::{bool_from_str_or_bool, f32_from_str_or_number, i32_from_str_or_number, OptionalField};
 
 const DEFAULT_PAGE_SIZE: u64 = 20;
 const MAX_PAGE_SIZE: u64 = 100;
@@ -45,22 +46,32 @@ pub struct CreateParams {
     pub model_name: String,
     pub endpoint_url: String,
     pub api_key: Option<String>,
+    #[serde(default, deserialize_with = "f32_from_str_or_number")]
     pub temperature: Option<f32>,
+    #[serde(default, deserialize_with = "i32_from_str_or_number")]
     pub max_tokens: Option<i32>,
+    #[serde(default, deserialize_with = "bool_from_str_or_bool")]
     pub is_active: Option<bool>,
 }
 
 /// Update parameters
 #[derive(Debug, Deserialize, Serialize)]
 pub struct UpdateParams {
+    // Required fields
     pub name: Option<String>,
     pub provider: Option<String>,
     pub model_name: Option<String>,
     pub endpoint_url: Option<String>,
-    pub api_key: Option<String>,
-    pub temperature: Option<f32>,
-    pub max_tokens: Option<i32>,
-    pub is_active: Option<bool>,
+
+    // Optional fields - use OptionalField for proper PATCH semantics
+    #[serde(default)]
+    pub api_key: OptionalField<String>,
+    #[serde(default)]
+    pub temperature: OptionalField<f32>,
+    #[serde(default)]
+    pub max_tokens: OptionalField<i32>,
+    #[serde(default)]
+    pub is_active: OptionalField<bool>,
 }
 
 /// Paginated response
@@ -206,6 +217,7 @@ impl LlmConfigService {
         let item = Self::find_by_id(db, id).await?;
         let mut item: ActiveModel = item.into();
 
+        // Required fields
         if let Some(name) = params.name {
             if name.trim().is_empty() {
                 return Err(Error::BadRequest("Name cannot be empty".to_string()));
@@ -221,27 +233,29 @@ impl LlmConfigService {
         if let Some(endpoint_url) = params.endpoint_url {
             item.endpoint_url = Set(endpoint_url);
         }
-        if params.api_key.is_some() {
-            item.api_key = Set(params.api_key);
+
+        // Optional fields - only update if Present (not Missing)
+        if let OptionalField::Present(opt_value) = params.api_key {
+            item.api_key = Set(opt_value);
         }
-        if params.temperature.is_some() {
-            if let Some(temp) = params.temperature {
+        if let OptionalField::Present(opt_value) = params.temperature {
+            if let Some(temp) = opt_value {
                 if !(0.0..=2.0).contains(&temp) {
                     return Err(Error::BadRequest("Temperature must be between 0.0 and 2.0".to_string()));
                 }
             }
-            item.temperature = Set(params.temperature);
+            item.temperature = Set(opt_value);
         }
-        if params.max_tokens.is_some() {
-            if let Some(tokens) = params.max_tokens {
+        if let OptionalField::Present(opt_value) = params.max_tokens {
+            if let Some(tokens) = opt_value {
                 if tokens <= 0 {
                     return Err(Error::BadRequest("Max tokens must be positive".to_string()));
                 }
             }
-            item.max_tokens = Set(params.max_tokens);
+            item.max_tokens = Set(opt_value);
         }
-        if params.is_active.is_some() {
-            item.is_active = Set(params.is_active);
+        if let OptionalField::Present(opt_value) = params.is_active {
+            item.is_active = Set(opt_value);
         }
 
         let item = item.update(db).await?;

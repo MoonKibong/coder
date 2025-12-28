@@ -14,7 +14,7 @@
         </div>
 
         <!-- Form -->
-        <form hx-post="/admin/prompt-templates" hx-target="#search-result" hx-swap="outerHTML"
+        <form hx-post="/admin/prompt-templates" hx-ext="json-enc" hx-target="#search-result" hx-swap="outerHTML"
               hx-on::after-request="if(event.detail.successful) this.closest('.fixed').remove()"
               class="flex-1 overflow-y-auto p-6">
             <div class="space-y-6">
@@ -51,14 +51,6 @@
                         <option value="popup">Popup</option>
                         <option value="form">Form</option>
                     </select>
-                </div>
-
-                <!-- Version -->
-                <div class="space-y-2">
-                    <label for="version" class="text-sm font-medium">Version</label>
-                    <input type="number" id="version" name="version" value="1" min="1" required
-                        class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm
-                               placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
                 </div>
 
                 <!-- System Prompt -->

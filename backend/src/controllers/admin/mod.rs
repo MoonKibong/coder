@@ -13,6 +13,7 @@ pub mod company_rules;
 pub mod generation_logs;
 pub mod llm_configs;
 pub mod users;
+pub mod knowledge_bases;
 
 use loco_rs::prelude::*;
 
@@ -42,6 +43,9 @@ pub fn routes() -> Routes {
         .add("prompt-templates/{id}/edit", get(prompt_templates::edit_form))
         .add("prompt-templates/{id}", patch(prompt_templates::update))
         .add("prompt-templates/{id}", delete(prompt_templates::delete))
+        .add("prompt-templates/import", get(prompt_templates::import_form))
+        .add("prompt-templates/import", post(prompt_templates::import))
+        .add("prompt-templates/{id}/export", get(prompt_templates::export))
         // Company Rules
         .add("company-rules", get(company_rules::main))
         .add("company-rules/list", get(company_rules::list))
@@ -72,4 +76,13 @@ pub fn routes() -> Routes {
         .add("users/{id}/edit", get(users::edit_form))
         .add("users/{id}", patch(users::update))
         .add("users/{id}", delete(users::delete))
+        // Knowledge Bases
+        .add("knowledge-bases", get(knowledge_bases::main))
+        .add("knowledge-bases/list", get(knowledge_bases::list))
+        .add("knowledge-bases/new", get(knowledge_bases::new_form))
+        .add("knowledge-bases", post(knowledge_bases::create))
+        .add("knowledge-bases/{id}", get(knowledge_bases::show))
+        .add("knowledge-bases/{id}/edit", get(knowledge_bases::edit_form))
+        .add("knowledge-bases/{id}", patch(knowledge_bases::update))
+        .add("knowledge-bases/{id}", delete(knowledge_bases::delete))
 }

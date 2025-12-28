@@ -8,9 +8,11 @@ pub mod company_rule;
 pub mod llm_config;
 pub mod generation_log;
 pub mod user;
+pub mod knowledge_base;
 
 pub use prompt_template::PromptTemplateService;
 pub use company_rule::CompanyRuleService;
 pub use llm_config::LlmConfigService;
 pub use generation_log::GenerationLogService;
 pub use user::UserService;
+pub use knowledge_base::KnowledgeBaseService as AdminKnowledgeBaseService;

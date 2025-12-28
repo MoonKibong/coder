@@ -1,0 +1,271 @@
+---
+- id: 1
+  name: core_architecture
+  category: architecture
+  component: null
+  section: overview
+  content: |
+    # Core Architecture
+
+    xFrame5 is an HTML5-based UI framework supporting Dataset-driven development.
+
+    ## Component Architecture Layers
+
+    - **Grid**: headers, rows, columns, items as discrete units
+    - **Dataset**: Structured data storage with column definitions
+    - **Transaction**: HTTP-based data exchange with backend
+    - **Event**: User interactions and lifecycle hooks
+    - **Return events**: Bidirectional data exchange
+  relevance_tags: ["list_screen", "detail_screen", "master_detail"]
+  priority: high
+  token_estimate: 300
+  version: 1
+  is_active: true
+  created_at: "2025-12-28T12:00:00.000Z"
+  updated_at: "2025-12-28T12:00:00.000Z"
+
+- id: 2
+  name: dataset_component_basic
+  category: component
+  component: dataset
+  section: basic_syntax
+  content: |
+    # Dataset Component
+
+    ## XDataSet Definition
+
+    Datasets store structured data with column definitions.
+
+    ### Column Definition Pattern
+    ```
+    COLUMN_NAME:"Display Name":Width:"Default Data":"Callback Function"
+    ```
+
+    ### XML Syntax
+    ```xml
+    <xlinkdataset id="ds_list" desc=""
+      columns="COL_ID:&quot;ID&quot;:10:&quot;&quot;:&quot;&quot;;
+               COL_NAME:&quot;Name&quot;:50:&quot;&quot;:&quot;&quot;"/>
+    ```
+
+    ### JavaScript Access
+    ```javascript
+    // Add row
+    ds_list.addRow({COL_ID: "001", COL_NAME: "John"});
+
+    // Get value
+    var name = ds_list.getColumn(0, "COL_NAME");
+
+    // Set value
+    ds_list.setColumn(0, "COL_NAME", "Jane");
+    ```
+  relevance_tags: ["list_screen", "detail_screen", "master_detail"]
+  priority: high
+  token_estimate: 500
+  version: 1
+  is_active: true
+  created_at: "2025-12-28T12:00:00.000Z"
+  updated_at: "2025-12-28T12:00:00.000Z"
+
+- id: 3
+  name: grid_component_basic
+  category: component
+  component: grid
+  section: basic_structure
+  content: |
+    # Grid Component
+
+    ## Basic Structure
+    ```xml
+    <grid control_id="0" name="grid_list"
+          link_data="ds_list"
+          linenumber_show="1"
+          use_checkrow="1">
+      <column>
+        <header title="Column Header"/>
+        <data name="COL_ID" link_data="ds_list:COL_ID" width="100"/>
+      </column>
+    </grid>
+    ```
+
+    ## Key Attributes
+    - `link_data`: Dataset binding (required)
+    - `linenumber_show`: Show row numbers (0/1)
+    - `use_checkrow`: Enable row selection (0/1)
+
+    ## Column Binding
+    Each `<data>` element must have:
+    - `name`: Column identifier
+    - `link_data`: Dataset reference (format: `dataset_id:column_name`)
+    - `width`: Column width in pixels
+  relevance_tags: ["list_screen", "master_detail"]
+  priority: high
+  token_estimate: 600
+  version: 1
+  is_active: true
+  created_at: "2025-12-28T12:00:00.000Z"
+  updated_at: "2025-12-28T12:00:00.000Z"
+
+- id: 4
+  name: popup_patterns_basic
+  category: pattern
+  component: popup
+  section: basic_usage
+  content: |
+    # Popup Patterns
+
+    ## Opening Popups
+    ```javascript
+    this.fn_openPopup = function() {
+        var popup = new xframeworks.ui.popup();
+        popup.set_title("Popup Title");
+        popup.set_url("path/to/popup.xfdl");
+        popup.show();
+    };
+    ```
+
+    ## Popup Communication
+    ```javascript
+    // Pass data to popup
+    popup.set_argument({selectedId: id, mode: "edit"});
+
+    // Receive data from popup
+    popup.set_callback(function(result) {
+        if (result.status === "ok") {
+            // Handle returned data
+        }
+    });
+    ```
+  relevance_tags: ["detail_screen", "popup"]
+  priority: high
+  token_estimate: 400
+  version: 1
+  is_active: true
+  created_at: "2025-12-28T12:00:00.000Z"
+  updated_at: "2025-12-28T12:00:00.000Z"
+
+- id: 5
+  name: io_mapping_transactions
+  category: pattern
+  component: transaction
+  section: http_requests
+  content: |
+    # IO Mapping & Transactions
+
+    ## Transaction Function Pattern
+    ```javascript
+    this.fn_search = function() {
+        // TODO: Set transaction URL
+        var tranUrl = "/api/placeholder/search";
+
+        // Set request dataset
+        var inDs = "ds_search";
+
+        // Set response dataset
+        var outDs = "ds_list";
+
+        // Execute transaction
+        this.gfn_transaction("search", tranUrl, inDs, outDs, "", "fn_callback");
+    };
+
+    this.fn_callback = function(id, code, message) {
+        if (code == 0) {
+            // Success
+            this.grid_list.refresh();
+        } else {
+            // Error
+            alert("Error: " + message);
+        }
+    };
+    ```
+  relevance_tags: ["list_screen", "detail_screen", "master_detail"]
+  priority: high
+  token_estimate: 400
+  version: 1
+  is_active: true
+  created_at: "2025-12-28T12:00:00.000Z"
+  updated_at: "2025-12-28T12:00:00.000Z"
+
+- id: 6
+  name: naming_conventions
+  category: standard
+  component: null
+  section: null
+  content: |
+    # Naming Conventions
+
+    ## Standard Prefixes
+
+    **Datasets**: `ds_` prefix
+    - `ds_list` - List data
+    - `ds_detail` - Detail data
+    - `ds_search` - Search criteria
+
+    **Grids**: `grid_` prefix
+    - `grid_list` - Main list grid
+    - `grid_detail` - Detail grid
+
+    **Functions**: `fn_` prefix
+    - `fn_search()` - Search/retrieve data
+    - `fn_save()` - Save data
+    - `fn_delete()` - Delete data
+    - `fn_init()` - Initialize screen
+
+    **Buttons**: `btn_` prefix
+    - `btn_search` - Search button
+    - `btn_save` - Save button
+    - `btn_new` - New button
+  relevance_tags: ["list_screen", "detail_screen", "master_detail", "all"]
+  priority: high
+  token_estimate: 400
+  version: 1
+  is_active: true
+  created_at: "2025-12-28T12:00:00.000Z"
+  updated_at: "2025-12-28T12:00:00.000Z"
+
+- id: 7
+  name: xml_complete_example
+  category: example
+  component: null
+  section: null
+  content: |
+    # Complete xFrame5 XML Example
+
+    ```xml
+    <?xml version="1.0" encoding="UTF-8"?>
+    <screen id="SCREEN_MEMBER_LIST" width="800" height="600">
+
+      <!-- Dataset Definition -->
+      <xlinkdataset id="ds_list" desc="Member List"
+        columns="MEMBER_ID:&quot;ID&quot;:10:&quot;&quot;:&quot;&quot;;
+                 MEMBER_NAME:&quot;Name&quot;:50:&quot;&quot;:&quot;&quot;;
+                 EMAIL:&quot;Email&quot;:100:&quot;&quot;:&quot;&quot;"/>
+
+      <!-- Grid Component -->
+      <grid control_id="0" name="grid_list"
+            link_data="ds_list"
+            linenumber_show="1"
+            use_checkrow="1">
+        <column>
+          <header title="ID"/>
+          <data name="MEMBER_ID" link_data="ds_list:MEMBER_ID" width="100"/>
+        </column>
+        <column>
+          <header title="Name"/>
+          <data name="MEMBER_NAME" link_data="ds_list:MEMBER_NAME" width="200"/>
+        </column>
+      </grid>
+
+      <!-- Buttons -->
+      <pushbutton control_id="1" name="btn_search"
+                  text="Search" onclick="fn_search"/>
+
+    </screen>
+    ```
+  relevance_tags: ["list_screen"]
+  priority: medium
+  token_estimate: 800
+  version: 1
+  is_active: true
+  created_at: "2025-12-28T12:00:00.000Z"
+  updated_at: "2025-12-28T12:00:00.000Z"

@@ -9,3 +9,4 @@ pub mod generation_log;
 pub mod llm_config;
 
 pub mod admin;
+pub mod knowledge_base;

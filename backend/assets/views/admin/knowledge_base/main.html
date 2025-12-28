@@ -1,0 +1,55 @@
+<!-- Knowledge Base Main Content -->
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-semibold text-foreground">Knowledge Base</h1>
+            <p class="text-muted-foreground">Manage xFrame5 framework knowledge for AI code generation</p>
+        </div>
+        <div class="flex gap-2">
+            <button hx-get="/admin/knowledge-bases/new" hx-target="#modal-container" hx-swap="innerHTML"
+                class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium
+                       h-9 px-4 py-2 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                New Entry
+            </button>
+        </div>
+    </div>
+
+    <!-- Search & Filters -->
+    <div class="bg-card rounded-xl border shadow-sm p-4">
+        <form id="search-form" hx-get="/admin/knowledge-bases/list" hx-target="#search-result" hx-swap="outerHTML"
+              hx-trigger="submit, load" hx-ext="json-enc" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <input type="text" name="keyword" placeholder="Search by name or content..."
+                    class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm
+                           placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+            </div>
+            <div>
+                <select name="category"
+                    class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm
+                           focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                    <option value="">All Categories</option>
+                    <option value="architecture">Architecture</option>
+                    <option value="component">Component</option>
+                    <option value="pattern">Pattern</option>
+                    <option value="example">Example</option>
+                    <option value="standard">Standard</option>
+                </select>
+            </div>
+            <button type="submit"
+                class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium
+                       h-9 px-4 py-2 border bg-background shadow-sm hover:bg-accent hover:text-accent-foreground">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                </svg>
+                Search
+            </button>
+        </form>
+    </div>
+
+    <!-- Table -->
+    {% include "admin/knowledge_base/list.html" %}
+</div>

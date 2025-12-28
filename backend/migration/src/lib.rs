@@ -10,6 +10,8 @@ mod m20251228_003221_llm_configs;
 mod m20251228_003509_add_indexes;
 mod m20251228_041600_seed_spring_prompt_templates;
 mod m20251228_050000_add_job_queue_fields;
+mod m20251228_104804_seed_xframe5_prompt_templates;
+mod m20251228_125645_knowledge_bases;
 pub struct Migrator;
 
 #[async_trait::async_trait]
@@ -24,6 +26,8 @@ impl MigratorTrait for Migrator {
             Box::new(m20251228_003509_add_indexes::Migration),
             Box::new(m20251228_041600_seed_spring_prompt_templates::Migration),
             Box::new(m20251228_050000_add_job_queue_fields::Migration),
+            Box::new(m20251228_104804_seed_xframe5_prompt_templates::Migration),
+            Box::new(m20251228_125645_knowledge_bases::Migration),
             // inject-above (do not remove this comment)
         ]
     }

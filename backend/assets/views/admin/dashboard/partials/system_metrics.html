@@ -160,8 +160,23 @@
 
 <script>
 (function() {
+    let metricsInterval = null;
+
     // Fetch and render metrics history
     async function fetchAndRenderMetrics() {
+        // Check if we're still on the dashboard (elements exist)
+        const cpuCurrentEl = document.getElementById('cpu-current');
+        const memoryCurrentEl = document.getElementById('memory-current');
+
+        // If elements don't exist, we've navigated away - stop the interval
+        if (!cpuCurrentEl || !memoryCurrentEl) {
+            if (metricsInterval) {
+                clearInterval(metricsInterval);
+                metricsInterval = null;
+            }
+            return;
+        }
+
         try {
             const response = await fetch('/admin/dashboard/metrics-history');
             if (!response.ok) return;
@@ -174,8 +189,8 @@
 
             // Update current values
             const latest = data.samples[data.samples.length - 1];
-            document.getElementById('cpu-current').textContent = Math.round(latest.cpu_usage) + '%';
-            document.getElementById('memory-current').textContent = Math.round(latest.memory_usage) + '%';
+            cpuCurrentEl.textContent = Math.round(latest.cpu_usage) + '%';
+            memoryCurrentEl.textContent = Math.round(latest.memory_usage) + '%';
         } catch (e) {
             console.error('Failed to fetch metrics history:', e);
         }
@@ -227,6 +242,6 @@
     fetchAndRenderMetrics();
 
     // Refresh every 10 seconds
-    setInterval(fetchAndRenderMetrics, 10000);
+    metricsInterval = setInterval(fetchAndRenderMetrics, 10000);
 })();
 </script>

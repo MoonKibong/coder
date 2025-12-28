@@ -7,6 +7,7 @@ use sea_orm::{query::*, DatabaseConnection, PaginatorTrait};
 use serde::{Deserialize, Serialize};
 
 use crate::models::_entities::company_rules::{ActiveModel, Column, Entity, Model};
+use crate::utils::OptionalField;
 
 const DEFAULT_PAGE_SIZE: u64 = 20;
 const MAX_PAGE_SIZE: u64 = 100;
@@ -41,9 +42,14 @@ pub struct CreateParams {
 /// Update parameters
 #[derive(Debug, Deserialize, Serialize)]
 pub struct UpdateParams {
+    // Required field
     pub company_id: Option<String>,
-    pub naming_convention: Option<String>,
-    pub additional_rules: Option<String>,
+
+    // Optional fields - use OptionalField for proper PATCH semantics
+    #[serde(default)]
+    pub naming_convention: OptionalField<String>,
+    #[serde(default)]
+    pub additional_rules: OptionalField<String>,
 }
 
 /// Paginated response
@@ -146,17 +152,20 @@ impl CompanyRuleService {
         let item = Self::find_by_id(db, id).await?;
         let mut item: ActiveModel = item.into();
 
+        // Required field
         if let Some(company_id) = params.company_id {
             if company_id.trim().is_empty() {
                 return Err(Error::BadRequest("Company ID cannot be empty".to_string()));
             }
             item.company_id = Set(company_id.trim().to_string());
         }
-        if params.naming_convention.is_some() {
-            item.naming_convention = Set(params.naming_convention);
+
+        // Optional fields - only update if Present (not Missing)
+        if let OptionalField::Present(opt_value) = params.naming_convention {
+            item.naming_convention = Set(opt_value);
         }
-        if params.additional_rules.is_some() {
-            item.additional_rules = Set(params.additional_rules);
+        if let OptionalField::Present(opt_value) = params.additional_rules {
+            item.additional_rules = Set(opt_value);
         }
 
         let item = item.update(db).await?;

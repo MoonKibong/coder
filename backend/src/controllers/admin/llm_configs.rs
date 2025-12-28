@@ -5,6 +5,7 @@
 
 use loco_rs::prelude::*;
 
+use crate::llm::OllamaBackend;
 use crate::middleware::cookie_auth::AuthUser;
 use crate::services::admin::llm_config::{
     CreateParams, LlmConfigService, QueryParams, UpdateParams,
@@ -59,7 +60,17 @@ pub async fn list(
 /// New form
 #[debug_handler]
 pub async fn new_form(ViewEngine(v): ViewEngine<TeraView>) -> Result<Response> {
-    format::render().view(&v, "admin/llm_config/create.html", data!({}))
+    // Fetch available models from Ollama
+    let ollama = OllamaBackend::from_env();
+    let available_models = ollama.list_models().await.unwrap_or_default();
+
+    format::render().view(
+        &v,
+        "admin/llm_config/create.html",
+        data!({
+            "available_models": available_models,
+        }),
+    )
 }
 
 /// Edit form
@@ -71,11 +82,16 @@ pub async fn edit_form(
 ) -> Result<Response> {
     let item = LlmConfigService::find_by_id(&ctx.db, id).await?;
 
+    // Fetch available models from Ollama
+    let ollama = OllamaBackend::from_env();
+    let available_models = ollama.list_models().await.unwrap_or_default();
+
     format::render().view(
         &v,
         "admin/llm_config/edit.html",
         data!({
             "item": item,
+            "available_models": available_models,
         }),
     )
 }

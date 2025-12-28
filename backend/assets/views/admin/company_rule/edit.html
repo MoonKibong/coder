@@ -14,87 +14,47 @@
         </div>
 
         <!-- Form -->
-        <form hx-put="/admin/company-rules/{{ item.id }}" hx-target="#search-result" hx-swap="outerHTML"
+        <form hx-patch="/admin/company-rules/{{ item.id }}" hx-ext="json-enc" hx-target="#search-result" hx-swap="outerHTML"
               hx-on::after-request="if(event.detail.successful) this.closest('.fixed').remove()"
               class="flex-1 overflow-y-auto p-6">
             <div class="space-y-6">
-                <!-- Name -->
+                <!-- Company ID -->
                 <div class="space-y-2">
-                    <label for="name" class="text-sm font-medium">Name</label>
-                    <input type="text" id="name" name="name" value="{{ item.name }}" required
+                    <label for="company_id" class="text-sm font-medium">Company ID <span class="text-destructive">*</span></label>
+                    <input type="text" id="company_id" name="company_id" value="{{ item.company_id }}" required
                         class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm
                                placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                        placeholder="e.g., Variable Naming Convention" />
-                </div>
-
-                <!-- Category -->
-                <div class="space-y-2">
-                    <label for="category" class="text-sm font-medium">Category</label>
-                    <select id="category" name="category" required
-                        class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm
-                               focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
-                        <option value="">Select category...</option>
-                        <option value="naming" {% if item.category == "naming" %}selected{% endif %}>Naming Convention</option>
-                        <option value="structure" {% if item.category == "structure" %}selected{% endif %}>Code Structure</option>
-                        <option value="documentation" {% if item.category == "documentation" %}selected{% endif %}>Documentation</option>
-                        <option value="security" {% if item.category == "security" %}selected{% endif %}>Security</option>
-                        <option value="performance" {% if item.category == "performance" %}selected{% endif %}>Performance</option>
-                        <option value="ui" {% if item.category == "ui" %}selected{% endif %}>UI/UX</option>
-                        <option value="other" {% if item.category == "other" %}selected{% endif %}>Other</option>
-                    </select>
-                </div>
-
-                <!-- Priority -->
-                <div class="space-y-2">
-                    <label for="priority" class="text-sm font-medium">Priority</label>
-                    <select id="priority" name="priority" required
-                        class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm
-                               focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
-                        <option value="low" {% if item.priority == "low" %}selected{% endif %}>Low</option>
-                        <option value="medium" {% if item.priority == "medium" %}selected{% endif %}>Medium</option>
-                        <option value="high" {% if item.priority == "high" %}selected{% endif %}>High</option>
-                    </select>
-                </div>
-
-                <!-- Description -->
-                <div class="space-y-2">
-                    <label for="description" class="text-sm font-medium">Description</label>
-                    <textarea id="description" name="description" rows="3"
-                        class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm
-                               placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring
-                               resize-y"
-                        placeholder="Brief description of the rule...">{{ item.description }}</textarea>
-                </div>
-
-                <!-- Rule Content -->
-                <div class="space-y-2">
-                    <label for="rule_content" class="text-sm font-medium">Rule Content</label>
-                    <textarea id="rule_content" name="rule_content" rows="8" required
-                        class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm
-                               placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring
-                               font-mono resize-y"
-                        placeholder="Detailed rule content that will be included in prompts...">{{ item.rule_content }}</textarea>
+                        placeholder="e.g., acme-corp" />
                     <p class="text-xs text-muted-foreground">
-                        This content will be injected into LLM prompts when generating code.
+                        Unique identifier for the company these rules apply to.
                     </p>
                 </div>
 
-                <!-- Example (Optional) -->
+                <!-- Naming Convention -->
                 <div class="space-y-2">
-                    <label for="example" class="text-sm font-medium">Example (Optional)</label>
-                    <textarea id="example" name="example" rows="4"
+                    <label for="naming_convention" class="text-sm font-medium">Naming Convention</label>
+                    <textarea id="naming_convention" name="naming_convention" rows="6"
                         class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm
                                placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring
                                font-mono resize-y"
-                        placeholder="// Good example:&#10;const userName = 'John';&#10;&#10;// Bad example:&#10;const un = 'John';">{{ item.example }}</textarea>
+                        placeholder="- Variables: camelCase
+- Constants: UPPER_SNAKE_CASE">{{ item.naming_convention }}</textarea>
+                    <p class="text-xs text-muted-foreground">
+                        Naming conventions to be followed in generated code.
+                    </p>
                 </div>
 
-                <!-- Is Active -->
-                <div class="flex items-center space-x-2">
-                    <input type="checkbox" id="is_active" name="is_active" value="true"
-                        {% if item.is_active %}checked{% endif %}
-                        class="h-4 w-4 rounded border-input" />
-                    <label for="is_active" class="text-sm font-medium">Active</label>
+                <!-- Additional Rules -->
+                <div class="space-y-2">
+                    <label for="additional_rules" class="text-sm font-medium">Additional Rules</label>
+                    <textarea id="additional_rules" name="additional_rules" rows="8"
+                        class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm
+                               placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring
+                               font-mono resize-y"
+                        placeholder="- Always add null checks for optional parameters">{{ item.additional_rules }}</textarea>
+                    <p class="text-xs text-muted-foreground">
+                        Additional coding rules and guidelines for this company.
+                    </p>
                 </div>
             </div>
         </form>

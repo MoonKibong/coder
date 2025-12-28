@@ -1,0 +1,129 @@
+<!-- Import Template Modal -->
+<div class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+    <div class="bg-background rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <!-- Header -->
+        <div class="flex items-center justify-between p-6 border-b">
+            <h2 class="text-xl font-semibold text-foreground">Import Template from File</h2>
+            <button hx-get="/admin/empty" hx-target="#modal-container" hx-swap="innerHTML"
+                class="text-muted-foreground hover:text-foreground">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Info Banner -->
+        <div class="m-6 mb-0 flex items-start gap-3 p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
+            <svg class="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+            </svg>
+            <div class="text-sm text-blue-700">
+                <p class="font-medium">Template File Format</p>
+                <p class="mt-1 text-xs">Upload a YAML or JSON file containing template metadata, system prompt, and user prompt template. The version will be auto-incremented.</p>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <form id="import-form" hx-post="/admin/prompt-templates/import" hx-target="#import-result"
+              hx-encoding="multipart/form-data" class="p-6 space-y-6">
+
+            <!-- File Upload -->
+            <div>
+                <label class="block text-sm font-medium text-foreground mb-2">
+                    Template File
+                    <span class="text-destructive">*</span>
+                </label>
+                <input type="file" name="file" accept=".yaml,.yml,.json" required
+                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm
+                           file:border-0 file:bg-transparent file:text-sm file:font-medium
+                           placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+                <p class="mt-1 text-xs text-muted-foreground">
+                    Supported formats: .yaml, .yml, .json
+                </p>
+            </div>
+
+            <!-- Options -->
+            <div class="space-y-4">
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" id="deactivate_old" name="deactivate_old" checked
+                        class="h-4 w-4 rounded border-input text-primary focus:ring-primary" />
+                    <label for="deactivate_old" class="text-sm text-foreground">
+                        Deactivate previous versions
+                    </label>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" id="set_active" name="set_active" checked
+                        class="h-4 w-4 rounded border-input text-primary focus:ring-primary" />
+                    <label for="set_active" class="text-sm text-foreground">
+                        Set this version as active
+                    </label>
+                </div>
+            </div>
+
+            <!-- Result Container -->
+            <div id="import-result"></div>
+
+            <!-- Actions -->
+            <div class="flex justify-end gap-3">
+                <button type="button" hx-get="/admin/empty" hx-target="#modal-container" hx-swap="innerHTML"
+                    class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium
+                           h-10 px-4 py-2 border bg-background shadow-sm hover:bg-accent hover:text-accent-foreground">
+                    Cancel
+                </button>
+                <button type="submit"
+                    class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium
+                           h-10 px-4 py-2 bg-primary text-primary-foreground shadow hover:bg-primary/90">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                    </svg>
+                    Import Template
+                </button>
+            </div>
+        </form>
+
+        <!-- Example Format -->
+        <div class="px-6 pb-6">
+            <details class="group">
+                <summary class="cursor-pointer text-sm font-medium text-foreground hover:text-primary">
+                    View Example YAML Format
+                </summary>
+                <pre class="mt-2 p-4 bg-muted rounded-md text-xs overflow-x-auto"><code>metadata:
+  name: xframe5-list
+  product: xframe5-ui
+  screen_type: list
+  version: 2
+  author: xFrame5 Vendor
+  changelog: Added support for nested grids
+
+system_prompt: |
+  You are an expert xFrame5 frontend code generator.
+  Your task is to generate XML view files and JavaScript handlers.
+
+  RULES:
+  1. Generate valid xFrame5 XML with proper Dataset and Grid definitions
+  2. Use proper column bindings between Dataset and Grid
+  3. Add TODO comments for any information you need but don't have
+
+  OUTPUT FORMAT:
+  --- XML ---
+  <your XML content>
+
+  --- JS ---
+  <your JavaScript content>
+
+user_prompt_template: |
+  Generate an xFrame5 {{screen_type}} screen.
+
+  Requirements:
+  - Screen name: {{screen_name}}
+  - Datasets: {{datasets}}
+  - Grid columns: {{grid_columns}}
+
+validation_rules:
+  - xml_must_parse
+  - dataset_grid_binding_check</code></pre>
+            </details>
+        </div>
+    </div>
+</div>

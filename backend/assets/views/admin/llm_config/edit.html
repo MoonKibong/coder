@@ -14,7 +14,7 @@
         </div>
 
         <!-- Form -->
-        <form hx-put="/admin/llm-configs/{{ item.id }}" hx-target="#search-result" hx-swap="outerHTML"
+        <form hx-patch="/admin/llm-configs/{{ item.id }}" hx-ext="json-enc" hx-target="#search-result" hx-swap="outerHTML"
               hx-on::after-request="if(event.detail.successful) this.closest('.fixed').remove()"
               class="flex-1 overflow-y-auto p-6">
             <div class="space-y-6">
@@ -76,12 +76,24 @@
                 <!-- Model Name -->
                 <div class="space-y-2">
                     <label for="model_name" class="text-sm font-medium">Model Name</label>
-                    <input type="text" id="model_name" name="model_name" value="{{ item.model_name }}" required
+                    <select id="model_name" name="model_name" required
                         class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm font-mono
-                               placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                        placeholder="e.g., codellama:13b" />
+                               focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                        <option value="">Select model...</option>
+                        {% for model in available_models %}
+                        <option value="{{ model.name }}" {% if model.name == item.model_name %}selected{% endif %}>{{ model.name }}{% if model.details and model.details.parameter_size %} ({{ model.details.parameter_size }}){% endif %}</option>
+                        {% endfor %}
+                        {% if item.model_name %}
+                        <!-- If current model is not in the list, show it anyway -->
+                        {% set model_in_list = false %}
+                        {% for model in available_models %}{% if model.name == item.model_name %}{% set model_in_list = true %}{% endif %}{% endfor %}
+                        {% if not model_in_list %}
+                        <option value="{{ item.model_name }}" selected>{{ item.model_name }} (not available)</option>
+                        {% endif %}
+                        {% endif %}
+                    </select>
                     <p class="text-xs text-muted-foreground">
-                        Model identifier as expected by the provider.
+                        Available models from the Ollama server.
                     </p>
                 </div>
 

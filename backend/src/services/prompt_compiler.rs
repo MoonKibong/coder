@@ -1,6 +1,7 @@
 use crate::domain::{ScreenType, UiIntent};
 use crate::models::_entities::{company_rules, prompt_templates};
 use crate::services::template::DefaultTemplates;
+use crate::services::{KnowledgeBaseService, KnowledgeFileFallback};
 use anyhow::Result;
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
 
@@ -42,10 +43,13 @@ impl PromptCompiler {
             None
         };
 
-        // 3. Build system prompt
-        let system = Self::build_system_prompt(&template, &rules);
+        // 3. Load knowledge base for screen type
+        let knowledge = Self::load_knowledge(db, intent.screen_type.as_str()).await;
 
-        // 4. Build user prompt from intent
+        // 4. Build system prompt with knowledge
+        let system = Self::build_system_prompt(&template, &rules, &knowledge);
+
+        // 5. Build user prompt from intent
         let user = Self::build_user_prompt(&template, intent, &rules);
 
         Ok(CompiledPrompt { system, user })
@@ -87,26 +91,85 @@ impl PromptCompiler {
             .ok_or_else(|| anyhow::anyhow!("Company rules not found for: {}", company_id))
     }
 
-    /// Build system prompt from template and rules
+    /// Load knowledge base for screen type
+    async fn load_knowledge(db: &DatabaseConnection, screen_type: &str) -> String {
+        // Convert screen_type to tag format (e.g., "list" -> "list_screen")
+        let tag = format!("{}_screen", screen_type);
+
+        // Query knowledge base for relevant entries
+        match KnowledgeBaseService::for_screen_type(db, &tag).await {
+            Ok(entries) if !entries.is_empty() => {
+                let token_estimate = KnowledgeBaseService::estimate_tokens(&entries);
+                tracing::info!(
+                    "Loaded {} knowledge entries for screen_type '{}' (~{} tokens)",
+                    entries.len(),
+                    screen_type,
+                    token_estimate
+                );
+
+                // Assemble knowledge content
+                KnowledgeBaseService::assemble_content(&entries)
+            }
+            Ok(_) => {
+                // Database query returned empty - try file fallback
+                tracing::warn!(
+                    "No knowledge entries found in database for screen_type '{}', trying file fallback",
+                    screen_type
+                );
+
+                KnowledgeFileFallback::for_screen_type(screen_type)
+                    .unwrap_or_else(|e| {
+                        tracing::error!("File fallback also failed: {}", e);
+                        String::new()
+                    })
+            }
+            Err(e) => {
+                // Database query failed - try file fallback
+                tracing::error!(
+                    "Failed to query knowledge base for '{}': {}, trying file fallback",
+                    screen_type,
+                    e
+                );
+
+                KnowledgeFileFallback::for_screen_type(screen_type)
+                    .unwrap_or_else(|e| {
+                        tracing::error!("File fallback also failed: {}", e);
+                        String::new()
+                    })
+            }
+        }
+    }
+
+    /// Build system prompt from template, rules, and knowledge
     fn build_system_prompt(
         template: &Option<prompt_templates::Model>,
         rules: &Option<company_rules::Model>,
+        knowledge: &str,
     ) -> String {
         let base_prompt = template
             .as_ref()
             .map(|t| t.system_prompt.clone())
             .unwrap_or_else(|| DefaultTemplates::xframe5_list_system_prompt().to_string());
 
+        let mut prompt = base_prompt;
+
+        // Add knowledge base if available
+        if !knowledge.is_empty() {
+            prompt.push_str("\n\n# XFRAME5 KNOWLEDGE BASE\n\n");
+            prompt.push_str(knowledge);
+        }
+
         // Append company rules if available
         if let Some(r) = rules {
             if let Some(ref additional) = r.additional_rules {
                 if !additional.is_empty() {
-                    return format!("{}\n\nCOMPANY-SPECIFIC RULES:\n{}", base_prompt, additional);
+                    prompt.push_str("\n\n# COMPANY-SPECIFIC RULES\n\n");
+                    prompt.push_str(additional);
                 }
             }
         }
 
-        base_prompt
+        prompt
     }
 
     /// Build user prompt from template and intent

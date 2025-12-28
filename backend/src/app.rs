@@ -15,7 +15,7 @@ use std::path::Path;
 
 #[allow(unused_imports)]
 use crate::{
-    controllers, initializers, models::_entities::users, services, tasks,
+    controllers, initializers, models::_entities::{users, knowledge_bases}, services, tasks,
     workers::downloader::DownloadWorker,
 };
 
@@ -58,6 +58,7 @@ impl Hooks for App {
 
     fn routes(_ctx: &AppContext) -> AppRoutes {
         AppRoutes::with_default_routes() // controller routes below
+            .add_route(controllers::knowledge_base::routes())
             // Landing page
             .add_route(controllers::home::routes())
             // API routes
@@ -83,10 +84,13 @@ impl Hooks for App {
     }
     async fn truncate(ctx: &AppContext) -> Result<()> {
         truncate_table(&ctx.db, users::Entity).await?;
+        truncate_table(&ctx.db, knowledge_bases::Entity).await?;
         Ok(())
     }
     async fn seed(ctx: &AppContext, base: &Path) -> Result<()> {
         db::seed::<users::ActiveModel>(&ctx.db, &base.join("users.yaml").display().to_string())
+            .await?;
+        db::seed::<knowledge_bases::ActiveModel>(&ctx.db, &base.join("knowledge_bases.yaml").display().to_string())
             .await?;
         Ok(())
     }
