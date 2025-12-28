@@ -1,5 +1,6 @@
 mod ollama;
 mod llama_cpp;
+mod local_llama_cpp;
 mod vllm;
 mod groq;
 mod openai;
@@ -8,6 +9,7 @@ mod mock;
 
 pub use ollama::OllamaBackend;
 pub use llama_cpp::LlamaCppBackend;
+pub use local_llama_cpp::LocalLlamaCppBackend;
 pub use vllm::VllmBackend;
 pub use groq::GroqBackend;
 pub use openai::OpenAIBackend;
@@ -39,11 +41,18 @@ pub trait LlmBackend: Send + Sync {
 /// Create LLM backend from environment variables.
 ///
 /// Environment variables:
-/// - LLM_PROVIDER: ollama | llama-cpp | vllm | groq | openai | anthropic
-/// - LLM_ENDPOINT: Server URL
-/// - LLM_MODEL: Model name
+/// - LLM_PROVIDER: ollama | llama-cpp | local-llama-cpp | vllm | groq | openai | anthropic
+/// - LLM_ENDPOINT: Server URL (for remote providers)
+/// - LLM_MODEL: Model name (for remote providers)
 /// - LLM_API_KEY: API key (required for remote providers)
 /// - LLM_TIMEOUT_SECONDS: Request timeout (default: 120)
+///
+/// For local-llama-cpp provider (native llama.cpp bindings):
+/// - LLM_MODEL_PATH: Path to GGUF model file
+/// - LLM_CONTEXT_SIZE: Context window size (default: 4096)
+/// - LLM_THREADS: Number of CPU threads (default: 4)
+/// - LLM_MAX_TOKENS: Max tokens to generate (default: 4096)
+/// - LLM_TEMPERATURE: Sampling temperature (default: 0.7)
 pub fn create_backend_from_env() -> Box<dyn LlmBackend> {
     let provider = env::var("LLM_PROVIDER").unwrap_or_else(|_| "ollama".to_string());
 
@@ -51,6 +60,7 @@ pub fn create_backend_from_env() -> Box<dyn LlmBackend> {
         // On-premise providers (Production)
         "ollama" => Box::new(OllamaBackend::from_env()),
         "llama-cpp" => Box::new(LlamaCppBackend::from_env()),
+        "local-llama-cpp" => Box::new(LocalLlamaCppBackend::from_env()),
         "vllm" => Box::new(VllmBackend::from_env()),
 
         // Remote providers (Development/Testing only)
