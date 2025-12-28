@@ -19,7 +19,7 @@ public class SpringGenerateFromNLHandler extends AbstractSpringGenerateHandler {
         NaturalLanguageInputDialog dialog = new NaturalLanguageInputDialog(shell);
 
         if (dialog.open() == Window.OK) {
-            lastNLInput = dialog.getNaturalLanguageInput();
+            lastNLInput = dialog.getNLInput();
             GenerateRequest request = GenerateRequest.fromNaturalLanguage(lastNLInput);
             request.setProduct("spring-backend");
             request.getContext().setProject(getBasePackage());
