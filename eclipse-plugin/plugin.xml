@@ -4,43 +4,43 @@
    <!-- Commands -->
    <extension point="org.eclipse.ui.commands">
       <category
-            id="com.softbase.xframe5.codegen.commands.category"
+            id="com.kosac.ai.codegen.commands.category"
             name="xFrame5 UI Generator">
       </category>
       <category
-            id="com.softbase.xframe5.codegen.commands.springCategory"
+            id="com.kosac.ai.codegen.commands.springCategory"
             name="Spring Code Generator">
       </category>
       <!-- xFrame5 Commands -->
       <command
-            categoryId="com.softbase.xframe5.codegen.commands.category"
-            id="com.softbase.xframe5.codegen.commands.generateFromSchema"
+            categoryId="com.kosac.ai.codegen.commands.category"
+            id="com.kosac.ai.codegen.commands.generateFromSchema"
             name="Generate from DB Schema">
       </command>
       <command
-            categoryId="com.softbase.xframe5.codegen.commands.category"
-            id="com.softbase.xframe5.codegen.commands.generateFromQuery"
+            categoryId="com.kosac.ai.codegen.commands.category"
+            id="com.kosac.ai.codegen.commands.generateFromQuery"
             name="Generate from Query Sample">
       </command>
       <command
-            categoryId="com.softbase.xframe5.codegen.commands.category"
-            id="com.softbase.xframe5.codegen.commands.generateFromNL"
+            categoryId="com.kosac.ai.codegen.commands.category"
+            id="com.kosac.ai.codegen.commands.generateFromNL"
             name="Generate from Description">
       </command>
       <!-- Spring Commands -->
       <command
-            categoryId="com.softbase.xframe5.codegen.commands.springCategory"
-            id="com.softbase.xframe5.codegen.commands.springGenerateFromSchema"
+            categoryId="com.kosac.ai.codegen.commands.springCategory"
+            id="com.kosac.ai.codegen.commands.springGenerateFromSchema"
             name="Generate Spring Backend from DB Schema">
       </command>
       <command
-            categoryId="com.softbase.xframe5.codegen.commands.springCategory"
-            id="com.softbase.xframe5.codegen.commands.springGenerateFromQuery"
+            categoryId="com.kosac.ai.codegen.commands.springCategory"
+            id="com.kosac.ai.codegen.commands.springGenerateFromQuery"
             name="Generate Spring Backend from Query Sample">
       </command>
       <command
-            categoryId="com.softbase.xframe5.codegen.commands.springCategory"
-            id="com.softbase.xframe5.codegen.commands.springGenerateFromNL"
+            categoryId="com.kosac.ai.codegen.commands.springCategory"
+            id="com.kosac.ai.codegen.commands.springGenerateFromNL"
             name="Generate Spring Backend from Description">
       </command>
    </extension>
@@ -49,29 +49,29 @@
    <extension point="org.eclipse.ui.handlers">
       <!-- xFrame5 Handlers -->
       <handler
-            class="com.softbase.xframe5.codegen.handlers.GenerateFromSchemaHandler"
-            commandId="com.softbase.xframe5.codegen.commands.generateFromSchema">
+            class="com.kosac.ai.codegen.handlers.GenerateFromSchemaHandler"
+            commandId="com.kosac.ai.codegen.commands.generateFromSchema">
       </handler>
       <handler
-            class="com.softbase.xframe5.codegen.handlers.GenerateFromQueryHandler"
-            commandId="com.softbase.xframe5.codegen.commands.generateFromQuery">
+            class="com.kosac.ai.codegen.handlers.GenerateFromQueryHandler"
+            commandId="com.kosac.ai.codegen.commands.generateFromQuery">
       </handler>
       <handler
-            class="com.softbase.xframe5.codegen.handlers.GenerateFromNLHandler"
-            commandId="com.softbase.xframe5.codegen.commands.generateFromNL">
+            class="com.kosac.ai.codegen.handlers.GenerateFromNLHandler"
+            commandId="com.kosac.ai.codegen.commands.generateFromNL">
       </handler>
       <!-- Spring Handlers -->
       <handler
-            class="com.softbase.xframe5.codegen.handlers.SpringGenerateFromSchemaHandler"
-            commandId="com.softbase.xframe5.codegen.commands.springGenerateFromSchema">
+            class="com.kosac.ai.codegen.handlers.SpringGenerateFromSchemaHandler"
+            commandId="com.kosac.ai.codegen.commands.springGenerateFromSchema">
       </handler>
       <handler
-            class="com.softbase.xframe5.codegen.handlers.SpringGenerateFromQueryHandler"
-            commandId="com.softbase.xframe5.codegen.commands.springGenerateFromQuery">
+            class="com.kosac.ai.codegen.handlers.SpringGenerateFromQueryHandler"
+            commandId="com.kosac.ai.codegen.commands.springGenerateFromQuery">
       </handler>
       <handler
-            class="com.softbase.xframe5.codegen.handlers.SpringGenerateFromNLHandler"
-            commandId="com.softbase.xframe5.codegen.commands.springGenerateFromNL">
+            class="com.kosac.ai.codegen.handlers.SpringGenerateFromNLHandler"
+            commandId="com.kosac.ai.codegen.commands.springGenerateFromNL">
       </handler>
    </extension>
 
@@ -82,29 +82,29 @@
             allPopups="false"
             locationURI="menu:org.eclipse.ui.main.menu?after=additions">
          <menu
-               id="com.softbase.xframe5.codegen.menus.mainMenu"
+               id="com.kosac.ai.codegen.menus.mainMenu"
                label="xFrame5"
                mnemonic="X">
             <command
-                  commandId="com.softbase.xframe5.codegen.commands.generateFromSchema"
+                  commandId="com.kosac.ai.codegen.commands.generateFromSchema"
                   label="Generate from DB Schema..."
                   mnemonic="S"
                   style="push">
             </command>
             <command
-                  commandId="com.softbase.xframe5.codegen.commands.generateFromQuery"
+                  commandId="com.kosac.ai.codegen.commands.generateFromQuery"
                   label="Generate from Query Sample..."
                   mnemonic="Q"
                   style="push">
             </command>
             <command
-                  commandId="com.softbase.xframe5.codegen.commands.generateFromNL"
+                  commandId="com.kosac.ai.codegen.commands.generateFromNL"
                   label="Generate from Description..."
                   mnemonic="D"
                   style="push">
             </command>
             <separator
-                  name="com.softbase.xframe5.codegen.menus.separator1"
+                  name="com.kosac.ai.codegen.menus.separator1"
                   visible="true">
             </separator>
             <command
@@ -114,7 +114,7 @@
                   style="push">
                <parameter
                      name="preferencePageId"
-                     value="com.softbase.xframe5.codegen.preferences.MainPreferencePage">
+                     value="com.kosac.ai.codegen.preferences.MainPreferencePage">
                </parameter>
             </command>
          </menu>
@@ -125,29 +125,29 @@
             allPopups="false"
             locationURI="menu:org.eclipse.ui.main.menu?after=additions">
          <menu
-               id="com.softbase.xframe5.codegen.menus.springMainMenu"
+               id="com.kosac.ai.codegen.menus.springMainMenu"
                label="Spring"
                mnemonic="R">
             <command
-                  commandId="com.softbase.xframe5.codegen.commands.springGenerateFromSchema"
+                  commandId="com.kosac.ai.codegen.commands.springGenerateFromSchema"
                   label="Generate Backend from DB Schema..."
                   mnemonic="S"
                   style="push">
             </command>
             <command
-                  commandId="com.softbase.xframe5.codegen.commands.springGenerateFromQuery"
+                  commandId="com.kosac.ai.codegen.commands.springGenerateFromQuery"
                   label="Generate Backend from Query Sample..."
                   mnemonic="Q"
                   style="push">
             </command>
             <command
-                  commandId="com.softbase.xframe5.codegen.commands.springGenerateFromNL"
+                  commandId="com.kosac.ai.codegen.commands.springGenerateFromNL"
                   label="Generate Backend from Description..."
                   mnemonic="D"
                   style="push">
             </command>
             <separator
-                  name="com.softbase.xframe5.codegen.menus.springSeparator1"
+                  name="com.kosac.ai.codegen.menus.springSeparator1"
                   visible="true">
             </separator>
             <command
@@ -157,7 +157,7 @@
                   style="push">
                <parameter
                      name="preferencePageId"
-                     value="com.softbase.xframe5.codegen.preferences.MainPreferencePage">
+                     value="com.kosac.ai.codegen.preferences.MainPreferencePage">
                </parameter>
             </command>
          </menu>
@@ -168,7 +168,7 @@
             allPopups="false"
             locationURI="popup:org.eclipse.ui.popup.any?after=additions">
          <menu
-               id="com.softbase.xframe5.codegen.menus.popupMenu"
+               id="com.kosac.ai.codegen.menus.popupMenu"
                label="xFrame5 Generate">
             <visibleWhen checkEnabled="false">
                <with variable="selection">
@@ -178,17 +178,17 @@
                </with>
             </visibleWhen>
             <command
-                  commandId="com.softbase.xframe5.codegen.commands.generateFromSchema"
+                  commandId="com.kosac.ai.codegen.commands.generateFromSchema"
                   label="From DB Schema..."
                   style="push">
             </command>
             <command
-                  commandId="com.softbase.xframe5.codegen.commands.generateFromQuery"
+                  commandId="com.kosac.ai.codegen.commands.generateFromQuery"
                   label="From Query Sample..."
                   style="push">
             </command>
             <command
-                  commandId="com.softbase.xframe5.codegen.commands.generateFromNL"
+                  commandId="com.kosac.ai.codegen.commands.generateFromNL"
                   label="From Description..."
                   style="push">
             </command>
@@ -200,7 +200,7 @@
             allPopups="false"
             locationURI="popup:org.eclipse.ui.popup.any?after=additions">
          <menu
-               id="com.softbase.xframe5.codegen.menus.springPopupMenu"
+               id="com.kosac.ai.codegen.menus.springPopupMenu"
                label="Spring Generate">
             <visibleWhen checkEnabled="false">
                <with variable="selection">
@@ -210,17 +210,17 @@
                </with>
             </visibleWhen>
             <command
-                  commandId="com.softbase.xframe5.codegen.commands.springGenerateFromSchema"
+                  commandId="com.kosac.ai.codegen.commands.springGenerateFromSchema"
                   label="From DB Schema..."
                   style="push">
             </command>
             <command
-                  commandId="com.softbase.xframe5.codegen.commands.springGenerateFromQuery"
+                  commandId="com.kosac.ai.codegen.commands.springGenerateFromQuery"
                   label="From Query Sample..."
                   style="push">
             </command>
             <command
-                  commandId="com.softbase.xframe5.codegen.commands.springGenerateFromNL"
+                  commandId="com.kosac.ai.codegen.commands.springGenerateFromNL"
                   label="From Description..."
                   style="push">
             </command>
@@ -231,14 +231,14 @@
    <!-- Preference Pages -->
    <extension point="org.eclipse.ui.preferencePages">
       <page
-            class="com.softbase.xframe5.codegen.preferences.MainPreferencePage"
-            id="com.softbase.xframe5.codegen.preferences.MainPreferencePage"
+            class="com.kosac.ai.codegen.preferences.MainPreferencePage"
+            id="com.kosac.ai.codegen.preferences.MainPreferencePage"
             name="Code Generator">
       </page>
    </extension>
 
    <!-- Preference Initializer -->
    <extension point="org.eclipse.core.runtime.preferences">
-      <initializer class="com.softbase.xframe5.codegen.preferences.PreferenceInitializer"/>
+      <initializer class="com.kosac.ai.codegen.preferences.PreferenceInitializer"/>
    </extension>
 </plugin>
