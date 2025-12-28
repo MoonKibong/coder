@@ -7,7 +7,7 @@
     <td class="p-4 align-middle">
         <div class="flex items-center gap-2">
             <div class="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center">
-                <span class="text-xs font-medium text-primary">{{ item.user_name | first | upper }}</span>
+                <span class="text-xs font-medium text-primary">{{ item.user_name | truncate(length=1, end="") | upper }}</span>
             </div>
             <div>
                 <div class="font-medium text-sm">{{ item.user_name }}</div>
@@ -19,7 +19,7 @@
     </td>
     <td class="p-4 align-middle hidden sm:table-cell">
         <span class="inline-flex items-center rounded-md bg-secondary px-2 py-1 text-xs font-medium">
-            {{ item.screen_type }}
+            {{ item.product }}
         </span>
     </td>
     <td class="p-4 align-middle hidden md:table-cell">
@@ -50,7 +50,7 @@
         {% endif %}
     </td>
     <td class="p-4 align-middle hidden lg:table-cell">
-        <span class="text-sm text-muted-foreground">{{ item.duration_ms }}ms</span>
+        <span class="text-sm text-muted-foreground">{% if item.generation_time_ms %}{{ item.generation_time_ms }}ms{% else %}-{% endif %}</span>
     </td>
     <td class="p-4 align-middle text-right">
         <button hx-get="/admin/generation-logs/{{ item.id }}" hx-target="#modal-container" hx-swap="innerHTML"

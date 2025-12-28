@@ -7,6 +7,10 @@ mod spring_normalizer;
 pub mod spring_validator;
 mod spring_prompt_compiler;
 mod spring_generation;
+pub mod admin;
+pub mod system_monitor;
+pub mod analytics;
+pub mod metrics_history;
 
 pub use generation::GenerationService;
 pub use normalizer::NormalizerService;
@@ -16,3 +20,5 @@ pub use spring_normalizer::SpringNormalizerService;
 pub use spring_validator::SpringValidator;
 pub use spring_prompt_compiler::SpringPromptCompiler;
 pub use spring_generation::{SpringGenerationService, SpringGenerateResponse};
+pub use system_monitor::{SystemMonitor, SystemMetrics};
+pub use analytics::AnalyticsService;

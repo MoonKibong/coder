@@ -2,21 +2,43 @@
 
 > **Source of Truth** for xFrame5 Code Assistant
 
+## Monorepo Documentation Structure
+
+**IMPORTANT**: All documentation lives in this top-level `docs/` folder, NOT in component subdirectories.
+
+```
+coder/
+├── docs/                    # ALL documentation here (monorepo pattern)
+│   ├── README.md
+│   ├── patterns/
+│   ├── features/
+│   └── implementation/
+├── backend/                 # Rust server (NO docs/ subfolder)
+├── eclipse-plugin/          # Eclipse plugin (NO docs/ subfolder)
+└── CLAUDE.md               # AI agent instructions
+```
+
+Do NOT create `backend/docs/` or `eclipse-plugin/docs/`. All docs go in the top-level `docs/` folder.
+
 ## Folder Structure
 
 ```
 docs/
 ├── README.md              # This file
 ├── requirements.md        # Project requirements and PoC scope
+├── DEPLOYMENT.md          # Deployment guide
 ├── implementation/        # Implementation guides
-│   ├── IMPLEMENTATION_PLAN.md           # Backend phase-by-phase plan
-│   └── FRONTEND_IMPLEMENTATION_PLAN.md  # Admin panel (React+Vite)
+│   └── IMPLEMENTATION_PLAN.md
 ├── patterns/              # Implementation patterns
-│   ├── LLM_BACKEND_ABSTRACTION.md
-│   ├── PROMPT_COMPILER.md
-│   ├── XFRAME5_VALIDATION.md
-│   ├── AUDIT_LOGGING.md
-│   └── LOCO_MIGRATION_PATTERNS.md
+│   ├── LLM_BACKEND_ABSTRACTION.md   # LLM trait design
+│   ├── PROMPT_COMPILER.md           # DSL to prompt transformation
+│   ├── XFRAME5_VALIDATION.md        # XML/JS validation
+│   ├── AUDIT_LOGGING.md             # Generation logging
+│   ├── LOCO_MIGRATION_PATTERNS.md   # Database migrations
+│   ├── ADMIN_PANEL.md               # HTMX admin UI
+│   ├── PAGINATION_PATTERN.md        # Pagination with service layer
+│   ├── CONTROLLER_SERVICE_SEPARATION.md  # Thin controller pattern
+│   └── COOKIE_AUTH.md               # Cookie-based JWT auth
 └── features/              # Feature specifications
     ├── SCREEN_GENERATION.md
     └── SCHEMA_INPUT.md
@@ -38,11 +60,26 @@ docs/
 - Reusable implementation patterns
 - Cross-cutting concerns (logging, validation)
 - Integration patterns (LLM, external systems)
+- Architecture patterns (controller/service separation)
 
 ### When to Create New Feature Docs
 - New screen types to support
 - New input types (beyond schema, query, natural language)
 - New output formats
+
+### Documentation Rules
+1. **Monorepo pattern**: All docs in top-level `docs/` folder
+2. **Reference HWS project**: For established patterns, reference `../HWS/docs/patterns/`
+3. **Keep CLAUDE.md lean**: Move details to pattern docs, reference from CLAUDE.md
+
+## Key Patterns (Quick Reference)
+
+| Pattern | File | Purpose |
+|---------|------|---------|
+| Pagination | `PAGINATION_PATTERN.md` | Search with filters, sorting, pagination |
+| Controller/Service | `CONTROLLER_SERVICE_SEPARATION.md` | Thin controllers, fat services |
+| Cookie Auth | `COOKIE_AUTH.md` | HTTP-only JWT cookies for admin pages |
+| Admin Panel | `ADMIN_PANEL.md` | HTMX-based CRUD interface |
 
 ## Tech Stack Rationale
 
@@ -71,3 +108,4 @@ docs/
 ### Pattern Documentation Updates
 - 새로운 패턴 발견 시 문서화
 - CLAUDE.md 용량 초과 시 상세 내용 이동
+- HWS 프로젝트의 패턴 참조 및 적용

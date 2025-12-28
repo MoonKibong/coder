@@ -1,14 +1,23 @@
 <!-- Dashboard Main Content -->
 <div class="space-y-6">
     <!-- Header -->
-    <div>
-        <h1 class="text-2xl font-semibold text-foreground">Dashboard</h1>
-        <p class="text-muted-foreground">Welcome to xFrame5 Code Generator Admin Panel</p>
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-semibold text-foreground">Dashboard</h1>
+            <p class="text-muted-foreground">Enterprise Code Generator - System Overview</p>
+        </div>
+        <div class="flex items-center gap-2 text-sm text-muted-foreground">
+            <span class="inline-flex items-center gap-1">
+                <span class="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+                System Online
+            </span>
+            <span>|</span>
+            <span>{{ system_metrics.hostname }}</span>
+        </div>
     </div>
 
-    <!-- Stats Cards -->
+    <!-- Configuration Stats -->
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <!-- Prompt Templates -->
         <div class="bg-card text-card-foreground rounded-xl border shadow-sm p-6">
             <div class="flex items-center gap-4">
                 <div class="p-2 bg-primary/10 rounded-lg">
@@ -18,12 +27,10 @@
                 </div>
                 <div>
                     <p class="text-sm font-medium text-muted-foreground">Prompt Templates</p>
-                    <p class="text-2xl font-semibold">{{ stats.prompt_templates_count }}</p>
+                    <p class="text-2xl font-semibold">{{ config_stats.prompt_templates_count }}</p>
                 </div>
             </div>
         </div>
-
-        <!-- Company Rules -->
         <div class="bg-card text-card-foreground rounded-xl border shadow-sm p-6">
             <div class="flex items-center gap-4">
                 <div class="p-2 bg-primary/10 rounded-lg">
@@ -33,40 +40,46 @@
                 </div>
                 <div>
                     <p class="text-sm font-medium text-muted-foreground">Company Rules</p>
-                    <p class="text-2xl font-semibold">{{ stats.company_rules_count }}</p>
+                    <p class="text-2xl font-semibold">{{ config_stats.company_rules_count }}</p>
                 </div>
             </div>
         </div>
-
-        <!-- LLM Configs -->
         <div class="bg-card text-card-foreground rounded-xl border shadow-sm p-6">
             <div class="flex items-center gap-4">
                 <div class="p-2 bg-primary/10 rounded-lg">
                     <svg class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3" />
                     </svg>
                 </div>
                 <div>
                     <p class="text-sm font-medium text-muted-foreground">LLM Configs</p>
-                    <p class="text-2xl font-semibold">{{ stats.llm_configs_count }}</p>
+                    <p class="text-2xl font-semibold">{{ config_stats.llm_configs_count }}</p>
                 </div>
             </div>
         </div>
-
-        <!-- Generation Logs -->
         <div class="bg-card text-card-foreground rounded-xl border shadow-sm p-6">
             <div class="flex items-center gap-4">
                 <div class="p-2 bg-primary/10 rounded-lg">
                     <svg class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
                     </svg>
                 </div>
                 <div>
-                    <p class="text-sm font-medium text-muted-foreground">Generation Logs</p>
-                    <p class="text-2xl font-semibold">{{ stats.generation_logs_count }}</p>
+                    <p class="text-sm font-medium text-muted-foreground">Users</p>
+                    <p class="text-2xl font-semibold">{{ config_stats.users_count }}</p>
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- System Resources -->
+    <div id="system-metrics-container" hx-get="/admin/dashboard/system-metrics" hx-trigger="every 10s" hx-swap="innerHTML">
+        {% include "admin/dashboard/partials/system_metrics.html" %}
+    </div>
+
+    <!-- Generation Analytics -->
+    <div id="analytics-container" hx-get="/admin/dashboard/analytics" hx-trigger="every 30s" hx-swap="innerHTML">
+        {% include "admin/dashboard/partials/analytics.html" %}
     </div>
 
     <!-- Quick Actions -->
@@ -82,7 +95,6 @@
                 </svg>
                 <span class="font-medium">New Template</span>
             </button>
-
             <button hx-get="/admin/company-rules/new" hx-target="#modal-container" hx-swap="innerHTML"
                 class="flex items-center gap-3 p-4 rounded-lg border hover:bg-accent transition-colors text-left">
                 <svg class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -90,7 +102,6 @@
                 </svg>
                 <span class="font-medium">New Company Rule</span>
             </button>
-
             <button hx-get="/admin/llm-configs/new" hx-target="#modal-container" hx-swap="innerHTML"
                 class="flex items-center gap-3 p-4 rounded-lg border hover:bg-accent transition-colors text-left">
                 <svg class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -98,7 +109,6 @@
                 </svg>
                 <span class="font-medium">New LLM Config</span>
             </button>
-
             <button hx-get="/admin/generation-logs" hx-target="#content-body" hx-swap="innerHTML" hx-push-url="true"
                 class="flex items-center gap-3 p-4 rounded-lg border hover:bg-accent transition-colors text-left">
                 <svg class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -107,38 +117,6 @@
                 </svg>
                 <span class="font-medium">View Logs</span>
             </button>
-        </div>
-    </div>
-
-    <!-- System Info -->
-    <div class="bg-card text-card-foreground rounded-xl border shadow-sm">
-        <div class="px-6 py-4 border-b">
-            <h2 class="text-lg font-semibold">System Information</h2>
-        </div>
-        <div class="p-6">
-            <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <dt class="text-sm font-medium text-muted-foreground">Version</dt>
-                    <dd class="text-sm">1.0.0</dd>
-                </div>
-                <div>
-                    <dt class="text-sm font-medium text-muted-foreground">Environment</dt>
-                    <dd class="text-sm">Production</dd>
-                </div>
-                <div>
-                    <dt class="text-sm font-medium text-muted-foreground">Recent Generations</dt>
-                    <dd class="text-sm">{{ stats.recent_generations }} in last 24h</dd>
-                </div>
-                <div>
-                    <dt class="text-sm font-medium text-muted-foreground">API Status</dt>
-                    <dd class="text-sm">
-                        <span class="inline-flex items-center gap-1">
-                            <span class="h-2 w-2 rounded-full bg-green-500"></span>
-                            Healthy
-                        </span>
-                    </dd>
-                </div>
-            </dl>
         </div>
     </div>
 </div>

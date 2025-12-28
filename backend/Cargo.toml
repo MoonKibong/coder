@@ -37,11 +37,15 @@ chrono = { version = "0.4" }
 validator = { version = "0.20" }
 uuid = { version = "1.6", features = ["v4"] }
 include_dir = { version = "0.7" }
+cookie = { version = "0.18" }
+time = { version = "0.3" }
 # view engine i18n
 fluent-templates = { version = "0.13", features = ["tera"] }
 unic-langid = { version = "0.9" }
 # /view engine
 axum-extra = { version = "0.10", features = ["form"] }
+urlencoding = { version = "2.1" }
+sysinfo = { version = "0.32" }
 
 [[bin]]
 name = "coder-cli"

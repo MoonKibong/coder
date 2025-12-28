@@ -1,5 +1,5 @@
 use axum::http::{HeaderName, HeaderValue};
-use coder::{models::users, views::auth::LoginResponse};
+use coder::models::users;
 use loco_rs::{app::AppContext, TestServer};
 
 const USER_EMAIL: &str = "test@loco.com";
@@ -17,7 +17,7 @@ pub async fn init_user_login(request: &TestServer, ctx: &AppContext) -> LoggedIn
         "password": USER_PASSWORD
     });
 
-    //Creating a new user
+    // Creating a new user
     request
         .post("/api/auth/register")
         .json(&register_payload)
@@ -26,12 +26,13 @@ pub async fn init_user_login(request: &TestServer, ctx: &AppContext) -> LoggedIn
         .await
         .unwrap();
 
-    let verify_payload = serde_json::json!({
-        "token": user.email_verification_token,
-    });
+    // Verify user email via GET endpoint with token in path
+    let token = user.email_verification_token.as_ref().unwrap();
+    request
+        .get(&format!("/api/auth/verify/{}", token))
+        .await;
 
-    request.post("/api/auth/verify").json(&verify_payload).await;
-
+    // Login and extract token from Set-Cookie header
     let response = request
         .post("/api/auth/login")
         .json(&serde_json::json!({
@@ -40,13 +41,27 @@ pub async fn init_user_login(request: &TestServer, ctx: &AppContext) -> LoggedIn
         }))
         .await;
 
-    let login_response: LoginResponse = serde_json::from_str(&response.text()).unwrap();
+    // Extract token from Set-Cookie header
+    let set_cookie = response
+        .headers()
+        .get("set-cookie")
+        .expect("Expected Set-Cookie header")
+        .to_str()
+        .unwrap();
+
+    // Parse "token=<value>; ..." format
+    let token = set_cookie
+        .split(';')
+        .next()
+        .unwrap()
+        .trim_start_matches("token=")
+        .to_string();
 
     LoggedInUser {
         user: users::Model::find_by_email(&ctx.db, USER_EMAIL)
             .await
             .unwrap(),
-        token: login_response.token,
+        token,
     }
 }
 

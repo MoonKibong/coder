@@ -5,12 +5,14 @@
 //! - Company Rules
 //! - LLM Configurations
 //! - Generation Logs (view only)
+//! - Users
 
 pub mod dashboard;
 pub mod prompt_templates;
 pub mod company_rules;
 pub mod generation_logs;
 pub mod llm_configs;
+pub mod users;
 
 use loco_rs::prelude::*;
 
@@ -28,6 +30,9 @@ pub fn routes() -> Routes {
         .add("empty", post(empty))
         // Dashboard
         .add("dashboard", get(dashboard::main))
+        .add("dashboard/system-metrics", get(dashboard::system_metrics))
+        .add("dashboard/analytics", get(dashboard::analytics))
+        .add("dashboard/metrics-history", get(dashboard::metrics_history))
         // Prompt Templates
         .add("prompt-templates", get(prompt_templates::main))
         .add("prompt-templates/list", get(prompt_templates::list))
@@ -58,4 +63,13 @@ pub fn routes() -> Routes {
         .add("generation-logs", get(generation_logs::main))
         .add("generation-logs/list", get(generation_logs::list))
         .add("generation-logs/{id}", get(generation_logs::show))
+        // Users
+        .add("users", get(users::main))
+        .add("users/list", get(users::list))
+        .add("users/new", get(users::new_form))
+        .add("users", post(users::create))
+        .add("users/{id}", get(users::show))
+        .add("users/{id}/edit", get(users::edit_form))
+        .add("users/{id}", patch(users::update))
+        .add("users/{id}", delete(users::delete))
 }

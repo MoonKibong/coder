@@ -6,7 +6,7 @@
                 <tr>
                     <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Timestamp</th>
                     <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground">User</th>
-                    <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground hidden sm:table-cell">Screen Type</th>
+                    <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground hidden sm:table-cell">Product</th>
                     <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground hidden md:table-cell">Input Type</th>
                     <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Status</th>
                     <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground hidden lg:table-cell">Duration</th>
@@ -37,7 +37,7 @@
     {% if total_pages > 1 %}
     <div class="flex items-center justify-between px-4 py-3 border-t">
         <div class="text-sm text-muted-foreground">
-            Page {{ page }} of {{ total_pages }} ({{ total_count }} total logs)
+            Page {{ page }} of {{ total_pages }} ({{ total_items }} total logs)
         </div>
         <div class="flex items-center gap-2">
             <input type="number" value="{{ page }}" min="1" max="{{ total_pages }}" name="page"

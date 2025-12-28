@@ -127,7 +127,7 @@ async fn login_with_un_existing_email() {
     configure_insta!();
 
     request::<App, _, _>(|request, _ctx| async move {
-      
+
         let login_response = request
             .post("/api/auth/login")
             .json(&serde_json::json!({
@@ -137,14 +137,16 @@ async fn login_with_un_existing_email() {
             .await;
 
         assert_eq!(login_response.status_code(), 401, "Login request should return 401");
-        login_response.assert_json(&serde_json::json!({"error": "unauthorized", "description": "You do not have permission to access this resource"}));
+        // Response is HTML for HTMX, check for error message in content
+        let body = login_response.text();
+        assert!(body.contains("Invalid email or password"), "Response should contain error message");
     })
     .await;
 }
 
 #[tokio::test]
 #[serial]
-async fn can_login_without_verify() {
+async fn cannot_login_without_verify() {
     configure_insta!();
 
     request::<App, _, _>(|request, _ctx| async move {
@@ -156,7 +158,7 @@ async fn can_login_without_verify() {
             "password": password
         });
 
-        //Creating a new user
+        // Creating a new user (unverified)
         let register_response = request
             .post("/api/auth/register")
             .json(&register_payload)
@@ -168,7 +170,7 @@ async fn can_login_without_verify() {
             "Register request should succeed"
         );
 
-        //verify user request
+        // Attempt login without verifying email - should fail
         let login_response = request
             .post("/api/auth/login")
             .json(&serde_json::json!({
@@ -179,15 +181,13 @@ async fn can_login_without_verify() {
 
         assert_eq!(
             login_response.status_code(),
-            200,
-            "Login request should succeed"
+            401,
+            "Login request should be rejected for unverified user"
         );
 
-        with_settings!({
-            filters => cleanup_user_model()
-        }, {
-            assert_debug_snapshot!(login_response.text());
-        });
+        // Response is HTML for HTMX
+        let body = login_response.text();
+        assert!(body.contains("verify your email"), "Response should contain verification message");
     })
     .await;
 }

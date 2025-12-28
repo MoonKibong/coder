@@ -1,0 +1,232 @@
+<!-- System Resources Panel -->
+<div class="bg-card text-card-foreground rounded-xl border shadow-sm">
+    <div class="px-6 py-4 border-b flex items-center justify-between">
+        <h2 class="text-lg font-semibold">System Resources</h2>
+        <span class="text-xs text-muted-foreground">Auto-refresh: 10s</span>
+    </div>
+    <div class="p-6">
+        <!-- Current Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <!-- CPU -->
+            <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm font-medium">CPU</span>
+                    <span class="text-sm text-muted-foreground">{{ system_metrics.cpu_usage | round }}%</span>
+                </div>
+                <div class="h-2 bg-muted rounded-full overflow-hidden">
+                    <div class="h-full bg-primary transition-all duration-500"
+                         style="width: {{ system_metrics.cpu_usage | round }}%"></div>
+                </div>
+                <p class="text-xs text-muted-foreground">{{ system_metrics.cpu_cores }} cores</p>
+            </div>
+
+            <!-- Memory -->
+            <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm font-medium">Memory</span>
+                    <span class="text-sm text-muted-foreground">{{ system_metrics.memory_usage | round }}%</span>
+                </div>
+                <div class="h-2 bg-muted rounded-full overflow-hidden">
+                    <div class="h-full bg-blue-500 transition-all duration-500"
+                         style="width: {{ system_metrics.memory_usage | round }}%"></div>
+                </div>
+                <p class="text-xs text-muted-foreground">{{ system_metrics.memory_used }} / {{ system_metrics.memory_total }}</p>
+            </div>
+
+            <!-- Disk (first disk) -->
+            {% if system_metrics.disks %}
+            {% set disk = system_metrics.disks.0 %}
+            {% if disk %}
+            <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm font-medium">Disk</span>
+                    <span class="text-sm text-muted-foreground">{{ disk.usage_percent | round }}%</span>
+                </div>
+                <div class="h-2 bg-muted rounded-full overflow-hidden">
+                    <div class="h-full {% if disk.usage_percent > 90 %}bg-red-500{% elif disk.usage_percent > 70 %}bg-yellow-500{% else %}bg-green-500{% endif %} transition-all duration-500"
+                         style="width: {{ disk.usage_percent | round }}%"></div>
+                </div>
+                <p class="text-xs text-muted-foreground">{{ disk.available }} free of {{ disk.total }}</p>
+            </div>
+            {% else %}
+            <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm font-medium">Disk</span>
+                    <span class="text-sm text-muted-foreground">N/A</span>
+                </div>
+                <div class="h-2 bg-muted rounded-full"></div>
+                <p class="text-xs text-muted-foreground">No disk info available</p>
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm font-medium">Disk</span>
+                    <span class="text-sm text-muted-foreground">N/A</span>
+                </div>
+                <div class="h-2 bg-muted rounded-full"></div>
+                <p class="text-xs text-muted-foreground">No disk info available</p>
+            </div>
+            {% endif %}
+
+            <!-- Network -->
+            <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm font-medium">Network</span>
+                    <span class="text-sm text-muted-foreground">Active</span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-1">
+                        <svg class="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
+                        </svg>
+                        <span class="text-xs">{{ system_metrics.network_received }}</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <svg class="h-4 w-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18" />
+                        </svg>
+                        <span class="text-xs">{{ system_metrics.network_transmitted }}</span>
+                    </div>
+                </div>
+                <p class="text-xs text-muted-foreground">Total RX / TX</p>
+            </div>
+        </div>
+
+        <!-- Historical Graphs -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6 pt-6 border-t">
+            <!-- CPU History Graph -->
+            <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm font-medium">CPU Usage History</span>
+                    <span class="text-xs text-muted-foreground">Last 10 minutes</span>
+                </div>
+                <div class="h-24 bg-muted/30 rounded-lg p-2 relative">
+                    <svg id="cpu-chart" class="w-full h-full" preserveAspectRatio="none">
+                        <defs>
+                            <linearGradient id="cpu-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" style="stop-color:hsl(var(--primary));stop-opacity:0.3" />
+                                <stop offset="100%" style="stop-color:hsl(var(--primary));stop-opacity:0" />
+                            </linearGradient>
+                        </defs>
+                        <path id="cpu-area" fill="url(#cpu-gradient)" />
+                        <path id="cpu-line" fill="none" stroke="hsl(var(--primary))" stroke-width="2" />
+                    </svg>
+                    <div class="absolute top-1 right-2 text-xs font-medium" id="cpu-current">0%</div>
+                </div>
+            </div>
+
+            <!-- Memory History Graph -->
+            <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm font-medium">Memory Usage History</span>
+                    <span class="text-xs text-muted-foreground">Last 10 minutes</span>
+                </div>
+                <div class="h-24 bg-muted/30 rounded-lg p-2 relative">
+                    <svg id="memory-chart" class="w-full h-full" preserveAspectRatio="none">
+                        <defs>
+                            <linearGradient id="memory-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:0.3" />
+                                <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:0" />
+                            </linearGradient>
+                        </defs>
+                        <path id="memory-area" fill="url(#memory-gradient)" />
+                        <path id="memory-line" fill="none" stroke="#3b82f6" stroke-width="2" />
+                    </svg>
+                    <div class="absolute top-1 right-2 text-xs font-medium" id="memory-current">0%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Info -->
+        <div class="mt-6 pt-6 border-t">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                    <span class="text-muted-foreground">OS:</span>
+                    <span class="ml-1">{{ system_metrics.os_name }} {{ system_metrics.os_version }}</span>
+                </div>
+                <div>
+                    <span class="text-muted-foreground">Uptime:</span>
+                    <span class="ml-1">{{ system_metrics.uptime }}</span>
+                </div>
+                <div class="col-span-2 md:col-span-2">
+                    <span class="text-muted-foreground">CPU:</span>
+                    <span class="ml-1 text-xs">{{ system_metrics.cpu_brand }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    // Fetch and render metrics history
+    async function fetchAndRenderMetrics() {
+        try {
+            const response = await fetch('/admin/dashboard/metrics-history');
+            if (!response.ok) return;
+
+            const data = await response.json();
+            if (!data.samples || data.samples.length === 0) return;
+
+            renderChart('cpu', data.samples, s => s.cpu_usage);
+            renderChart('memory', data.samples, s => s.memory_usage);
+
+            // Update current values
+            const latest = data.samples[data.samples.length - 1];
+            document.getElementById('cpu-current').textContent = Math.round(latest.cpu_usage) + '%';
+            document.getElementById('memory-current').textContent = Math.round(latest.memory_usage) + '%';
+        } catch (e) {
+            console.error('Failed to fetch metrics history:', e);
+        }
+    }
+
+    function renderChart(id, samples, getValue) {
+        const svg = document.getElementById(id + '-chart');
+        const line = document.getElementById(id + '-line');
+        const area = document.getElementById(id + '-area');
+
+        if (!svg || !line || !area) return;
+
+        const width = svg.clientWidth || 300;
+        const height = svg.clientHeight || 80;
+        const padding = 4;
+
+        const effectiveWidth = width - padding * 2;
+        const effectiveHeight = height - padding * 2;
+
+        // Generate path points
+        const points = samples.map((sample, i) => {
+            const x = padding + (i / (samples.length - 1 || 1)) * effectiveWidth;
+            const value = Math.min(100, Math.max(0, getValue(sample)));
+            const y = padding + (1 - value / 100) * effectiveHeight;
+            return { x, y };
+        });
+
+        if (points.length < 2) return;
+
+        // Create smooth line path using bezier curves
+        let linePath = `M ${points[0].x} ${points[0].y}`;
+        for (let i = 1; i < points.length; i++) {
+            const prev = points[i - 1];
+            const curr = points[i];
+            const cpx = (prev.x + curr.x) / 2;
+            linePath += ` C ${cpx} ${prev.y}, ${cpx} ${curr.y}, ${curr.x} ${curr.y}`;
+        }
+
+        // Create area path (same as line but closed at bottom)
+        const areaPath = linePath +
+            ` L ${points[points.length - 1].x} ${height - padding}` +
+            ` L ${points[0].x} ${height - padding} Z`;
+
+        line.setAttribute('d', linePath);
+        area.setAttribute('d', areaPath);
+    }
+
+    // Initial fetch
+    fetchAndRenderMetrics();
+
+    // Refresh every 10 seconds
+    setInterval(fetchAndRenderMetrics, 10000);
+})();
+</script>

@@ -47,7 +47,7 @@
                         <dd class="text-sm">
                             <div class="flex items-center gap-2">
                                 <div class="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
-                                    <span class="text-xs font-medium text-primary">{{ item.user_name | first | upper }}</span>
+                                    <span class="text-xs font-medium text-primary">{{ item.user_name | truncate(length=1, end="") | upper }}</span>
                                 </div>
                                 <span>{{ item.user_name }}</span>
                             </div>
@@ -59,11 +59,11 @@
                     </div>
                     <div class="space-y-1">
                         <dt class="text-sm font-medium text-muted-foreground">Duration</dt>
-                        <dd class="text-sm">{{ item.duration_ms }}ms</dd>
+                        <dd class="text-sm">{% if item.generation_time_ms %}{{ item.generation_time_ms }}ms{% else %}N/A{% endif %}</dd>
                     </div>
                     <div class="space-y-1">
-                        <dt class="text-sm font-medium text-muted-foreground">Token Usage</dt>
-                        <dd class="text-sm">{{ item.token_count | default(value="N/A") }}</dd>
+                        <dt class="text-sm font-medium text-muted-foreground">Template Version</dt>
+                        <dd class="text-sm">v{{ item.template_version | default(value="1") }}</dd>
                     </div>
                 </div>
 
@@ -80,24 +80,12 @@
                             </dd>
                         </div>
                         <div class="space-y-1">
-                            <dt class="text-xs font-medium text-muted-foreground">Screen Type</dt>
-                            <dd class="text-sm">
-                                <span class="inline-flex items-center rounded-md bg-secondary px-2 py-1 text-xs font-medium">
-                                    {{ item.screen_type }}
-                                </span>
-                            </dd>
-                        </div>
-                        <div class="space-y-1">
                             <dt class="text-xs font-medium text-muted-foreground">Input Type</dt>
                             <dd class="text-sm">{{ item.input_type }}</dd>
                         </div>
                         <div class="space-y-1">
-                            <dt class="text-xs font-medium text-muted-foreground">Template Used</dt>
-                            <dd class="text-sm">{{ item.template_name | default(value="Default") }}</dd>
-                        </div>
-                        <div class="space-y-1">
-                            <dt class="text-xs font-medium text-muted-foreground">LLM Config</dt>
-                            <dd class="text-sm">{{ item.llm_config_name | default(value="Default") }}</dd>
+                            <dt class="text-xs font-medium text-muted-foreground">User ID</dt>
+                            <dd class="text-sm">#{{ item.user_id }}</dd>
                         </div>
                     </div>
                 </div>
@@ -112,42 +100,31 @@
                     </p>
                 </div>
 
-                <!-- Generated Output -->
-                {% if item.status != "error" %}
-                <div class="space-y-4">
+                <!-- UI Intent -->
+                {% if item.ui_intent %}
+                <div class="space-y-2">
                     <div class="flex items-center justify-between">
-                        <h3 class="text-sm font-medium">Generated Output</h3>
-                        <div class="flex items-center gap-2">
-                            <button onclick="navigator.clipboard.writeText(document.getElementById('output-xml').textContent)"
-                                class="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground px-2 py-1 rounded hover:bg-accent">
-                                Copy XML
-                            </button>
-                            <button onclick="navigator.clipboard.writeText(document.getElementById('output-js').textContent)"
-                                class="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground px-2 py-1 rounded hover:bg-accent">
-                                Copy JS
-                            </button>
-                        </div>
+                        <h3 class="text-sm font-medium">UI Intent (Meta Model)</h3>
+                        <button onclick="navigator.clipboard.writeText(document.getElementById('ui-intent').textContent)"
+                            class="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground px-2 py-1 rounded hover:bg-accent">
+                            Copy
+                        </button>
                     </div>
+                    <pre id="ui-intent" class="w-full rounded-md border bg-muted/50 p-4 text-xs font-mono whitespace-pre-wrap break-words overflow-x-auto max-h-64">{{ item.ui_intent }}</pre>
+                </div>
+                {% endif %}
 
-                    <!-- Tabs for XML/JS -->
-                    <div x-data="{ tab: 'xml' }">
-                        <div class="flex border-b">
-                            <button @click="tab = 'xml'" :class="tab === 'xml' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'"
-                                class="px-4 py-2 text-sm font-medium border-b-2 -mb-px">
-                                XML Output
-                            </button>
-                            <button @click="tab = 'js'" :class="tab === 'js' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'"
-                                class="px-4 py-2 text-sm font-medium border-b-2 -mb-px">
-                                JavaScript Output
-                            </button>
-                        </div>
-                        <div class="mt-4">
-                            <pre x-show="tab === 'xml'" id="output-xml"
-                                class="w-full rounded-md border bg-muted/50 p-4 text-xs font-mono whitespace-pre-wrap break-words overflow-x-auto max-h-96">{{ item.output_xml | default(value="No XML output") }}</pre>
-                            <pre x-show="tab === 'js'" id="output-js"
-                                class="w-full rounded-md border bg-muted/50 p-4 text-xs font-mono whitespace-pre-wrap break-words overflow-x-auto max-h-96">{{ item.output_js | default(value="No JavaScript output") }}</pre>
-                        </div>
+                <!-- Generated Artifacts -->
+                {% if item.status != "error" and item.artifacts %}
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-sm font-medium">Generated Artifacts</h3>
+                        <button onclick="navigator.clipboard.writeText(document.getElementById('artifacts').textContent)"
+                            class="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground px-2 py-1 rounded hover:bg-accent">
+                            Copy
+                        </button>
                     </div>
+                    <pre id="artifacts" class="w-full rounded-md border bg-muted/50 p-4 text-xs font-mono whitespace-pre-wrap break-words overflow-x-auto max-h-96">{{ item.artifacts }}</pre>
                 </div>
                 {% endif %}
 

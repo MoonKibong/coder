@@ -15,7 +15,8 @@ use std::path::Path;
 
 #[allow(unused_imports)]
 use crate::{
-    controllers, initializers, models::_entities::users, tasks, workers::downloader::DownloadWorker,
+    controllers, initializers, models::_entities::users, services, tasks,
+    workers::downloader::DownloadWorker,
 };
 
 pub struct App;
@@ -47,6 +48,12 @@ impl Hooks for App {
         Ok(vec![Box::new(
             initializers::view_engine::ViewEngineInitializer,
         )])
+    }
+
+    async fn after_context(ctx: AppContext) -> Result<AppContext> {
+        // Start the metrics collector for dashboard graphs
+        services::metrics_history::start_metrics_collector();
+        Ok(ctx)
     }
 
     fn routes(_ctx: &AppContext) -> AppRoutes {

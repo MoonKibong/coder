@@ -1,0 +1,29 @@
+{% extends "auth/base.html" %}
+
+{% block title %}Email Verified{% endblock title %}
+
+{% block content %}
+<div class="text-center">
+    <div class="mx-auto h-12 w-12 rounded-full bg-green-100 flex items-center justify-center mb-4">
+        <svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+        </svg>
+    </div>
+    <h1 class="text-2xl font-bold text-foreground">Email Verified!</h1>
+    <p class="text-muted-foreground mt-2">Your email has been successfully verified.</p>
+</div>
+
+<div class="mt-6 bg-muted/50 rounded-lg p-4 text-sm text-center">
+    <p class="text-foreground">You can now sign in to your account and start using the code generator.</p>
+</div>
+
+<a href="/login"
+    class="mt-6 w-full h-10 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium
+           hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2
+           transition-colors inline-flex items-center justify-center gap-2">
+    Sign In
+    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+    </svg>
+</a>
+{% endblock content %}

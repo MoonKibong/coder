@@ -4,26 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Enterprise Code Generator</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        border: "hsl(214.3 31.8% 91.4%)",
-                        input: "hsl(214.3 31.8% 91.4%)",
-                        ring: "hsl(221.2 83.2% 53.3%)",
-                        background: "hsl(0 0% 100%)",
-                        foreground: "hsl(222.2 84% 4.9%)",
-                        primary: { DEFAULT: "hsl(221.2 83.2% 53.3%)", foreground: "hsl(210 40% 98%)" },
-                        secondary: { DEFAULT: "hsl(210 40% 96.1%)", foreground: "hsl(222.2 47.4% 11.2%)" },
-                        muted: { DEFAULT: "hsl(210 40% 96.1%)", foreground: "hsl(215.4 16.3% 46.9%)" },
-                        accent: { DEFAULT: "hsl(210 40% 96.1%)", foreground: "hsl(222.2 47.4% 11.2%)" },
-                    }
-                }
-            }
-        }
-    </script>
+    <!-- Local CSS (offline support) -->
+    <link rel="stylesheet" href="/static/css/tailwind.css">
     <style>
         @keyframes float {
             0%, 100% { transform: translateY(0px); }
@@ -31,9 +13,6 @@
         }
         .float-animation {
             animation: float 6s ease-in-out infinite;
-        }
-        .gradient-bg {
-            background: linear-gradient(135deg, hsl(221.2 83.2% 53.3% / 0.1) 0%, hsl(210 40% 96.1%) 50%, hsl(221.2 83.2% 53.3% / 0.05) 100%);
         }
     </style>
 </head>
@@ -54,12 +33,12 @@
 
                 <!-- Auth Buttons -->
                 <div class="flex items-center gap-3">
-                    <a href="/auth/login"
+                    <a href="/login"
                         class="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-4 py-2
                                border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors">
                         Sign In
                     </a>
-                    <a href="/auth/register"
+                    <a href="/register"
                         class="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-4 py-2
                                bg-primary text-primary-foreground shadow hover:bg-primary/90 transition-colors">
                         Sign Up
@@ -95,7 +74,7 @@
                         </p>
 
                         <div class="flex flex-col sm:flex-row gap-4">
-                            <a href="/auth/register"
+                            <a href="/register"
                                 class="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium h-11 px-8
                                        bg-primary text-primary-foreground shadow hover:bg-primary/90 transition-colors">
                                 Get Started
@@ -314,7 +293,7 @@
                     Sign up now and start generating code in minutes.
                 </p>
                 <div class="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-                    <a href="/auth/register"
+                    <a href="/register"
                         class="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium h-11 px-8
                                bg-white text-primary shadow hover:bg-white/90 transition-colors">
                         Create Account

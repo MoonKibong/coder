@@ -1,0 +1,56 @@
+{% extends "admin/layout.html" %}
+
+{% block main %}
+<!-- Users Main Content -->
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-semibold text-foreground">Users</h1>
+            <p class="text-muted-foreground">Manage system users and their access</p>
+        </div>
+        <button hx-get="/admin/users/new" hx-target="#modal-container" hx-swap="innerHTML"
+            class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium
+                   h-9 px-4 py-2 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            New User
+        </button>
+    </div>
+
+    <!-- Info Banner -->
+    <div class="flex items-start gap-3 p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
+        <svg class="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+        </svg>
+        <div class="text-sm text-blue-700">
+            <p class="font-medium">User Management</p>
+            <p class="mt-1 text-xs">Users can access the admin panel and use the code generation API. Each user has a unique API key for Eclipse plugin integration.</p>
+        </div>
+    </div>
+
+    <!-- Search -->
+    <div class="bg-card rounded-xl border shadow-sm p-4">
+        <form id="search-form" hx-get="/admin/users/list" hx-target="#search-result" hx-swap="outerHTML"
+              hx-trigger="submit, load" class="flex gap-4">
+            <div class="flex-1">
+                <input type="text" name="keyword" placeholder="Search by name or email..."
+                    class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm
+                           placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+            </div>
+            <button type="submit"
+                class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium
+                       h-9 px-4 py-2 border bg-background shadow-sm hover:bg-accent hover:text-accent-foreground">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                </svg>
+                Search
+            </button>
+        </form>
+    </div>
+
+    <!-- Table -->
+    {% include "admin/user/list.html" %}
+</div>
+{% endblock main %}

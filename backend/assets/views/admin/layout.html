@@ -11,7 +11,7 @@
                     <svg class="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
                     </svg>
-                    <span class="text-lg font-semibold text-sidebar-foreground">xFrame5 Admin</span>
+                    <span class="text-lg font-semibold text-sidebar-foreground">CodeGen Admin</span>
                 </a>
             </div>
 
@@ -20,19 +20,30 @@
                 {% include "admin/partials/sidebar_nav.html" %}
             </nav>
 
-            <!-- Footer -->
+            <!-- Footer - User Info & Logout -->
             <div class="flex-shrink-0 p-4 border-t border-sidebar-border">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                        <svg class="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                        </svg>
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                        <span class="text-sm font-medium text-primary">
+                            {% if user %}{{ user.name | truncate(length=1, end="") | upper }}{% else %}?{% endif %}
+                        </span>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium text-sidebar-foreground truncate">Admin User</p>
-                        <p class="text-xs text-muted-foreground truncate">v1.0.0</p>
+                        <p class="text-sm font-medium text-sidebar-foreground truncate">
+                            {% if user %}{{ user.name }}{% else %}Unknown{% endif %}
+                        </p>
+                        <p class="text-xs text-muted-foreground truncate">
+                            {% if user %}{{ user.email }}{% else %}Not logged in{% endif %}
+                        </p>
                     </div>
                 </div>
+                <a href="/api/auth/logout" onclick="handleLogout()"
+                    class="flex items-center gap-2 w-full px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-sidebar-accent rounded-md transition-colors">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+                    </svg>
+                    Sign out
+                </a>
             </div>
         </div>
     </aside>
@@ -60,7 +71,7 @@
         <div class="fixed inset-0 bg-black/50" onclick="toggleMobileMenu()"></div>
         <div class="fixed inset-y-0 left-0 w-full max-w-xs bg-sidebar overflow-y-auto">
             <div class="flex items-center justify-between h-14 px-4 border-b border-sidebar-border">
-                <span class="text-lg font-semibold text-sidebar-foreground">xFrame5 Admin</span>
+                <span class="text-lg font-semibold text-sidebar-foreground">CodeGen Admin</span>
                 <button type="button" onclick="toggleMobileMenu()"
                     class="rounded-md p-2 text-sidebar-foreground hover:bg-sidebar-accent">
                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -93,11 +104,24 @@ function toggleMobileMenu() {
     menu.classList.toggle('hidden');
 }
 
+function handleLogout() {
+    // Clear session storage on logout
+    sessionStorage.removeItem('coder-session-auth');
+}
+
 // Close mobile menu on HTMX request
 document.body.addEventListener('htmx:beforeRequest', function(evt) {
     const menu = document.getElementById('mobile-menu');
     if (!menu.classList.contains('hidden')) {
         menu.classList.add('hidden');
+    }
+});
+
+// Handle 401 responses from HTMX requests
+document.body.addEventListener('htmx:responseError', function(evt) {
+    if (evt.detail.xhr.status === 401) {
+        sessionStorage.removeItem('coder-session-auth');
+        window.location.href = '/login?redirect_to=' + encodeURIComponent(window.location.pathname);
     }
 });
 </script>

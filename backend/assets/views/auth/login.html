@@ -1,0 +1,103 @@
+{% extends "auth/base.html" %}
+
+{% block title %}Sign In{% endblock title %}
+
+{% block content %}
+<div class="text-center mb-6">
+    <h1 class="text-2xl font-bold text-foreground">Welcome back</h1>
+    <p class="text-muted-foreground mt-2">Sign in to your account</p>
+</div>
+
+<!-- Message Container -->
+<div id="message-container" class="mb-4"></div>
+
+<!-- Login Form -->
+<form class="space-y-4"
+    {% if params and params.redirect_to %}
+    hx-post="/api/auth/login?redirect_to={{ params.redirect_to }}"
+    {% else %}
+    hx-post="/api/auth/login"
+    {% endif %}
+    hx-ext="json-enc"
+    hx-target="#message-container"
+    hx-on::after-request="handleLoginResponse(event)">
+    <div>
+        <label for="email" class="block text-sm font-medium text-foreground mb-1.5">Email</label>
+        <input type="email" id="email" name="email" required
+            class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm
+                   focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2
+                   placeholder:text-muted-foreground"
+            placeholder="john@example.com">
+    </div>
+
+    <div>
+        <div class="flex items-center justify-between mb-1.5">
+            <label for="password" class="block text-sm font-medium text-foreground">Password</label>
+            <a href="/forgot" class="text-sm text-primary hover:underline">Forgot password?</a>
+        </div>
+        <input type="password" id="password" name="password" required
+            class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm
+                   focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2
+                   placeholder:text-muted-foreground"
+            placeholder="Enter your password">
+    </div>
+
+    <button type="submit"
+        class="w-full h-10 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium
+               hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2
+               disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+        <span class="btn-text">Sign In</span>
+        <svg class="htmx-indicator animate-spin h-5 w-5 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+    </button>
+</form>
+
+<!-- Resend verification (hidden by default) -->
+<div id="resend-verification" class="hidden mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm">
+    <p class="text-amber-800 mb-2">Your email is not verified yet.</p>
+    <form hx-post="/api/auth/resend-verification-mail" hx-ext="json-enc" hx-target="#message-container" hx-swap="innerHTML">
+        <input type="hidden" id="resend-email" name="email">
+        <button type="submit" class="text-primary hover:underline font-medium">
+            Resend Verification Email
+        </button>
+    </form>
+</div>
+
+<div class="mt-6 text-center text-sm text-muted-foreground">
+    Don't have an account?
+    <a href="/register" class="text-primary hover:underline font-medium">Sign up</a>
+</div>
+{% endblock content %}
+
+{% block js %}
+<script>
+    function handleLoginResponse(event) {
+        const xhr = event.detail.xhr;
+        const messageContainer = document.getElementById('message-container');
+        const responseText = messageContainer.innerHTML.toLowerCase();
+        const resendVerification = document.getElementById('resend-verification');
+
+        // Check if login was successful (X-User-Data header present)
+        const userData = xhr.getResponseHeader('X-User-Data');
+        if (userData) {
+            try {
+                const user = JSON.parse(userData);
+                sessionStorage.setItem('coder-session-auth', JSON.stringify({ user }));
+            } catch (e) {
+                console.error('Failed to parse user data:', e);
+            }
+        }
+
+        // Check if it's a verification error
+        if (responseText.includes('verify')) {
+            resendVerification.classList.remove('hidden');
+            // Copy email to hidden field for resend
+            document.getElementById('resend-email').value = document.getElementById('email').value;
+        } else {
+            resendVerification.classList.add('hidden');
+        }
+    }
+</script>
+{% endblock js %}

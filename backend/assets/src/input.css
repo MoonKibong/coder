@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    --radius: 0.625rem;
+    --background: 0 0% 100%;
+    --foreground: 224 71% 4%;
+    --card: 0 0% 100%;
+    --card-foreground: 224 71% 4%;
+    --primary: 220 14% 10%;
+    --primary-foreground: 210 20% 98%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 220 14% 10%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+    --accent: 220 14% 96%;
+    --accent-foreground: 220 14% 10%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 20% 98%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 224 71% 4%;
+    --sidebar: 0 0% 98%;
+    --sidebar-foreground: 224 71% 4%;
+    --sidebar-accent: 220 14% 96%;
+    --sidebar-accent-foreground: 220 14% 10%;
+    --sidebar-border: 220 13% 91%;
+}
+
+.dark {
+    --background: 224 71% 4%;
+    --foreground: 210 20% 98%;
+    --card: 224 71% 6%;
+    --card-foreground: 210 20% 98%;
+    --primary: 210 20% 98%;
+    --primary-foreground: 224 71% 4%;
+    --secondary: 215 28% 17%;
+    --secondary-foreground: 210 20% 98%;
+    --muted: 215 28% 17%;
+    --muted-foreground: 218 11% 65%;
+    --accent: 215 28% 17%;
+    --accent-foreground: 210 20% 98%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 20% 98%;
+    --border: 215 28% 17%;
+    --input: 215 28% 17%;
+    --ring: 216 12% 84%;
+    --sidebar: 224 71% 4%;
+    --sidebar-foreground: 210 20% 98%;
+    --sidebar-accent: 215 28% 17%;
+    --sidebar-accent-foreground: 210 20% 98%;
+    --sidebar-border: 215 28% 17%;
+}
+
+* {
+    border-color: hsl(var(--border));
+}
+
+body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+}
+
+/* HTMX loading indicator */
+.htmx-indicator {
+    display: none;
+}
+
+.htmx-request .htmx-indicator {
+    display: inline-flex;
+}
+
+.htmx-request.htmx-indicator {
+    display: inline-flex;
+}
+
+/* Auth page gradient background */
+.gradient-bg {
+    background: linear-gradient(135deg, hsl(221.2 83.2% 53.3% / 0.1) 0%, hsl(210 40% 96.1%) 50%, hsl(221.2 83.2% 53.3% / 0.05) 100%);
+}

@@ -18,6 +18,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 3. Audit logging: ALL generation requests must be logged (who, when, what output)
 4. Input sanitization: NEVER trust plugin input directly for prompt construction
 5. Monorepo structure: `backend/`, `eclipse-plugin/`, `docs/` directories
+6. Documentation: ALL docs in top-level `docs/` folder (NO `backend/docs/` or component docs)
 
 **🟡 PREFER** (use unless specifically overridden):
 - Loco.rs patterns over custom implementations
@@ -216,13 +217,27 @@ POST /agent/generate
 ```
 backend/
 ├── src/
-│   ├── controllers/     # Thin - request/response only
-│   ├── services/        # Fat - business logic
-│   ├── domain/          # Request, Artifact, InputKind types
-│   ├── prompt/          # Prompt compiler + templates
-│   ├── llm/             # LlmBackend trait + implementations
-│   └── validator/       # xFrame5 syntax validation
+│   ├── controllers/         # Thin - request/response only
+│   │   └── admin/           # HTMX admin panel controllers
+│   ├── services/            # Fat - business logic
+│   │   └── admin/           # Admin CRUD services (pagination, validation)
+│   ├── middleware/          # Custom extractors (cookie_auth)
+│   ├── domain/              # Request, Artifact, InputKind types
+│   ├── prompt/              # Prompt compiler + templates
+│   ├── llm/                 # LlmBackend trait + implementations
+│   └── validator/           # xFrame5 syntax validation
 ```
+
+### Controller/Service Separation
+- **Controllers**: Thin - HTTP handling, auth extraction, response formatting
+- **Services**: Fat - business logic, validation, database operations
+- See `docs/patterns/CONTROLLER_SERVICE_SEPARATION.md`
+
+### Pagination Pattern
+- Use service layer `search()` method with `QueryParams` and `PageResponse<T>`
+- Multi-select filters with `Vec<T>`
+- Default/max page size enforcement
+- See `docs/patterns/PAGINATION_PATTERN.md`
 
 ### Configuration
 - `config/development.yaml` - Local ollama settings
@@ -345,7 +360,10 @@ mvn test
 3. **XFRAME5_VALIDATION.md** - XML/JS validation rules
 4. **AUDIT_LOGGING.md** - Generation request logging
 5. **LOCO_MIGRATION_PATTERNS.md** - Database migration patterns
-6. **ADMIN_PANEL.md** - HTMX admin panel architecture and patterns
+6. **ADMIN_PANEL.md** - HTMX admin panel architecture
+7. **PAGINATION_PATTERN.md** - Pagination with service layer (from HWS)
+8. **CONTROLLER_SERVICE_SEPARATION.md** - Thin controller, fat service pattern
+9. **COOKIE_AUTH.md** - Cookie-based JWT auth for admin pages
 
 ### Feature Documentation (docs/features/)
 1. **SCREEN_GENERATION.md** - List/Detail screen generation
