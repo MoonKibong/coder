@@ -376,21 +376,88 @@ impl NormalizerService {
     fn infer_screen_name_from_description(description: &str) -> String {
         let lower = description.to_lowercase();
 
-        // Common patterns
-        if lower.contains("회원") || lower.contains("member") || lower.contains("user") {
-            return "member_list".to_string();
-        }
-        if lower.contains("주문") || lower.contains("order") {
-            return "order_list".to_string();
-        }
-        if lower.contains("상품") || lower.contains("product") {
-            return "product_list".to_string();
-        }
-        if lower.contains("게시판") || lower.contains("board") || lower.contains("post") {
-            return "board_list".to_string();
+        // Entity mappings: (keywords, entity_name)
+        let entity_patterns: &[(&[&str], &str)] = &[
+            // Korean entities
+            (&["회원", "사용자"], "member"),
+            (&["주문"], "order"),
+            (&["상품", "제품"], "product"),
+            (&["게시판", "게시물"], "board"),
+            (&["고객"], "customer"),
+            (&["직원", "사원"], "employee"),
+            (&["부서"], "department"),
+            (&["프로젝트"], "project"),
+            (&["업무", "작업", "태스크"], "task"),
+            (&["일정", "스케줄"], "schedule"),
+            (&["예약"], "reservation"),
+            (&["결제", "payment"], "payment"),
+            (&["송장", "인보이스"], "invoice"),
+            (&["재고"], "inventory"),
+            (&["카테고리", "분류"], "category"),
+            (&["공지사항", "공지"], "notice"),
+            (&["문의", "질문"], "inquiry"),
+            (&["코드", "코드관리"], "code"),
+            // English entities
+            (&["member", "user", "account"], "member"),
+            (&["order", "purchase"], "order"),
+            (&["product", "item", "goods"], "product"),
+            (&["board", "post", "article"], "board"),
+            (&["customer", "client"], "customer"),
+            (&["employee", "staff", "worker"], "employee"),
+            (&["department", "dept"], "department"),
+            (&["project"], "project"),
+            (&["task", "todo", "job", "work"], "task"),
+            (&["schedule", "calendar", "event"], "schedule"),
+            (&["reservation", "booking"], "reservation"),
+            (&["payment", "transaction"], "payment"),
+            (&["invoice", "bill"], "invoice"),
+            (&["inventory", "stock"], "inventory"),
+            (&["category"], "category"),
+            (&["notice", "announcement"], "notice"),
+            (&["inquiry", "question", "support"], "inquiry"),
+            (&["code", "master"], "code"),
+            (&["setting", "config", "preference"], "setting"),
+            (&["log", "history", "audit"], "log"),
+            (&["report", "statistics", "analytics"], "report"),
+            (&["file", "document", "attachment"], "file"),
+            (&["menu", "navigation"], "menu"),
+            (&["role", "permission", "authority"], "role"),
+            (&["company", "organization", "org"], "company"),
+        ];
+
+        // Check each pattern
+        for (keywords, entity) in entity_patterns {
+            for keyword in *keywords {
+                if lower.contains(keyword) {
+                    return format!("{}_list", entity);
+                }
+            }
         }
 
-        // Default: extract first noun-like word
+        // Try to extract entity from common patterns like "X list", "X screen", "X management"
+        let extraction_patterns = [
+            " list", " screen", " management", " manager", " page", " view",
+            " 목록", " 화면", " 관리", " 조회",
+        ];
+
+        for pattern in extraction_patterns {
+            if let Some(pos) = lower.find(pattern) {
+                // Get the word before the pattern
+                let before = &lower[..pos];
+                let words: Vec<&str> = before.split_whitespace().collect();
+                if let Some(last_word) = words.last() {
+                    // Clean and use as entity name
+                    let entity = last_word
+                        .trim_matches(|c: char| !c.is_alphanumeric())
+                        .to_lowercase();
+                    if !entity.is_empty() && entity.len() > 1 {
+                        return format!("{}_list", entity);
+                    }
+                }
+            }
+        }
+
+        // Default fallback
         "screen_list".to_string()
     }
 }

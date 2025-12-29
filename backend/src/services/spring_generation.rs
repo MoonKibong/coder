@@ -1,7 +1,7 @@
 use crate::domain::{
     GenerateInput, GenerateOptions, GenerateStatus, RequestContext, ResponseMeta, SpringArtifacts,
 };
-use crate::llm::create_backend_from_env;
+use crate::llm::{create_backend_from_db_or_env, create_backend_from_env};
 use crate::models::_entities::generation_logs;
 use crate::services::{SpringNormalizerService, SpringValidator, TemplateService};
 use crate::services::spring_prompt_compiler::SpringPromptCompiler;
@@ -65,8 +65,8 @@ impl SpringGenerationService {
         )
         .await?;
 
-        // 4. Generate via LLM
-        let llm = create_backend_from_env();
+        // 4. Generate via LLM (DB config takes priority, falls back to env)
+        let llm = create_backend_from_db_or_env(db).await;
 
         // Health check
         llm.health_check().await.map_err(|e| {

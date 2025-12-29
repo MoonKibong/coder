@@ -303,6 +303,8 @@ public class AgentClient {
         GenerateResponse.Artifacts artifacts = new GenerateResponse.Artifacts();
         artifacts.setXml(extractJsonString(json, "xml"));
         artifacts.setJavascript(extractJsonString(json, "javascript"));
+        artifacts.setXmlFilename(extractJsonString(json, "xml_filename"));
+        artifacts.setJsFilename(extractJsonString(json, "js_filename"));
         return artifacts;
     }
 
@@ -543,6 +545,9 @@ public class AgentClient {
                     String artifactsJson = json.substring(objStart, objEnd + 1);
                     artifacts.setXml(extractJsonString(artifactsJson, "xml"));
                     artifacts.setJavascript(extractJsonString(artifactsJson, "javascript"));
+                    // Extract filenames from server response
+                    artifacts.setXmlFilename(extractJsonString(artifactsJson, "xml_filename"));
+                    artifacts.setJsFilename(extractJsonString(artifactsJson, "js_filename"));
                 }
             }
             response.setArtifacts(artifacts);

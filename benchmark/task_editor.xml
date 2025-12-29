@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Task Editor Popup Screen
+  Generated as benchmark for code quality evaluation
+
+  Features:
+  - Create new task or edit existing task
+  - Form validation
+  - Save and Cancel actions
+  - Return data to parent screen
+-->
+<screen id="SCREEN_TASK_EDITOR" width="600" height="500" script_language="Java">
+
+  <!-- ========================================== -->
+  <!-- DATASETS -->
+  <!-- ========================================== -->
+
+  <!-- Task Detail Dataset -->
+  <xlinkdataset id="ds_detail" desc="Task Detail"
+    columns="TASK_ID:&quot;Task ID&quot;:10:&quot;&quot;:&quot;&quot;;
+             TASK_TITLE:&quot;Title&quot;:50:&quot;&quot;:&quot;&quot;;
+             TASK_DESC:&quot;Description&quot;:500:&quot;&quot;:&quot;&quot;;
+             STATUS:&quot;Status&quot;:2:&quot;&quot;:&quot;&quot;;
+             PRIORITY:&quot;Priority&quot;:1:&quot;&quot;:&quot;&quot;;
+             ASSIGNEE:&quot;Assignee&quot;:50:&quot;&quot;:&quot;&quot;;
+             DUE_DATE:&quot;Due Date&quot;:10:&quot;&quot;:&quot;&quot;"/>
+
+  <!-- Status Code Dataset -->
+  <xlinkdataset id="ds_status" desc="Status Codes"
+    columns="CODE:&quot;CODE&quot;:2:&quot;01&#x0A;02&#x0A;03&#x0A;04&#x0A;&quot;:&quot;&quot;;
+             NAME:&quot;NAME&quot;:20:&quot;Pending&#x0A;In Progress&#x0A;Completed&#x0A;Cancelled&#x0A;&quot;:&quot;&quot;"/>
+
+  <!-- Priority Code Dataset -->
+  <xlinkdataset id="ds_priority" desc="Priority Codes"
+    columns="CODE:&quot;CODE&quot;:1:&quot;1&#x0A;2&#x0A;3&#x0A;&quot;:&quot;&quot;;
+             NAME:&quot;NAME&quot;:20:&quot;High&#x0A;Medium&#x0A;Low&#x0A;&quot;:&quot;&quot;"/>
+
+  <!-- ========================================== -->
+  <!-- HEADER PANEL -->
+  <!-- ========================================== -->
+  <panel control_id="1" name="pnl_header"
+         x="0" y="0" width="600" height="50"
+         back_color="00F8F9FA" border="0">
+
+    <text control_id="2" name="txt_popup_title"
+          x="20" y="12" width="400" height="28"
+          text="Task Editor"
+          font="Malgun Gothic,14,1,0,0,0"
+          text_color="00333333"/>
+  </panel>
+
+  <!-- ========================================== -->
+  <!-- FORM PANEL -->
+  <!-- ========================================== -->
+  <panel control_id="10" name="pnl_form"
+         x="10" y="60" width="580" height="370"
+         back_color="00FFFFFF" border="1">
+
+    <!-- Task ID (Hidden for create mode, readonly for edit mode) -->
+    <text control_id="11" name="txt_task_id_label"
+          x="20" y="20" width="100" height="24"
+          text="Task ID:"
+          font="Malgun Gothic,9,0,0,0,0"
+          hidden="1"/>
+
+    <normal_field control_id="12" name="field_task_id"
+                  x="130" y="18" width="150" height="24"
+                  font="Malgun Gothic,9,0,0,0,0"
+                  link_data="ds_detail:TASK_ID"
+                  editable="0"
+                  back_color="00F0F0F0"
+                  hidden="1"/>
+
+    <!-- Task Title (Required) -->
+    <text control_id="13" name="txt_title_label"
+          x="20" y="20" width="100" height="24"
+          text="Title: *"
+          font="Malgun Gothic,9,0,0,0,0"
+          text_color="00333333"/>
+
+    <normal_field control_id="14" name="field_title"
+                  x="130" y="18" width="420" height="24"
+                  max_length="50"
+                  font="Malgun Gothic,9,0,0,0,0"
+                  link_data="ds_detail:TASK_TITLE"
+                  placeholder="Enter task title (required)"/>
+
+    <!-- Description -->
+    <text control_id="15" name="txt_desc_label"
+          x="20" y="60" width="100" height="24"
+          text="Description:"
+          font="Malgun Gothic,9,0,0,0,0"
+          text_color="00333333"/>
+
+    <textarea control_id="16" name="field_desc"
+              x="130" y="58" width="420" height="100"
+              max_length="500"
+              font="Malgun Gothic,9,0,0,0,0"
+              link_data="ds_detail:TASK_DESC"
+              placeholder="Enter task description..."/>
+
+    <!-- Status (Required) -->
+    <text control_id="17" name="txt_status_label"
+          x="20" y="175" width="100" height="24"
+          text="Status: *"
+          font="Malgun Gothic,9,0,0,0,0"
+          text_color="00333333"/>
+
+    <combobox control_id="18" name="cbo_status"
+              x="130" y="173" width="150" height="24"
+              link_data="ds_status"
+              default_value="0"
+              picklist_font="Malgun Gothic,9,0,0,0,0"
+              picklist_viewstyle="2"
+              picklist_selstyle="2"
+              on_itemselchange="eventfunc:cbo_status_on_change(objInst, nPrevIndex, nIndex)"/>
+
+    <!-- Priority (Required) -->
+    <text control_id="19" name="txt_priority_label"
+          x="300" y="175" width="80" height="24"
+          text="Priority: *"
+          font="Malgun Gothic,9,0,0,0,0"
+          text_color="00333333"/>
+
+    <combobox control_id="20" name="cbo_priority"
+              x="380" y="173" width="150" height="24"
+              link_data="ds_priority"
+              default_value="1"
+              picklist_font="Malgun Gothic,9,0,0,0,0"
+              picklist_viewstyle="2"
+              picklist_selstyle="2"/>
+
+    <!-- Assignee -->
+    <text control_id="21" name="txt_assignee_label"
+          x="20" y="215" width="100" height="24"
+          text="Assignee:"
+          font="Malgun Gothic,9,0,0,0,0"
+          text_color="00333333"/>
+
+    <normal_field control_id="22" name="field_assignee"
+                  x="130" y="213" width="250" height="24"
+                  max_length="50"
+                  font="Malgun Gothic,9,0,0,0,0"
+                  link_data="ds_detail:ASSIGNEE"
+                  placeholder="Enter assignee name"/>
+
+    <!-- Due Date -->
+    <text control_id="23" name="txt_due_date_label"
+          x="20" y="255" width="100" height="24"
+          text="Due Date:"
+          font="Malgun Gothic,9,0,0,0,0"
+          text_color="00333333"/>
+
+    <datepicker control_id="24" name="field_due_date"
+                x="130" y="253" width="150" height="24"
+                font="Malgun Gothic,9,0,0,0,0"
+                link_data="ds_detail:DUE_DATE"
+                date_format="yyyy-MM-dd"
+                placeholder="Select date"/>
+
+    <!-- Required Field Notice -->
+    <text control_id="25" name="txt_required_notice"
+          x="20" y="300" width="530" height="20"
+          text="* Required fields"
+          font="Malgun Gothic,8,0,0,0,0"
+          text_color="00999999"/>
+
+    <!-- Validation Error Display -->
+    <text control_id="26" name="txt_error_message"
+          x="20" y="325" width="530" height="24"
+          text=""
+          font="Malgun Gothic,9,0,0,0,0"
+          text_color="00DC3545"
+          hidden="1"/>
+
+  </panel>
+
+  <!-- ========================================== -->
+  <!-- BUTTON PANEL -->
+  <!-- ========================================== -->
+  <panel control_id="30" name="pnl_buttons"
+         x="10" y="440" width="580" height="50"
+         back_color="00FFFFFF" border="0">
+
+    <!-- Save Button -->
+    <pushbutton control_id="31" name="btn_save"
+                x="360" y="10" width="100" height="32"
+                text="Save"
+                font="Malgun Gothic,9,1,0,0,0"
+                back_color="00007BFF"
+                text_color="00FFFFFF"
+                hover_back_color="000056B3"
+                on_click="eventfunc:fn_save()"/>
+
+    <!-- Cancel Button -->
+    <pushbutton control_id="32" name="btn_cancel"
+                x="470" y="10" width="100" height="32"
+                text="Cancel"
+                font="Malgun Gothic,9,0,0,0,0"
+                on_click="eventfunc:fn_cancel()"/>
+
+  </panel>
+
+</screen>

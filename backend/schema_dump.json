@@ -1,0 +1,382 @@
+[
+  {
+    "column": "created_at",
+    "table": "company_rules",
+    "type": "timestamp with time zone"
+  },
+  {
+    "column": "updated_at",
+    "table": "company_rules",
+    "type": "timestamp with time zone"
+  },
+  {
+    "column": "id",
+    "table": "company_rules",
+    "type": "integer"
+  },
+  {
+    "column": "company_id",
+    "table": "company_rules",
+    "type": "character varying"
+  },
+  {
+    "column": "naming_convention",
+    "table": "company_rules",
+    "type": "text"
+  },
+  {
+    "column": "additional_rules",
+    "table": "company_rules",
+    "type": "text"
+  },
+  {
+    "column": "created_at",
+    "table": "generation_logs",
+    "type": "timestamp with time zone"
+  },
+  {
+    "column": "updated_at",
+    "table": "generation_logs",
+    "type": "timestamp with time zone"
+  },
+  {
+    "column": "id",
+    "table": "generation_logs",
+    "type": "integer"
+  },
+  {
+    "column": "product",
+    "table": "generation_logs",
+    "type": "character varying"
+  },
+  {
+    "column": "input_type",
+    "table": "generation_logs",
+    "type": "character varying"
+  },
+  {
+    "column": "ui_intent",
+    "table": "generation_logs",
+    "type": "text"
+  },
+  {
+    "column": "template_version",
+    "table": "generation_logs",
+    "type": "integer"
+  },
+  {
+    "column": "status",
+    "table": "generation_logs",
+    "type": "character varying"
+  },
+  {
+    "column": "artifacts",
+    "table": "generation_logs",
+    "type": "text"
+  },
+  {
+    "column": "warnings",
+    "table": "generation_logs",
+    "type": "text"
+  },
+  {
+    "column": "error_message",
+    "table": "generation_logs",
+    "type": "text"
+  },
+  {
+    "column": "generation_time_ms",
+    "table": "generation_logs",
+    "type": "integer"
+  },
+  {
+    "column": "user_id",
+    "table": "generation_logs",
+    "type": "integer"
+  },
+  {
+    "column": "job_id",
+    "table": "generation_logs",
+    "type": "character varying"
+  },
+  {
+    "column": "request_payload",
+    "table": "generation_logs",
+    "type": "text"
+  },
+  {
+    "column": "queued_at",
+    "table": "generation_logs",
+    "type": "timestamp with time zone"
+  },
+  {
+    "column": "started_at",
+    "table": "generation_logs",
+    "type": "timestamp with time zone"
+  },
+  {
+    "column": "completed_at",
+    "table": "generation_logs",
+    "type": "timestamp with time zone"
+  },
+  {
+    "column": "priority",
+    "table": "generation_logs",
+    "type": "integer"
+  },
+  {
+    "column": "created_at",
+    "table": "knowledge_bases",
+    "type": "timestamp with time zone"
+  },
+  {
+    "column": "updated_at",
+    "table": "knowledge_bases",
+    "type": "timestamp with time zone"
+  },
+  {
+    "column": "id",
+    "table": "knowledge_bases",
+    "type": "integer"
+  },
+  {
+    "column": "name",
+    "table": "knowledge_bases",
+    "type": "character varying"
+  },
+  {
+    "column": "category",
+    "table": "knowledge_bases",
+    "type": "character varying"
+  },
+  {
+    "column": "component",
+    "table": "knowledge_bases",
+    "type": "character varying"
+  },
+  {
+    "column": "section",
+    "table": "knowledge_bases",
+    "type": "character varying"
+  },
+  {
+    "column": "content",
+    "table": "knowledge_bases",
+    "type": "text"
+  },
+  {
+    "column": "relevance_tags",
+    "table": "knowledge_bases",
+    "type": "json"
+  },
+  {
+    "column": "priority",
+    "table": "knowledge_bases",
+    "type": "character varying"
+  },
+  {
+    "column": "token_estimate",
+    "table": "knowledge_bases",
+    "type": "integer"
+  },
+  {
+    "column": "version",
+    "table": "knowledge_bases",
+    "type": "integer"
+  },
+  {
+    "column": "is_active",
+    "table": "knowledge_bases",
+    "type": "boolean"
+  },
+  {
+    "column": "created_at",
+    "table": "llm_configs",
+    "type": "timestamp with time zone"
+  },
+  {
+    "column": "updated_at",
+    "table": "llm_configs",
+    "type": "timestamp with time zone"
+  },
+  {
+    "column": "id",
+    "table": "llm_configs",
+    "type": "integer"
+  },
+  {
+    "column": "name",
+    "table": "llm_configs",
+    "type": "character varying"
+  },
+  {
+    "column": "provider",
+    "table": "llm_configs",
+    "type": "character varying"
+  },
+  {
+    "column": "endpoint_url",
+    "table": "llm_configs",
+    "type": "character varying"
+  },
+  {
+    "column": "model_name",
+    "table": "llm_configs",
+    "type": "character varying"
+  },
+  {
+    "column": "api_key",
+    "table": "llm_configs",
+    "type": "character varying"
+  },
+  {
+    "column": "temperature",
+    "table": "llm_configs",
+    "type": "real"
+  },
+  {
+    "column": "max_tokens",
+    "table": "llm_configs",
+    "type": "integer"
+  },
+  {
+    "column": "is_active",
+    "table": "llm_configs",
+    "type": "boolean"
+  },
+  {
+    "column": "created_at",
+    "table": "prompt_templates",
+    "type": "timestamp with time zone"
+  },
+  {
+    "column": "updated_at",
+    "table": "prompt_templates",
+    "type": "timestamp with time zone"
+  },
+  {
+    "column": "id",
+    "table": "prompt_templates",
+    "type": "integer"
+  },
+  {
+    "column": "name",
+    "table": "prompt_templates",
+    "type": "character varying"
+  },
+  {
+    "column": "product",
+    "table": "prompt_templates",
+    "type": "character varying"
+  },
+  {
+    "column": "screen_type",
+    "table": "prompt_templates",
+    "type": "character varying"
+  },
+  {
+    "column": "system_prompt",
+    "table": "prompt_templates",
+    "type": "text"
+  },
+  {
+    "column": "user_prompt_template",
+    "table": "prompt_templates",
+    "type": "text"
+  },
+  {
+    "column": "version",
+    "table": "prompt_templates",
+    "type": "integer"
+  },
+  {
+    "column": "is_active",
+    "table": "prompt_templates",
+    "type": "boolean"
+  },
+  {
+    "column": "version",
+    "table": "seaql_migrations",
+    "type": "character varying"
+  },
+  {
+    "column": "applied_at",
+    "table": "seaql_migrations",
+    "type": "bigint"
+  },
+  {
+    "column": "created_at",
+    "table": "users",
+    "type": "timestamp with time zone"
+  },
+  {
+    "column": "updated_at",
+    "table": "users",
+    "type": "timestamp with time zone"
+  },
+  {
+    "column": "id",
+    "table": "users",
+    "type": "integer"
+  },
+  {
+    "column": "pid",
+    "table": "users",
+    "type": "uuid"
+  },
+  {
+    "column": "email",
+    "table": "users",
+    "type": "character varying"
+  },
+  {
+    "column": "password",
+    "table": "users",
+    "type": "character varying"
+  },
+  {
+    "column": "api_key",
+    "table": "users",
+    "type": "character varying"
+  },
+  {
+    "column": "name",
+    "table": "users",
+    "type": "character varying"
+  },
+  {
+    "column": "reset_token",
+    "table": "users",
+    "type": "character varying"
+  },
+  {
+    "column": "reset_sent_at",
+    "table": "users",
+    "type": "timestamp with time zone"
+  },
+  {
+    "column": "email_verification_token",
+    "table": "users",
+    "type": "character varying"
+  },
+  {
+    "column": "email_verification_sent_at",
+    "table": "users",
+    "type": "timestamp with time zone"
+  },
+  {
+    "column": "email_verified_at",
+    "table": "users",
+    "type": "timestamp with time zone"
+  },
+  {
+    "column": "magic_link_token",
+    "table": "users",
+    "type": "character varying"
+  },
+  {
+    "column": "magic_link_expiration",
+    "table": "users",
+    "type": "timestamp with time zone"
+  }
+]

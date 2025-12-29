@@ -75,6 +75,8 @@ public class GenerateResponse {
     public static class Artifacts {
         private String xml;
         private String javascript;
+        private String xmlFilename;
+        private String jsFilename;
 
         public String getXml() {
             return xml;
@@ -90,6 +92,36 @@ public class GenerateResponse {
 
         public void setJavascript(String javascript) {
             this.javascript = javascript;
+        }
+
+        public String getXmlFilename() {
+            return xmlFilename;
+        }
+
+        public void setXmlFilename(String xmlFilename) {
+            this.xmlFilename = xmlFilename;
+        }
+
+        public String getJsFilename() {
+            return jsFilename;
+        }
+
+        public void setJsFilename(String jsFilename) {
+            this.jsFilename = jsFilename;
+        }
+
+        /**
+         * Get XML filename with fallback to default.
+         */
+        public String getXmlFilenameOrDefault(String defaultName) {
+            return xmlFilename != null && !xmlFilename.isEmpty() ? xmlFilename : defaultName;
+        }
+
+        /**
+         * Get JS filename with fallback to default.
+         */
+        public String getJsFilenameOrDefault(String defaultName) {
+            return jsFilename != null && !jsFilename.isEmpty() ? jsFilename : defaultName;
         }
     }
 

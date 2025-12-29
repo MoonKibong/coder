@@ -2,7 +2,7 @@ use crate::domain::{
     GenerateInput, GenerateOptions, GenerateResponse, GenerateStatus, GeneratedArtifacts,
     RequestContext, ResponseMeta,
 };
-use crate::llm::create_backend_from_env;
+use crate::llm::{create_backend_from_db_or_env, create_backend_from_env};
 use crate::models::_entities::generation_logs;
 use crate::services::{NormalizerService, PromptCompiler, TemplateService};
 use crate::services::xframe5_validator::XFrame5Validator;
@@ -44,8 +44,8 @@ impl GenerationService {
         )
         .await?;
 
-        // 4. Generate via LLM
-        let llm = create_backend_from_env();
+        // 4. Generate via LLM (DB config takes priority, falls back to env)
+        let llm = create_backend_from_db_or_env(db).await;
 
         // Health check
         llm.health_check().await.map_err(|e| {
@@ -53,6 +53,14 @@ impl GenerationService {
         })?;
 
         let raw_output = llm.generate(&prompt.full()).await?;
+
+        // Log raw output for debugging (truncated)
+        let output_preview = if raw_output.len() > 500 {
+            format!("{}...[truncated, total {} chars]", &raw_output[..500], raw_output.len())
+        } else {
+            raw_output.clone()
+        };
+        tracing::debug!("LLM raw output preview:\n{}", output_preview);
 
         // 5. Parse and validate
         let validation_result = XFrame5Validator::parse_and_validate(&raw_output, &intent);

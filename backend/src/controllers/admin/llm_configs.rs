@@ -151,13 +151,21 @@ pub async fn update(
     State(ctx): State<AppContext>,
     Json(params): Json<UpdateParams>,
 ) -> Result<Response> {
-    let item = LlmConfigService::update(&ctx.db, id, params).await?;
+    let _item = LlmConfigService::update(&ctx.db, id, params).await?;
+
+    // Return the full list to replace #search-result
+    let query_params = QueryParams::default();
+    let response = LlmConfigService::search(&ctx.db, &query_params).await?;
 
     format::render().view(
         &v,
-        "admin/llm_config/row.html",
+        "admin/llm_config/list.html",
         data!({
-            "item": item,
+            "items": response.items,
+            "page": response.page,
+            "page_size": response.page_size,
+            "total_pages": response.total_pages,
+            "total_items": response.total_items,
         }),
     )
 }

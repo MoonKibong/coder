@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Task List Screen
+  Generated as benchmark for code quality evaluation
+
+  Features:
+  - Task grid with list display
+  - Query, Create, Edit, Delete buttons
+  - Task editor popup integration
+-->
+<screen id="SCREEN_TASK_LIST" width="1024" height="768" script_language="Java">
+
+  <!-- ========================================== -->
+  <!-- DATASETS -->
+  <!-- ========================================== -->
+
+  <!-- Search Criteria Dataset -->
+  <xdataset id="ds_search" desc="Search Criteria">
+    <!-- Search parameters populated programmatically -->
+  </xdataset>
+
+  <!-- Task List Dataset -->
+  <xlinkdataset id="ds_list" desc="Task List"
+    columns="TASK_ID:&quot;Task ID&quot;:10:&quot;&quot;:&quot;&quot;;
+             TASK_TITLE:&quot;Title&quot;:50:&quot;&quot;:&quot;&quot;;
+             TASK_DESC:&quot;Description&quot;:200:&quot;&quot;:&quot;&quot;;
+             STATUS:&quot;Status&quot;:10:&quot;&quot;:&quot;&quot;;
+             STATUS_NAME:&quot;Status Name&quot;:20:&quot;&quot;:&quot;&quot;;
+             PRIORITY:&quot;Priority&quot;:10:&quot;&quot;:&quot;&quot;;
+             PRIORITY_NAME:&quot;Priority Name&quot;:20:&quot;&quot;:&quot;&quot;;
+             ASSIGNEE:&quot;Assignee&quot;:50:&quot;&quot;:&quot;&quot;;
+             DUE_DATE:&quot;Due Date&quot;:10:&quot;&quot;:&quot;&quot;;
+             CREATED_AT:&quot;Created At&quot;:20:&quot;&quot;:&quot;&quot;;
+             UPDATED_AT:&quot;Updated At&quot;:20:&quot;&quot;:&quot;&quot;"/>
+
+  <!-- Status Code Dataset for Filter -->
+  <xlinkdataset id="ds_status" desc="Status Codes"
+    columns="CODE:&quot;CODE&quot;:2:&quot;&#x0A;01&#x0A;02&#x0A;03&#x0A;04&#x0A;&quot;:&quot;&quot;;
+             NAME:&quot;NAME&quot;:20:&quot;All&#x0A;Pending&#x0A;In Progress&#x0A;Completed&#x0A;Cancelled&#x0A;&quot;:&quot;&quot;"/>
+
+  <!-- Priority Code Dataset for Filter -->
+  <xlinkdataset id="ds_priority" desc="Priority Codes"
+    columns="CODE:&quot;CODE&quot;:2:&quot;&#x0A;1&#x0A;2&#x0A;3&#x0A;&quot;:&quot;&quot;;
+             NAME:&quot;NAME&quot;:20:&quot;All&#x0A;High&#x0A;Medium&#x0A;Low&#x0A;&quot;:&quot;&quot;"/>
+
+  <!-- ========================================== -->
+  <!-- HEADER PANEL -->
+  <!-- ========================================== -->
+  <panel control_id="1" name="pnl_header"
+         x="0" y="0" width="1024" height="50"
+         back_color="00F8F9FA" border="0">
+
+    <text control_id="2" name="txt_title"
+          x="20" y="12" width="300" height="28"
+          text="Task Management"
+          font="Malgun Gothic,16,1,0,0,0"
+          text_color="00333333"/>
+  </panel>
+
+  <!-- ========================================== -->
+  <!-- SEARCH PANEL -->
+  <!-- ========================================== -->
+  <panel control_id="10" name="pnl_search"
+         x="10" y="60" width="1004" height="80"
+         back_color="00FFFFFF" border="1">
+
+    <!-- Title Search -->
+    <text control_id="11" name="txt_search_title"
+          x="20" y="28" width="80" height="24"
+          text="Title:"
+          font="Malgun Gothic,9,0,0,0,0"/>
+
+    <normal_field control_id="12" name="field_search_title"
+                  x="100" y="26" width="200" height="24"
+                  max_length="50"
+                  font="Malgun Gothic,9,0,0,0,0"
+                  placeholder="Enter task title..."/>
+
+    <!-- Status Filter -->
+    <text control_id="13" name="txt_search_status"
+          x="320" y="28" width="60" height="24"
+          text="Status:"
+          font="Malgun Gothic,9,0,0,0,0"/>
+
+    <combobox control_id="14" name="cbo_search_status"
+              x="380" y="26" width="120" height="24"
+              link_data="ds_status"
+              default_value="0"
+              picklist_font="Malgun Gothic,9,0,0,0,0"
+              picklist_viewstyle="2"
+              picklist_selstyle="2"/>
+
+    <!-- Priority Filter -->
+    <text control_id="15" name="txt_search_priority"
+          x="520" y="28" width="70" height="24"
+          text="Priority:"
+          font="Malgun Gothic,9,0,0,0,0"/>
+
+    <combobox control_id="16" name="cbo_search_priority"
+              x="590" y="26" width="120" height="24"
+              link_data="ds_priority"
+              default_value="0"
+              picklist_font="Malgun Gothic,9,0,0,0,0"
+              picklist_viewstyle="2"
+              picklist_selstyle="2"/>
+
+    <!-- Query Button -->
+    <pushbutton control_id="17" name="btn_query"
+                x="740" y="24" width="100" height="30"
+                text="Query"
+                font="Malgun Gothic,9,1,0,0,0"
+                back_color="00007BFF"
+                text_color="00FFFFFF"
+                hover_back_color="000056B3"
+                on_click="eventfunc:fn_search()"/>
+
+    <!-- Reset Button -->
+    <pushbutton control_id="18" name="btn_reset"
+                x="850" y="24" width="80" height="30"
+                text="Reset"
+                font="Malgun Gothic,9,0,0,0,0"
+                on_click="eventfunc:fn_reset()"/>
+  </panel>
+
+  <!-- ========================================== -->
+  <!-- BUTTON PANEL -->
+  <!-- ========================================== -->
+  <panel control_id="20" name="pnl_buttons"
+         x="10" y="150" width="1004" height="50"
+         back_color="00FFFFFF" border="0">
+
+    <!-- Create Button -->
+    <pushbutton control_id="21" name="btn_create"
+                x="10" y="10" width="100" height="30"
+                text="Create"
+                font="Malgun Gothic,9,1,0,0,0"
+                back_color="0028A745"
+                text_color="00FFFFFF"
+                hover_back_color="001E7E34"
+                on_click="eventfunc:fn_create()"/>
+
+    <!-- Edit Button -->
+    <pushbutton control_id="22" name="btn_edit"
+                x="120" y="10" width="100" height="30"
+                text="Edit"
+                font="Malgun Gothic,9,0,0,0,0"
+                on_click="eventfunc:fn_edit()"/>
+
+    <!-- Delete Button -->
+    <pushbutton control_id="23" name="btn_delete"
+                x="230" y="10" width="100" height="30"
+                text="Delete"
+                font="Malgun Gothic,9,0,0,0,0"
+                back_color="00DC3545"
+                text_color="00FFFFFF"
+                hover_back_color="00C82333"
+                on_click="eventfunc:fn_delete()"/>
+
+    <!-- Total Count Display -->
+    <text control_id="24" name="txt_total_count"
+          x="850" y="15" width="150" height="20"
+          text="Total: 0 items"
+          font="Malgun Gothic,9,0,0,0,0"
+          text_horzalign="2"
+          text_color="00666666"/>
+  </panel>
+
+  <!-- ========================================== -->
+  <!-- GRID PANEL -->
+  <!-- ========================================== -->
+  <panel control_id="30" name="pnl_grid"
+         x="10" y="200" width="1004" height="550"
+         back_color="00FFFFFF" border="1">
+
+    <grid control_id="31" name="grid_list"
+          x="0" y="0" width="1004" height="550"
+          link_data="ds_list"
+          linenumber_show="1"
+          use_checkrow="1"
+          checkrow_hd_backcolor="00F8F9FA"
+          version="1.1"
+          on_itemdblclick="eventfunc:grid_list_on_itemdblclick(objInst, nRow, nColumn, buttonClick, imageIndex)"
+          on_itemselchange="eventfunc:grid_list_on_itemselchange(objInst, nPrevRow, nPrevColumn, nRow, nColumn)">
+
+      <!-- Checkbox Column (Auto-generated by use_checkrow) -->
+
+      <!-- Task ID Column -->
+      <column>
+        <header title="ID" back_color="00F8F9FA"/>
+        <data name="TASK_ID"
+              link_data="ds_list:TASK_ID"
+              width="80"
+              text_horzalign="1"
+              data_type="2"
+              editable="0"/>
+      </column>
+
+      <!-- Task Title Column -->
+      <column>
+        <header title="Title" back_color="00F8F9FA"/>
+        <data name="TASK_TITLE"
+              link_data="ds_list:TASK_TITLE"
+              width="250"
+              text_horzalign="0"
+              data_type="2"
+              editable="0"/>
+      </column>
+
+      <!-- Status Column -->
+      <column>
+        <header title="Status" back_color="00F8F9FA"/>
+        <data name="STATUS_NAME"
+              link_data="ds_list:STATUS_NAME"
+              width="100"
+              text_horzalign="1"
+              data_type="2"
+              editable="0"/>
+      </column>
+
+      <!-- Priority Column -->
+      <column>
+        <header title="Priority" back_color="00F8F9FA"/>
+        <data name="PRIORITY_NAME"
+              link_data="ds_list:PRIORITY_NAME"
+              width="80"
+              text_horzalign="1"
+              data_type="2"
+              editable="0"/>
+      </column>
+
+      <!-- Assignee Column -->
+      <column>
+        <header title="Assignee" back_color="00F8F9FA"/>
+        <data name="ASSIGNEE"
+              link_data="ds_list:ASSIGNEE"
+              width="120"
+              text_horzalign="1"
+              data_type="2"
+              editable="0"/>
+      </column>
+
+      <!-- Due Date Column -->
+      <column>
+        <header title="Due Date" back_color="00F8F9FA"/>
+        <data name="DUE_DATE"
+              link_data="ds_list:DUE_DATE"
+              width="100"
+              text_horzalign="1"
+              data_type="2"
+              editable="0"/>
+      </column>
+
+      <!-- Created At Column -->
+      <column>
+        <header title="Created" back_color="00F8F9FA"/>
+        <data name="CREATED_AT"
+              link_data="ds_list:CREATED_AT"
+              width="140"
+              text_horzalign="1"
+              data_type="2"
+              editable="0"/>
+      </column>
+
+      <!-- Updated At Column -->
+      <column>
+        <header title="Updated" back_color="00F8F9FA"/>
+        <data name="UPDATED_AT"
+              link_data="ds_list:UPDATED_AT"
+              width="140"
+              text_horzalign="1"
+              data_type="2"
+              editable="0"/>
+      </column>
+
+    </grid>
+  </panel>
+
+</screen>

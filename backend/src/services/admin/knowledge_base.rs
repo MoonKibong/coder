@@ -7,7 +7,11 @@ use sea_orm::{query::*, DatabaseConnection, JsonValue, PaginatorTrait};
 use serde::{Deserialize, Serialize};
 
 use crate::models::_entities::knowledge_bases::{ActiveModel, Column, Entity, Model};
-use crate::utils::{bool_from_str_or_bool, i32_from_str_or_number, OptionalField};
+use crate::utils::{
+    bool_from_str_or_bool, i32_from_str_or_number,
+    optional_bool_from_str_or_bool, optional_i32_from_str_or_number,
+    OptionalField,
+};
 
 const DEFAULT_PAGE_SIZE: u64 = 20;
 const MAX_PAGE_SIZE: u64 = 100;
@@ -70,9 +74,9 @@ pub struct UpdateParams {
     pub relevance_tags: OptionalField<String>, // Comma-separated string
     #[serde(default)]
     pub priority: OptionalField<String>,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "optional_i32_from_str_or_number")]
     pub token_estimate: OptionalField<i32>,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "optional_bool_from_str_or_bool")]
     pub is_active: OptionalField<bool>,
 }
 

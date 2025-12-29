@@ -7,7 +7,11 @@ use sea_orm::{query::*, DatabaseConnection, PaginatorTrait};
 use serde::{Deserialize, Serialize};
 
 use crate::models::_entities::llm_configs::{ActiveModel, Column, Entity, Model};
-use crate::utils::{bool_from_str_or_bool, f32_from_str_or_number, i32_from_str_or_number, OptionalField};
+use crate::utils::{
+    bool_from_str_or_bool, f32_from_str_or_number, i32_from_str_or_number,
+    optional_bool_from_str_or_bool, optional_f32_from_str_or_number, optional_i32_from_str_or_number,
+    OptionalField,
+};
 
 const DEFAULT_PAGE_SIZE: u64 = 20;
 const MAX_PAGE_SIZE: u64 = 100;
@@ -64,13 +68,14 @@ pub struct UpdateParams {
     pub endpoint_url: Option<String>,
 
     // Optional fields - use OptionalField for proper PATCH semantics
+    // with string-to-type conversion for HTML form compatibility
     #[serde(default)]
     pub api_key: OptionalField<String>,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "optional_f32_from_str_or_number")]
     pub temperature: OptionalField<f32>,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "optional_i32_from_str_or_number")]
     pub max_tokens: OptionalField<i32>,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "optional_bool_from_str_or_bool")]
     pub is_active: OptionalField<bool>,
 }
 

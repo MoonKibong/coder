@@ -161,6 +161,13 @@ public abstract class AbstractGenerateHandler extends AbstractHandler {
                     String screenName = getScreenName(request);
                     createFiles(project, screenName, response);
 
+                    // Get actual filenames used
+                    GenerateResponse.Artifacts artifacts = response.getArtifacts();
+                    String xmlFilename = artifacts != null ?
+                            artifacts.getXmlFilenameOrDefault(screenName + ".xml") : screenName + ".xml";
+                    String jsFilename = artifacts != null ?
+                            artifacts.getJsFilenameOrDefault(screenName + ".js") : screenName + ".js";
+
                     // Show success with warnings if any
                     if (response.hasWarnings()) {
                         showWarning(shell, "Code generated with warnings:\n" +
@@ -168,8 +175,8 @@ public abstract class AbstractGenerateHandler extends AbstractHandler {
                     } else {
                         showInfo(shell, "Code generated successfully!\n\n" +
                                 "Files created:\n" +
-                                "- views/" + screenName + ".xml\n" +
-                                "- scripts/" + screenName + ".js");
+                                "- views/" + xmlFilename + "\n" +
+                                "- scripts/" + jsFilename);
                     }
 
                     return Status.OK_STATUS;
@@ -211,9 +218,13 @@ public abstract class AbstractGenerateHandler extends AbstractHandler {
             createFolder(scriptsFolder);
         }
 
+        // Get filenames from response, falling back to screenName-based names
+        String xmlFilename = artifacts.getXmlFilenameOrDefault(screenName + ".xml");
+        String jsFilename = artifacts.getJsFilenameOrDefault(screenName + ".js");
+
         // Create XML file
         if (artifacts.getXml() != null && !artifacts.getXml().isEmpty()) {
-            IFile xmlFile = viewsFolder.getFile(screenName + ".xml");
+            IFile xmlFile = viewsFolder.getFile(xmlFilename);
             createOrUpdateFile(xmlFile, artifacts.getXml());
 
             // Open in editor
@@ -230,7 +241,7 @@ public abstract class AbstractGenerateHandler extends AbstractHandler {
 
         // Create JavaScript file
         if (artifacts.getJavascript() != null && !artifacts.getJavascript().isEmpty()) {
-            IFile jsFile = scriptsFolder.getFile(screenName + ".js");
+            IFile jsFile = scriptsFolder.getFile(jsFilename);
             createOrUpdateFile(jsFile, artifacts.getJavascript());
         }
 

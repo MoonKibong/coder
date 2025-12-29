@@ -5,18 +5,7 @@
         <!-- Header -->
         <div class="flex items-center justify-between px-6 py-4 border-b">
             <div class="flex items-center gap-3">
-                <h2 class="text-lg font-semibold">{{ item.name }}</h2>
-                {% if item.is_active %}
-                <span class="inline-flex items-center gap-1 rounded-full bg-green-500/10 px-2 py-1 text-xs font-medium text-green-600">
-                    <span class="h-1.5 w-1.5 rounded-full bg-green-500"></span>
-                    Active
-                </span>
-                {% else %}
-                <span class="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-1 text-xs font-medium text-muted-foreground">
-                    <span class="h-1.5 w-1.5 rounded-full bg-muted-foreground"></span>
-                    Inactive
-                </span>
-                {% endif %}
+                <h2 class="text-lg font-semibold font-mono">{{ item.company_id }}</h2>
             </div>
             <button onclick="this.closest('.fixed').remove()"
                 class="inline-flex items-center justify-center rounded-md h-8 w-8 hover:bg-accent">
@@ -32,52 +21,20 @@
                 <!-- Meta Info -->
                 <div class="grid grid-cols-2 gap-4">
                     <div class="space-y-1">
-                        <dt class="text-sm font-medium text-muted-foreground">Category</dt>
-                        <dd class="text-sm">
-                            <span class="inline-flex items-center rounded-md bg-secondary px-2 py-1 text-xs font-medium">
-                                {{ item.category }}
-                            </span>
-                        </dd>
+                        <dt class="text-sm font-medium text-muted-foreground">Created</dt>
+                        <dd class="text-sm">{{ item.created_at | date(format="%Y-%m-%d %H:%M") }}</dd>
                     </div>
                     <div class="space-y-1">
-                        <dt class="text-sm font-medium text-muted-foreground">Priority</dt>
-                        <dd class="text-sm">
-                            {% if item.priority == "high" %}
-                            <span class="inline-flex items-center gap-1 text-xs font-medium text-red-600">
-                                <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3"/></svg>
-                                High
-                            </span>
-                            {% elif item.priority == "medium" %}
-                            <span class="inline-flex items-center gap-1 text-xs font-medium text-yellow-600">
-                                <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3"/></svg>
-                                Medium
-                            </span>
-                            {% else %}
-                            <span class="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
-                                <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3"/></svg>
-                                Low
-                            </span>
-                            {% endif %}
-                        </dd>
-                    </div>
-                    <div class="space-y-1 col-span-2">
-                        <dt class="text-sm font-medium text-muted-foreground">Created</dt>
-                        <dd class="text-sm text-muted-foreground">{{ item.created_at }}</dd>
+                        <dt class="text-sm font-medium text-muted-foreground">Last Updated</dt>
+                        <dd class="text-sm">{{ item.updated_at | date(format="%Y-%m-%d %H:%M") }}</dd>
                     </div>
                 </div>
 
-                <!-- Description -->
-                {% if item.description %}
-                <div class="space-y-2">
-                    <label class="text-sm font-medium">Description</label>
-                    <p class="text-sm text-muted-foreground">{{ item.description }}</p>
-                </div>
-                {% endif %}
-
-                <!-- Rule Content -->
+                <!-- Naming Convention -->
                 <div class="space-y-2">
                     <div class="flex items-center justify-between">
-                        <label class="text-sm font-medium">Rule Content</label>
+                        <label class="text-sm font-medium">Naming Convention</label>
+                        {% if item.naming_convention %}
                         <button onclick="navigator.clipboard.writeText(this.closest('.space-y-2').querySelector('pre').textContent)"
                             class="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
                             <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -85,15 +42,20 @@
                             </svg>
                             Copy
                         </button>
+                        {% endif %}
                     </div>
-                    <pre class="w-full rounded-md border bg-muted/50 p-4 text-sm font-mono whitespace-pre-wrap break-words overflow-x-auto">{{ item.rule_content }}</pre>
+                    {% if item.naming_convention %}
+                    <pre class="w-full rounded-md border bg-muted/50 p-4 text-sm font-mono whitespace-pre-wrap break-words overflow-x-auto">{{ item.naming_convention }}</pre>
+                    {% else %}
+                    <p class="text-sm text-muted-foreground italic">Not set</p>
+                    {% endif %}
                 </div>
 
-                <!-- Example -->
-                {% if item.example %}
+                <!-- Additional Rules -->
                 <div class="space-y-2">
                     <div class="flex items-center justify-between">
-                        <label class="text-sm font-medium">Example</label>
+                        <label class="text-sm font-medium">Additional Rules</label>
+                        {% if item.additional_rules %}
                         <button onclick="navigator.clipboard.writeText(this.closest('.space-y-2').querySelector('pre').textContent)"
                             class="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
                             <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -101,19 +63,14 @@
                             </svg>
                             Copy
                         </button>
+                        {% endif %}
                     </div>
-                    <pre class="w-full rounded-md border bg-muted/50 p-4 text-sm font-mono whitespace-pre-wrap break-words overflow-x-auto">{{ item.example }}</pre>
+                    {% if item.additional_rules %}
+                    <pre class="w-full rounded-md border bg-muted/50 p-4 text-sm font-mono whitespace-pre-wrap break-words overflow-x-auto">{{ item.additional_rules }}</pre>
+                    {% else %}
+                    <p class="text-sm text-muted-foreground italic">Not set</p>
+                    {% endif %}
                 </div>
-                {% endif %}
-
-                <!-- Updated Info -->
-                {% if item.updated_at %}
-                <div class="pt-4 border-t">
-                    <p class="text-xs text-muted-foreground">
-                        Last updated: {{ item.updated_at }}
-                    </p>
-                </div>
-                {% endif %}
             </div>
         </div>
 

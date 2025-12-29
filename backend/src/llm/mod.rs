@@ -17,7 +17,10 @@ pub use anthropic::AnthropicBackend;
 pub use mock::{MockLlmBackend, MockResponse};
 
 use async_trait::async_trait;
+use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
 use std::env;
+
+use crate::models::_entities::llm_configs;
 
 /// Core trait for LLM backends.
 /// All implementations must be Send + Sync for async contexts.
@@ -71,6 +74,96 @@ pub fn create_backend_from_env() -> Box<dyn LlmBackend> {
         _ => {
             tracing::warn!("Unknown LLM provider '{}', falling back to ollama", provider);
             Box::new(OllamaBackend::from_env())
+        }
+    }
+}
+
+/// Create LLM backend from database configuration, falling back to environment variables.
+///
+/// This function:
+/// 1. Queries the database for an active LLM config (is_active = true)
+/// 2. If found, creates the backend from database settings
+/// 3. If not found, falls back to create_backend_from_env()
+///
+/// This allows runtime configuration changes via the admin panel without server restart.
+pub async fn create_backend_from_db_or_env(db: &DatabaseConnection) -> Box<dyn LlmBackend> {
+    // Try to get active config from database
+    match get_active_llm_config(db).await {
+        Some(config) => {
+            tracing::info!(
+                "Using LLM config from database: {} ({}/{})",
+                config.name,
+                config.provider,
+                config.model_name
+            );
+            create_backend_from_config(&config)
+        }
+        None => {
+            tracing::info!("No active LLM config in database, using environment variables");
+            create_backend_from_env()
+        }
+    }
+}
+
+/// Get the active LLM configuration from database
+async fn get_active_llm_config(db: &DatabaseConnection) -> Option<llm_configs::Model> {
+    llm_configs::Entity::find()
+        .filter(llm_configs::Column::IsActive.eq(true))
+        .one(db)
+        .await
+        .ok()
+        .flatten()
+}
+
+/// Create LLM backend from database configuration
+fn create_backend_from_config(config: &llm_configs::Model) -> Box<dyn LlmBackend> {
+    let timeout_seconds = 120u64; // Default timeout
+
+    match config.provider.as_str() {
+        "ollama" => Box::new(OllamaBackend::new(
+            config.endpoint_url.clone(),
+            config.model_name.clone(),
+            timeout_seconds,
+        )),
+        "llama-cpp" => Box::new(LlamaCppBackend::new(
+            config.endpoint_url.clone(),
+            config.model_name.clone(),
+            timeout_seconds,
+        )),
+        "vllm" => Box::new(VllmBackend::new(
+            config.endpoint_url.clone(),
+            config.model_name.clone(),
+            config.api_key.clone(), // Optional<String>
+            timeout_seconds,
+        )),
+        "groq" => Box::new(GroqBackend::new(
+            config.endpoint_url.clone(),
+            config.model_name.clone(),
+            config.api_key.clone().unwrap_or_default(),
+            timeout_seconds,
+        )),
+        "openai" => Box::new(OpenAIBackend::new(
+            config.endpoint_url.clone(),
+            config.model_name.clone(),
+            config.api_key.clone().unwrap_or_default(),
+            timeout_seconds,
+        )),
+        "anthropic" => Box::new(AnthropicBackend::new(
+            config.endpoint_url.clone(),
+            config.model_name.clone(),
+            config.api_key.clone().unwrap_or_default(),
+            timeout_seconds,
+        )),
+        _ => {
+            tracing::warn!(
+                "Unknown provider '{}' in database config, falling back to ollama",
+                config.provider
+            );
+            Box::new(OllamaBackend::new(
+                config.endpoint_url.clone(),
+                config.model_name.clone(),
+                timeout_seconds,
+            ))
         }
     }
 }

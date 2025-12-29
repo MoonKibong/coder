@@ -81,18 +81,20 @@
                         class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm
                                placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring
                                font-mono resize-y"
-                        placeholder="Enter the user prompt template with {{placeholders}}...">{{ item.user_prompt_template }}</textarea>
+                        placeholder="Enter the user prompt template with curly brace placeholders...">{{ item.user_prompt_template }}</textarea>
                     <p class="text-xs text-muted-foreground">
-                        Use <code class="bg-muted px-1 rounded">{{variable}}</code> for dynamic placeholders.
+                        Use <code class="bg-muted px-1 rounded">{{ "{{" }}variable{{ "}}" }}</code> for dynamic placeholders.
                     </p>
                 </div>
 
                 <!-- Is Active -->
                 <div class="flex items-center space-x-2">
-                    <input type="checkbox" id="is_active" name="is_active" value="true"
+                    <input type="hidden" id="is_active_hidden" name="is_active" value="{% if item.is_active %}true{% else %}false{% endif %}" />
+                    <input type="checkbox" id="is_active_checkbox"
                         {% if item.is_active %}checked{% endif %}
+                        onchange="document.getElementById('is_active_hidden').value = this.checked ? 'true' : 'false'"
                         class="h-4 w-4 rounded border-input" />
-                    <label for="is_active" class="text-sm font-medium">Active</label>
+                    <label for="is_active_checkbox" class="text-sm font-medium">Active</label>
                 </div>
             </div>
         </form>

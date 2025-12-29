@@ -286,9 +286,9 @@ async fn process_sync(
 ///
 /// GET /agent/health
 #[debug_handler]
-pub async fn health(State(_ctx): State<AppContext>) -> Result<Response> {
-    // Check LLM availability
-    let llm = crate::llm::create_backend_from_env();
+pub async fn health(State(ctx): State<AppContext>) -> Result<Response> {
+    // Check LLM availability (DB config takes priority, falls back to env)
+    let llm = crate::llm::create_backend_from_db_or_env(&ctx.db).await;
     let llm_check = llm.health_check().await;
 
     let (llm_available, message) = match llm_check {

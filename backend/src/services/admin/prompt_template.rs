@@ -7,7 +7,7 @@ use sea_orm::{query::*, DatabaseConnection, PaginatorTrait};
 use serde::{Deserialize, Serialize};
 
 use crate::models::_entities::prompt_templates::{ActiveModel, Column, Entity, Model};
-use crate::utils::{bool_from_str_or_bool, OptionalField};
+use crate::utils::{bool_from_str_or_bool, optional_bool_from_str_or_bool, OptionalField};
 
 const DEFAULT_PAGE_SIZE: u64 = 20;
 const MAX_PAGE_SIZE: u64 = 100;
@@ -62,7 +62,7 @@ pub struct UpdateParams {
     // Optional fields - use OptionalField for proper PATCH semantics
     #[serde(default)]
     pub screen_type: OptionalField<String>,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "optional_bool_from_str_or_bool")]
     pub is_active: OptionalField<bool>,
 }
 

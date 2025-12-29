@@ -291,6 +291,14 @@ pub struct GeneratedArtifacts {
 
     /// Generated JavaScript content
     pub javascript: Option<String>,
+
+    /// Suggested XML filename (e.g., "task_list.xml")
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub xml_filename: Option<String>,
+
+    /// Suggested JavaScript filename (e.g., "task_list.js")
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub js_filename: Option<String>,
 }
 
 /// Response metadata (NO LLM details exposed)

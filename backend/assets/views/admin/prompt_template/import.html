@@ -113,12 +113,12 @@ system_prompt: |
   <your JavaScript content>
 
 user_prompt_template: |
-  Generate an xFrame5 {{screen_type}} screen.
+  Generate an xFrame5 {{ "{{" }}screen_type{{ "}}" }} screen.
 
   Requirements:
-  - Screen name: {{screen_name}}
-  - Datasets: {{datasets}}
-  - Grid columns: {{grid_columns}}
+  - Screen name: {{ "{{" }}screen_name{{ "}}" }}
+  - Datasets: {{ "{{" }}datasets{{ "}}" }}
+  - Grid columns: {{ "{{" }}grid_columns{{ "}}" }}
 
 validation_rules:
   - xml_must_parse

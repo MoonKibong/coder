@@ -544,8 +544,9 @@ pub fn create_backend_from_env() -> Box<dyn LlmBackend> {
 ## Usage in Service
 
 ```rust
-pub async fn generate(req: GenerateRequest) -> Result<GenerateResponse> {
-    let llm = create_backend_from_env();
+pub async fn generate(db: &DatabaseConnection, req: GenerateRequest) -> Result<GenerateResponse> {
+    // DB config takes priority, falls back to env
+    let llm = create_backend_from_db_or_env(db).await;
 
     // Health check before generating
     llm.health_check().await
@@ -567,27 +568,112 @@ pub async fn generate(req: GenerateRequest) -> Result<GenerateResponse> {
 
 ---
 
-## Future: Admin Panel Configuration
+## Database Configuration (Admin Panel)
 
-When admin panel is implemented, configuration will be stored in database:
+LLM configuration is stored in the database for runtime updates without server restart:
 
 ```sql
 CREATE TABLE llm_configs (
-    id UUID PRIMARY KEY,
-    provider_type VARCHAR(50) NOT NULL,
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    provider VARCHAR(50) NOT NULL,
     model_name VARCHAR(255) NOT NULL,
-    api_endpoint VARCHAR(500) NOT NULL,
-    encrypted_api_key TEXT,
-    is_default BOOLEAN DEFAULT true,
-    is_active BOOLEAN DEFAULT true,
+    endpoint_url VARCHAR(500) NOT NULL,
+    api_key TEXT,
+    is_active BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ NOT NULL,
     updated_at TIMESTAMPTZ NOT NULL
 );
 ```
 
-The factory will then prioritize:
-1. Database configuration (if exists)
-2. Environment variables (fallback)
+### Configuration Priority
+
+The `create_backend_from_db_or_env()` function implements this priority:
+
+1. **Database configuration** (if `is_active = true` exists)
+2. **Environment variables** (fallback)
+
+### Factory Functions
+
+```rust
+use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
+
+/// Create LLM backend from database configuration, falling back to environment variables.
+pub async fn create_backend_from_db_or_env(db: &DatabaseConnection) -> Box<dyn LlmBackend> {
+    match get_active_llm_config(db).await {
+        Some(config) => {
+            tracing::info!(
+                "Using LLM config from database: {} ({}/{})",
+                config.name,
+                config.provider,
+                config.model_name
+            );
+            create_backend_from_config(&config)
+        }
+        None => {
+            tracing::info!("No active LLM config in database, using environment variables");
+            create_backend_from_env()
+        }
+    }
+}
+
+/// Get the active LLM configuration from database
+async fn get_active_llm_config(db: &DatabaseConnection) -> Option<llm_configs::Model> {
+    llm_configs::Entity::find()
+        .filter(llm_configs::Column::IsActive.eq(true))
+        .one(db)
+        .await
+        .ok()
+        .flatten()
+}
+
+/// Create LLM backend from database configuration
+fn create_backend_from_config(config: &llm_configs::Model) -> Box<dyn LlmBackend> {
+    let timeout_seconds = 120u64;
+
+    match config.provider.as_str() {
+        "ollama" => Box::new(OllamaBackend::new(
+            config.endpoint_url.clone(),
+            config.model_name.clone(),
+            timeout_seconds,
+        )),
+        "vllm" => Box::new(VllmBackend::new(
+            config.endpoint_url.clone(),
+            config.model_name.clone(),
+            config.api_key.clone(),
+            timeout_seconds,
+        )),
+        "groq" => Box::new(GroqBackend::new(
+            config.endpoint_url.clone(),
+            config.model_name.clone(),
+            config.api_key.clone().unwrap_or_default(),
+            timeout_seconds,
+        )),
+        // ... other providers
+        _ => Box::new(OllamaBackend::new(
+            config.endpoint_url.clone(),
+            config.model_name.clone(),
+            timeout_seconds,
+        )),
+    }
+}
+```
+
+### Admin Panel
+
+Configure LLM settings at runtime via `/admin/llm-configs`:
+
+- Create/edit/delete LLM configurations
+- Toggle `is_active` to switch between configurations
+- Only ONE configuration can be active at a time
+- Changes take effect immediately (no server restart)
+
+### Benefits
+
+1. **Runtime configuration** - No server restart needed
+2. **Customer-specific settings** - Different LLM for each deployment
+3. **Easy switching** - Toggle between providers via admin panel
+4. **Fallback safety** - Environment variables as backup
 
 ---
 
@@ -606,4 +692,4 @@ The factory will then prioritize:
 
 ---
 
-**Last Updated**: 2025-12-28
+**Last Updated**: 2025-12-29

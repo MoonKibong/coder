@@ -69,14 +69,35 @@ impl PromptCompiler {
         product: &str,
         screen_type: &str,
     ) -> Option<prompt_templates::Model> {
-        prompt_templates::Entity::find()
+        use sea_orm::QueryOrder;
+
+        let result = prompt_templates::Entity::find()
             .filter(prompt_templates::Column::Product.eq(product))
             .filter(prompt_templates::Column::ScreenType.eq(Some(screen_type.to_string())))
             .filter(prompt_templates::Column::IsActive.eq(Some(true)))
+            .order_by_desc(prompt_templates::Column::Version) // Get highest version
             .one(db)
-            .await
-            .ok()
-            .flatten()
+            .await;
+
+        match &result {
+            Ok(Some(t)) => {
+                tracing::info!(
+                    "Loaded template: {} v{} (active={:?}) for {}/{}",
+                    t.name, t.version, t.is_active, product, screen_type
+                );
+            }
+            Ok(None) => {
+                tracing::warn!(
+                    "No active template found for {}/{}, using defaults",
+                    product, screen_type
+                );
+            }
+            Err(e) => {
+                tracing::error!("Error loading template: {}", e);
+            }
+        }
+
+        result.ok().flatten()
     }
 
     /// Load company rules from database

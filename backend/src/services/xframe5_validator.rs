@@ -13,14 +13,40 @@ pub struct ValidatedArtifacts {
 
     /// Warnings found during validation
     pub warnings: Vec<String>,
+
+    /// Screen name for filename generation
+    pub screen_name: Option<String>,
+}
+
+impl ValidatedArtifacts {
+    /// Convert to GeneratedArtifacts with filenames based on screen_name
+    pub fn into_artifacts(self) -> GeneratedArtifacts {
+        let (xml_filename, js_filename) = if let Some(ref name) = self.screen_name {
+            // Convert screen_name to snake_case filename
+            let base_name = name
+                .to_lowercase()
+                .replace(' ', "_")
+                .replace('-', "_");
+            (
+                Some(format!("{}.xml", base_name)),
+                Some(format!("{}.js", base_name)),
+            )
+        } else {
+            (None, None)
+        };
+
+        GeneratedArtifacts {
+            xml: Some(self.xml),
+            javascript: Some(self.javascript),
+            xml_filename,
+            js_filename,
+        }
+    }
 }
 
 impl From<ValidatedArtifacts> for GeneratedArtifacts {
     fn from(v: ValidatedArtifacts) -> Self {
-        GeneratedArtifacts {
-            xml: Some(v.xml),
-            javascript: Some(v.javascript),
-        }
+        v.into_artifacts()
     }
 }
 
@@ -47,14 +73,29 @@ impl XFrame5Validator {
             xml,
             javascript: js,
             warnings,
+            screen_name: Some(intent.screen_name.clone()),
         })
     }
 
     /// Split LLM output into XML and JS sections
     fn split_output(raw: &str) -> Result<(String, String)> {
         // Look for markers like "--- XML ---" and "--- JS ---"
-        let xml_marker = Self::find_section_marker(raw, &["--- XML ---", "---XML---", "<!-- XML -->", "```xml"]);
-        let js_marker = Self::find_section_marker(raw, &["--- JS ---", "---JS---", "// JS", "```javascript", "```js"]);
+        // Also handle markdown format that some LLMs produce
+        let xml_marker = Self::find_section_marker(raw, &[
+            "--- XML ---", "---XML---", "<!-- XML -->", "```xml",
+            "**XML:**", "**XML**", "## XML", "# XML"
+        ]);
+        let js_marker = Self::find_section_marker(raw, &[
+            "--- JS ---", "---JS---", "// JS", "```javascript", "```js",
+            "**JavaScript:**", "**JavaScript**", "**JS:**", "**JS**",
+            "## JavaScript", "# JavaScript", "## JS", "# JS"
+        ]);
+
+        tracing::debug!(
+            "Section markers found - XML: {:?}, JS: {:?}",
+            xml_marker.map(|(pos, _)| pos),
+            js_marker.map(|(pos, _)| pos)
+        );
 
         match (xml_marker, js_marker) {
             (Some((xml_start, xml_marker_len)), Some((js_start, js_marker_len))) => {
@@ -65,17 +106,26 @@ impl XFrame5Validator {
                 let xml = Self::clean_section(&raw[xml_content_start..xml_content_end]);
                 let js = Self::clean_section(&raw[js_content_start..]);
 
+                tracing::debug!(
+                    "Marker-based split - XML length: {}, JS length: {}",
+                    xml.len(),
+                    js.len()
+                );
+
                 if xml.is_empty() {
                     return Err(anyhow!("XML section is empty"));
                 }
                 if js.is_empty() {
-                    return Err(anyhow!("JavaScript section is empty"));
+                    // JS section empty with markers - try content-based splitting as fallback
+                    tracing::warn!("JS section empty after marker-based split, trying content-based fallback");
+                    return Self::split_by_content(raw);
                 }
 
                 Ok((xml, js))
             }
             _ => {
                 // Try to detect XML and JS without explicit markers
+                tracing::debug!("No markers found, trying content-based splitting");
                 Self::split_by_content(raw)
             }
         }
@@ -95,12 +145,7 @@ impl XFrame5Validator {
     fn clean_section(text: &str) -> String {
         let mut result = text.trim().to_string();
 
-        // Remove markdown code block endings
-        if result.ends_with("```") {
-            result = result[..result.len() - 3].trim().to_string();
-        }
-
-        // Remove leading/trailing backticks
+        // Remove leading markdown code block markers
         result = result.trim_start_matches("```xml")
             .trim_start_matches("```javascript")
             .trim_start_matches("```js")
@@ -108,7 +153,41 @@ impl XFrame5Validator {
             .trim()
             .to_string();
 
-        result
+        // Remove trailing markdown code block and any text after it
+        // Look for ``` that ends the code block
+        if let Some(backtick_pos) = result.rfind("```") {
+            // Check if this is at the end of actual code
+            let before_backtick = result[..backtick_pos].trim();
+            // If there's actual content before the backticks, truncate there
+            if !before_backtick.is_empty() {
+                result = before_backtick.to_string();
+            }
+        }
+
+        // For XML: ensure we end at </screen> if present (remove any trailing explanation)
+        if result.contains("</screen>") {
+            if let Some(screen_end_pos) = result.rfind("</screen>") {
+                result = result[..screen_end_pos + "</screen>".len()].to_string();
+            }
+        }
+
+        // For JS: remove any trailing explanation text that starts with common patterns
+        let explanation_markers = [
+            "\n\nNote that",
+            "\n\nPlease note",
+            "\n\nThis code",
+            "\n\nAlso,",
+            "\n\nI've ",
+            "\n\n**",
+            "\n\nThe above",
+        ];
+        for marker in explanation_markers {
+            if let Some(pos) = result.find(marker) {
+                result = result[..pos].trim().to_string();
+            }
+        }
+
+        result.trim().to_string()
     }
 
     /// Try to split content by detecting XML and JS patterns
@@ -131,17 +210,39 @@ impl XFrame5Validator {
                     if last_bracket + 1 < abs_pos && abs_pos < js_start {
                         xml_end = last_bracket + 1;
                         js_start = abs_pos;
+                        tracing::debug!(
+                            "Found JS pattern '{}' at position {}, XML ends at {}",
+                            pattern, abs_pos, xml_end
+                        );
                     }
                 }
             }
         }
 
         if js_start >= raw.len() {
-            return Err(anyhow!("Could not separate XML and JavaScript sections"));
+            // Log what we found to help diagnose
+            let raw_preview = if raw.len() > 500 {
+                format!("{}...[truncated]", &raw[..500])
+            } else {
+                raw.to_string()
+            };
+            tracing::warn!(
+                "Could not find JavaScript section. Raw content preview:\n{}",
+                raw_preview
+            );
+            return Err(anyhow!(
+                "Could not separate XML and JavaScript sections. The LLM may not have generated JavaScript code."
+            ));
         }
 
         let xml = raw[xml_start..xml_end].trim().to_string();
         let js = raw[js_start..].trim().to_string();
+
+        tracing::debug!(
+            "Content-based split - XML length: {}, JS length: {}",
+            xml.len(),
+            js.len()
+        );
 
         if xml.is_empty() {
             return Err(anyhow!("XML section is empty"));
@@ -162,8 +263,9 @@ impl XFrame5Validator {
             return Err(anyhow!("Invalid XML: no tags found"));
         }
 
-        // Check for Dataset element
-        if !xml.contains("<Dataset") && !xml.contains("<dataset") {
+        // Check for Dataset element (including xlinkdataset which is the xFrame5 format)
+        if !xml.contains("<Dataset") && !xml.contains("<dataset") &&
+           !xml.contains("<xlinkdataset") && !xml.contains("<Xlinkdataset") {
             warnings.push("Warning: No Dataset element found in XML".to_string());
         }
 
@@ -207,15 +309,12 @@ impl XFrame5Validator {
             }
         }
 
-        // Check for common xFrame5 patterns
-        let required_patterns = [
-            ("this.", "xFrame5 context reference"),
-        ];
+        // Check for common xFrame5 patterns (either this. or function declarations)
+        let has_this_pattern = js.contains("this.");
+        let has_function_pattern = js.contains("function ");
 
-        for (pattern, desc) in required_patterns {
-            if !js.contains(pattern) {
-                warnings.push(format!("Warning: Missing {} pattern: '{}'", desc, pattern));
-            }
+        if !has_this_pattern && !has_function_pattern {
+            warnings.push("Warning: No function declarations found in JavaScript".to_string());
         }
 
         // Check for TODO placeholders
@@ -377,6 +476,7 @@ this.fn_save = function() {
             xml: "<Dataset />".to_string(),
             javascript: "// existing code".to_string(),
             warnings: vec![],
+            screen_name: Some("test_screen".to_string()),
         };
 
         XFrame5Validator::post_process(&mut artifacts, &intent);

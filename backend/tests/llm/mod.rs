@@ -20,7 +20,7 @@ fn test_ollama_backend_from_env() {
 
     let backend = OllamaBackend::from_env();
     assert_eq!(backend.name(), "ollama");
-    assert_eq!(backend.model(), "codellama:13b");
+    assert_eq!(backend.model(), "llama3.1:latest");
 }
 
 #[test]

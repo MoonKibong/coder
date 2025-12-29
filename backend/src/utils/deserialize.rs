@@ -74,6 +74,91 @@ where
     }
 }
 
+// ============================================================================
+// OptionalField variants for PATCH semantics with string-to-type conversion
+// ============================================================================
+
+use super::OptionalField;
+
+/// Deserialize OptionalField<f32> from either string or number
+pub fn optional_f32_from_str_or_number<'de, D>(deserializer: D) -> Result<OptionalField<f32>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum StringOrNumber {
+        String(String),
+        Number(f32),
+    }
+
+    match Option::<StringOrNumber>::deserialize(deserializer)? {
+        None => Ok(OptionalField::Present(None)),
+        Some(StringOrNumber::String(s)) => {
+            if s.is_empty() {
+                Ok(OptionalField::Present(None))
+            } else {
+                s.parse::<f32>()
+                    .map(|v| OptionalField::Present(Some(v)))
+                    .map_err(serde::de::Error::custom)
+            }
+        }
+        Some(StringOrNumber::Number(n)) => Ok(OptionalField::Present(Some(n))),
+    }
+}
+
+/// Deserialize OptionalField<i32> from either string or number
+pub fn optional_i32_from_str_or_number<'de, D>(deserializer: D) -> Result<OptionalField<i32>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum StringOrNumber {
+        String(String),
+        Number(i32),
+    }
+
+    match Option::<StringOrNumber>::deserialize(deserializer)? {
+        None => Ok(OptionalField::Present(None)),
+        Some(StringOrNumber::String(s)) => {
+            if s.is_empty() {
+                Ok(OptionalField::Present(None))
+            } else {
+                s.parse::<i32>()
+                    .map(|v| OptionalField::Present(Some(v)))
+                    .map_err(serde::de::Error::custom)
+            }
+        }
+        Some(StringOrNumber::Number(n)) => Ok(OptionalField::Present(Some(n))),
+    }
+}
+
+/// Deserialize OptionalField<bool> from either string ("true"/"false") or boolean
+pub fn optional_bool_from_str_or_bool<'de, D>(deserializer: D) -> Result<OptionalField<bool>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum StringOrBool {
+        String(String),
+        Bool(bool),
+    }
+
+    match Option::<StringOrBool>::deserialize(deserializer)? {
+        None => Ok(OptionalField::Present(None)),
+        Some(StringOrBool::String(s)) => {
+            match s.to_lowercase().as_str() {
+                "true" | "1" | "yes" | "on" => Ok(OptionalField::Present(Some(true))),
+                "false" | "0" | "no" | "off" | "" => Ok(OptionalField::Present(Some(false))),
+                _ => Err(serde::de::Error::custom(format!("invalid bool string: {}", s))),
+            }
+        }
+        Some(StringOrBool::Bool(b)) => Ok(OptionalField::Present(Some(b))),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

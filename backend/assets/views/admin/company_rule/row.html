@@ -1,46 +1,24 @@
 <!-- Company Rule Row -->
 <tr class="border-b transition-colors hover:bg-muted/50">
     <td class="p-4 align-middle">
-        <div class="font-medium">{{ item.name }}</div>
-        {% if item.description %}
-        <div class="text-xs text-muted-foreground mt-0.5 line-clamp-1">{{ item.description }}</div>
-        {% endif %}
-    </td>
-    <td class="p-4 align-middle">
-        <span class="inline-flex items-center rounded-md bg-secondary px-2 py-1 text-xs font-medium">
-            {{ item.category }}
-        </span>
+        <div class="font-medium font-mono">{{ item.company_id }}</div>
     </td>
     <td class="p-4 align-middle hidden sm:table-cell">
-        {% if item.priority == "high" %}
-        <span class="inline-flex items-center gap-1 text-xs font-medium text-red-600">
-            <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3"/></svg>
-            High
-        </span>
-        {% elif item.priority == "medium" %}
-        <span class="inline-flex items-center gap-1 text-xs font-medium text-yellow-600">
-            <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3"/></svg>
-            Medium
-        </span>
+        {% if item.naming_convention %}
+        <div class="text-sm text-muted-foreground line-clamp-2 max-w-xs">{{ item.naming_convention | truncate(length=80) }}</div>
         {% else %}
-        <span class="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
-            <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3"/></svg>
-            Low
-        </span>
+        <span class="text-xs text-muted-foreground italic">Not set</span>
         {% endif %}
     </td>
-    <td class="p-4 align-middle">
-        {% if item.is_active %}
-        <span class="inline-flex items-center gap-1 rounded-full bg-green-500/10 px-2 py-1 text-xs font-medium text-green-600">
-            <span class="h-1.5 w-1.5 rounded-full bg-green-500"></span>
-            Active
-        </span>
+    <td class="p-4 align-middle hidden md:table-cell">
+        {% if item.additional_rules %}
+        <div class="text-sm text-muted-foreground line-clamp-2 max-w-xs">{{ item.additional_rules | truncate(length=80) }}</div>
         {% else %}
-        <span class="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-1 text-xs font-medium text-muted-foreground">
-            <span class="h-1.5 w-1.5 rounded-full bg-muted-foreground"></span>
-            Inactive
-        </span>
+        <span class="text-xs text-muted-foreground italic">Not set</span>
         {% endif %}
+    </td>
+    <td class="p-4 align-middle text-sm text-muted-foreground">
+        {{ item.created_at | date(format="%Y-%m-%d") }}
     </td>
     <td class="p-4 align-middle text-right">
         <div class="flex items-center justify-end gap-2">
