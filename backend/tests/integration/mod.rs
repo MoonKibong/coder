@@ -594,6 +594,8 @@ fn test_generate_response_serialization() {
         artifacts: Some(GeneratedArtifacts {
             xml: Some("<Dataset />".to_string()),
             javascript: Some("fn_search".to_string()),
+            xml_filename: Some("test.xml".to_string()),
+            js_filename: Some("test.js".to_string()),
         }),
         warnings: vec!["Warning: TODO found".to_string()],
         error: None,

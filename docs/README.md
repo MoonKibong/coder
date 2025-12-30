@@ -40,8 +40,10 @@ docs/
 │   ├── CONTROLLER_SERVICE_SEPARATION.md  # Thin controller pattern
 │   └── COOKIE_AUTH.md               # Cookie-based JWT auth
 └── features/              # Feature specifications
-    ├── SCREEN_GENERATION.md
-    └── SCHEMA_INPUT.md
+    ├── SCREEN_GENERATION.md         # List/Detail screen generation
+    ├── SCHEMA_INPUT.md              # DB schema input processing
+    ├── CODE_REVIEW.md               # AI-powered code review
+    └── QA_CHATBOT.md                # Knowledge-based Q&A
 ```
 
 ## Naming Conventions

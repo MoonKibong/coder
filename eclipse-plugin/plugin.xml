@@ -43,6 +43,40 @@
             id="com.kosac.ai.codegen.commands.springGenerateFromNL"
             name="Generate Spring Backend from Description">
       </command>
+      <!-- xFrame5 Review Commands -->
+      <command
+            categoryId="com.kosac.ai.codegen.commands.category"
+            id="com.kosac.ai.codegen.commands.reviewSelection"
+            name="Review Selection">
+      </command>
+      <command
+            categoryId="com.kosac.ai.codegen.commands.category"
+            id="com.kosac.ai.codegen.commands.reviewCode"
+            name="Review Code">
+      </command>
+      <!-- Spring Review Commands -->
+      <command
+            categoryId="com.kosac.ai.codegen.commands.springCategory"
+            id="com.kosac.ai.codegen.commands.springReviewSelection"
+            name="Review Selection">
+      </command>
+      <command
+            categoryId="com.kosac.ai.codegen.commands.springCategory"
+            id="com.kosac.ai.codegen.commands.springReviewCode"
+            name="Review Code">
+      </command>
+      <!-- xFrame5 Q&A Command -->
+      <command
+            categoryId="com.kosac.ai.codegen.commands.category"
+            id="com.kosac.ai.codegen.commands.askQuestion"
+            name="Ask Question">
+      </command>
+      <!-- Spring Q&A Command -->
+      <command
+            categoryId="com.kosac.ai.codegen.commands.springCategory"
+            id="com.kosac.ai.codegen.commands.springAskQuestion"
+            name="Ask Question">
+      </command>
    </extension>
 
    <!-- Handlers -->
@@ -72,6 +106,34 @@
       <handler
             class="com.kosac.ai.codegen.handlers.SpringGenerateFromNLHandler"
             commandId="com.kosac.ai.codegen.commands.springGenerateFromNL">
+      </handler>
+      <!-- xFrame5 Review Handlers -->
+      <handler
+            class="com.kosac.ai.codegen.handlers.XFrame5ReviewSelectionHandler"
+            commandId="com.kosac.ai.codegen.commands.reviewSelection">
+      </handler>
+      <handler
+            class="com.kosac.ai.codegen.handlers.XFrame5ReviewCodeHandler"
+            commandId="com.kosac.ai.codegen.commands.reviewCode">
+      </handler>
+      <!-- Spring Review Handlers -->
+      <handler
+            class="com.kosac.ai.codegen.handlers.SpringReviewSelectionHandler"
+            commandId="com.kosac.ai.codegen.commands.springReviewSelection">
+      </handler>
+      <handler
+            class="com.kosac.ai.codegen.handlers.SpringReviewCodeHandler"
+            commandId="com.kosac.ai.codegen.commands.springReviewCode">
+      </handler>
+      <!-- xFrame5 Q&A Handler -->
+      <handler
+            class="com.kosac.ai.codegen.handlers.XFrame5QAHandler"
+            commandId="com.kosac.ai.codegen.commands.askQuestion">
+      </handler>
+      <!-- Spring Q&A Handler -->
+      <handler
+            class="com.kosac.ai.codegen.handlers.SpringQAHandler"
+            commandId="com.kosac.ai.codegen.commands.springAskQuestion">
       </handler>
    </extension>
 
@@ -105,6 +167,28 @@
             </command>
             <separator
                   name="com.kosac.ai.codegen.menus.separator1"
+                  visible="true">
+            </separator>
+            <command
+                  commandId="com.kosac.ai.codegen.commands.reviewSelection"
+                  label="Review Selection"
+                  mnemonic="R"
+                  style="push">
+            </command>
+            <command
+                  commandId="com.kosac.ai.codegen.commands.reviewCode"
+                  label="Review Code..."
+                  mnemonic="V"
+                  style="push">
+            </command>
+            <command
+                  commandId="com.kosac.ai.codegen.commands.askQuestion"
+                  label="Ask Question..."
+                  mnemonic="A"
+                  style="push">
+            </command>
+            <separator
+                  name="com.kosac.ai.codegen.menus.separator2"
                   visible="true">
             </separator>
             <command
@@ -148,6 +232,28 @@
             </command>
             <separator
                   name="com.kosac.ai.codegen.menus.springSeparator1"
+                  visible="true">
+            </separator>
+            <command
+                  commandId="com.kosac.ai.codegen.commands.springReviewSelection"
+                  label="Review Selection"
+                  mnemonic="R"
+                  style="push">
+            </command>
+            <command
+                  commandId="com.kosac.ai.codegen.commands.springReviewCode"
+                  label="Review Code..."
+                  mnemonic="V"
+                  style="push">
+            </command>
+            <command
+                  commandId="com.kosac.ai.codegen.commands.springAskQuestion"
+                  label="Ask Question..."
+                  mnemonic="A"
+                  style="push">
+            </command>
+            <separator
+                  name="com.kosac.ai.codegen.menus.springSeparator2"
                   visible="true">
             </separator>
             <command

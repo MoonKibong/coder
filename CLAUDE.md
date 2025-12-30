@@ -57,6 +57,7 @@ Enterprise Code Generator - On-premise AI-powered code assistant for enterprise 
 | Agent Server | `backend/` | Rust + Loco.rs + SeaORM + PostgreSQL |
 | Admin Panel | `backend/assets/views/admin/` | HTMX + Tera (Loco.rs built-in) |
 | Eclipse Plugin | `eclipse-plugin/` | Java + Eclipse PDE |
+| Docker | `docker/` | All-in-one Docker image (PostgreSQL + Ollama + Backend) |
 | LLM Runtime | (external) | Ollama / llama.cpp / vLLM |
 | Docs | `docs/` | Shared documentation |
 
@@ -178,15 +179,15 @@ LLM receives structured intent, not raw input.
 
 ### Generate Endpoint
 ```
-POST /agent/generate
+POST /api/agent/generate
 ```
 
 **Request**:
 ```json
 {
-  "product": "spring-boot | xframe5-ui",
+  "product": "spring-backend | xframe5-ui",
   "inputType": "db-schema | query-sample | natural-language",
-  "input": { "payload": "..." },
+  "input": { "description": "..." },
   "options": { "language": "ko", "strictMode": true },
   "context": {
     "project": "my-project",
@@ -196,21 +197,59 @@ POST /agent/generate
 }
 ```
 
-**Response**:
+### Code Review Endpoint
+```
+POST /api/agent/review
+```
+
+**Request**:
 ```json
 {
-  "status": "success | error",
-  "artifacts": {
-    "entity": "public class Member {...}",
-    "repository": "public interface MemberRepository {...}",
-    "service": "public class MemberService {...}"
+  "product": "xframe5-ui | spring-backend",
+  "input": {
+    "code": "...(XML/JS/Java code)...",
+    "fileType": "xml | javascript | java",
+    "context": "Optional description"
   },
-  "warnings": ["API endpoint not defined yet"],
-  "meta": {
-    "generator": "spring-boot-v1",
-    "timestamp": "2025-xx-xx"
+  "options": {
+    "language": "ko",
+    "reviewFocus": ["syntax", "patterns", "performance", "security"]
   }
 }
+```
+
+### Q&A Endpoint
+```
+POST /api/agent/qa
+```
+
+**Request**:
+```json
+{
+  "product": "xframe5-ui | spring-backend",
+  "input": {
+    "question": "How do I use Dataset in xFrame5?",
+    "context": "Building a list screen with grid"
+  },
+  "options": {
+    "language": "ko",
+    "includeExamples": true,
+    "maxReferences": 5
+  }
+}
+```
+
+### CLI Testing Tool
+Use `docker/run_prompt.sh` to test APIs from command line:
+```bash
+# Code Generation
+./run_prompt.sh --mode gen --prompt "generate a member list page"
+
+# Q&A
+./run_prompt.sh --mode qa --prompt "How do I use Dataset?"
+
+# Code Review
+./run_prompt.sh --mode review --prompt '<Screen>...</Screen>'
 ```
 
 ---
@@ -358,6 +397,24 @@ mvn clean package
 mvn test
 ```
 
+### Docker All-in-One Commands
+```bash
+# Build image locally
+docker build -f docker/Dockerfile.allinone -t coder-allinone .
+
+# Run container
+docker run -p 3000:3000 -p 11434:11434 coder-allinone
+
+# With persistent data
+docker run -p 3000:3000 -p 11434:11434 \
+  -v coder-postgres-data:/var/lib/postgresql/14/main \
+  -v coder-ollama-data:/root/.ollama \
+  coder-allinone
+
+# Test APIs with CLI tool
+./docker/run_prompt.sh --mode gen --prompt "generate a member list"
+```
+
 ---
 
 ## Documentation
@@ -380,6 +437,8 @@ mvn test
 ### Feature Documentation (docs/features/)
 1. **SCREEN_GENERATION.md** - List/Detail screen generation
 2. **SCHEMA_INPUT.md** - DB schema input processing
+3. **CODE_REVIEW.md** - AI-powered code review for xFrame5/Spring
+4. **QA_CHATBOT.md** - Knowledge-based Q&A chatbot
 
 ### Knowledge Base Documentation (docs/)
 1. **KNOWLEDGE_BASE_ARCHITECTURE.md** - Knowledge base system architecture and design
@@ -387,4 +446,4 @@ mvn test
 
 ---
 
-**Version**: 0.1 (PoC) | **Updated**: 2025-12-28
+**Version**: 0.2 | **Updated**: 2025-12-30

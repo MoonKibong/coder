@@ -13,8 +13,12 @@ import java.util.stream.Collectors;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 
+import com.kosac.ai.codegen.model.CodeReviewResponse;
 import com.kosac.ai.codegen.model.GenerateRequest;
 import com.kosac.ai.codegen.model.GenerateResponse;
+import com.kosac.ai.codegen.model.QARequest;
+import com.kosac.ai.codegen.model.QAResponse;
+import com.kosac.ai.codegen.model.ReviewRequest;
 import com.kosac.ai.codegen.model.SpringGenerateResponse;
 
 /**
@@ -100,6 +104,40 @@ public class AgentClient {
             return false;
         } catch (IOException e) {
             throw new AgentClientException("Agent server health check failed: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Review code and get feedback on issues and improvements.
+     *
+     * @param request The review request (contains code to review, NO LLM configuration)
+     * @return The review response with issues and suggestions
+     * @throws AgentClientException if the request fails
+     */
+    public CodeReviewResponse review(ReviewRequest request) throws AgentClientException {
+        try {
+            String json = mapToJson(request.toMap());
+            String responseBody = post("/agent/review", json);
+            return parseReviewResponse(responseBody);
+        } catch (IOException e) {
+            throw new AgentClientException("Failed to communicate with agent server: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Ask a question and get an answer from the knowledge base.
+     *
+     * @param request The Q&A request (contains question, NO LLM configuration)
+     * @return The Q&A response with answer and references
+     * @throws AgentClientException if the request fails
+     */
+    public QAResponse qa(QARequest request) throws AgentClientException {
+        try {
+            String json = mapToJson(request.toMap());
+            String responseBody = post("/agent/qa", json);
+            return parseQAResponse(responseBody);
+        } catch (IOException e) {
+            throw new AgentClientException("Failed to communicate with agent server: " + e.getMessage(), e);
         }
     }
 
@@ -752,5 +790,455 @@ public class AgentClient {
         }
 
         return response;
+    }
+
+    /**
+     * Parse code review response.
+     */
+    private CodeReviewResponse parseReviewResponse(String json) {
+        CodeReviewResponse response = new CodeReviewResponse();
+
+        // Extract status
+        response.setStatus(extractJsonString(json, "status"));
+
+        // Extract error
+        response.setError(extractJsonString(json, "error"));
+
+        // Extract review result
+        int reviewStart = json.indexOf("\"review\"");
+        if (reviewStart >= 0) {
+            int objStart = json.indexOf("{", reviewStart);
+            if (objStart >= 0) {
+                int objEnd = findMatchingBrace(json, objStart);
+                if (objEnd > objStart) {
+                    String reviewJson = json.substring(objStart, objEnd + 1);
+                    CodeReviewResponse.ReviewResult review = parseReviewResult(reviewJson);
+                    response.setReview(review);
+                }
+            }
+        }
+
+        // Extract meta
+        int metaStart = json.indexOf("\"meta\"");
+        if (metaStart >= 0) {
+            CodeReviewResponse.ResponseMeta meta = new CodeReviewResponse.ResponseMeta();
+            int objStart = json.indexOf("{", metaStart);
+            if (objStart >= 0) {
+                int objEnd = findMatchingBrace(json, objStart);
+                if (objEnd > objStart) {
+                    String metaJson = json.substring(objStart, objEnd + 1);
+                    meta.setGenerator(extractJsonString(metaJson, "generator"));
+                    meta.setTimestamp(extractJsonString(metaJson, "timestamp"));
+                    String timeMs = extractJsonString(metaJson, "review_time_ms");
+                    if (timeMs != null) {
+                        try {
+                            meta.setReviewTimeMs(Long.parseLong(timeMs));
+                        } catch (NumberFormatException e) {
+                            // Ignore
+                        }
+                    }
+                }
+            }
+            response.setMeta(meta);
+        }
+
+        return response;
+    }
+
+    /**
+     * Parse review result from JSON.
+     */
+    private CodeReviewResponse.ReviewResult parseReviewResult(String json) {
+        CodeReviewResponse.ReviewResult review = new CodeReviewResponse.ReviewResult();
+
+        // Extract summary
+        review.setSummary(extractJsonString(json, "summary"));
+
+        // Extract issues array
+        int issuesStart = json.indexOf("\"issues\"");
+        if (issuesStart >= 0) {
+            int arrayStart = json.indexOf("[", issuesStart);
+            if (arrayStart >= 0) {
+                int arrayEnd = findMatchingBracket(json, arrayStart);
+                if (arrayEnd > arrayStart) {
+                    String issuesJson = json.substring(arrayStart, arrayEnd + 1);
+                    java.util.List<CodeReviewResponse.ReviewIssue> issues = parseIssues(issuesJson);
+                    review.setIssues(issues);
+                }
+            }
+        }
+
+        // Extract score
+        int scoreStart = json.indexOf("\"score\"");
+        if (scoreStart >= 0) {
+            int objStart = json.indexOf("{", scoreStart);
+            if (objStart >= 0) {
+                int objEnd = findMatchingBrace(json, objStart);
+                if (objEnd > objStart) {
+                    String scoreJson = json.substring(objStart, objEnd + 1);
+                    CodeReviewResponse.ReviewScore score = parseScore(scoreJson);
+                    review.setScore(score);
+                }
+            }
+        }
+
+        // Extract improvements array
+        int improvementsStart = json.indexOf("\"improvements\"");
+        if (improvementsStart >= 0) {
+            int arrayStart = json.indexOf("[", improvementsStart);
+            if (arrayStart >= 0) {
+                int arrayEnd = findMatchingBracket(json, arrayStart);
+                if (arrayEnd > arrayStart) {
+                    String improvementsJson = json.substring(arrayStart, arrayEnd + 1);
+                    java.util.List<String> improvements = parseStringArray(improvementsJson);
+                    review.setImprovements(improvements);
+                }
+            }
+        }
+
+        return review;
+    }
+
+    /**
+     * Parse issues array from JSON.
+     */
+    private java.util.List<CodeReviewResponse.ReviewIssue> parseIssues(String json) {
+        java.util.List<CodeReviewResponse.ReviewIssue> issues = new java.util.ArrayList<>();
+
+        int pos = 0;
+        while (pos < json.length()) {
+            int objStart = json.indexOf("{", pos);
+            if (objStart < 0) break;
+
+            int objEnd = findMatchingBrace(json, objStart);
+            if (objEnd <= objStart) break;
+
+            String issueJson = json.substring(objStart, objEnd + 1);
+            CodeReviewResponse.ReviewIssue issue = new CodeReviewResponse.ReviewIssue();
+            issue.setSeverity(extractJsonString(issueJson, "severity"));
+            issue.setCategory(extractJsonString(issueJson, "category"));
+            issue.setMessage(extractJsonString(issueJson, "message"));
+            issue.setSuggestion(extractJsonString(issueJson, "suggestion"));
+
+            String lineStr = extractJsonString(issueJson, "line");
+            if (lineStr != null) {
+                try {
+                    issue.setLine(Integer.parseInt(lineStr));
+                } catch (NumberFormatException e) {
+                    issue.setLine(0);
+                }
+            }
+
+            issues.add(issue);
+            pos = objEnd + 1;
+        }
+
+        return issues;
+    }
+
+    /**
+     * Parse score from JSON.
+     */
+    private CodeReviewResponse.ReviewScore parseScore(String json) {
+        CodeReviewResponse.ReviewScore score = new CodeReviewResponse.ReviewScore();
+
+        String overallStr = extractJsonString(json, "overall");
+        if (overallStr != null) {
+            try {
+                score.setOverall(Integer.parseInt(overallStr));
+            } catch (NumberFormatException e) {
+                score.setOverall(0);
+            }
+        }
+
+        // Parse categories
+        int catsStart = json.indexOf("\"categories\"");
+        if (catsStart >= 0) {
+            int objStart = json.indexOf("{", catsStart);
+            if (objStart >= 0) {
+                int objEnd = findMatchingBrace(json, objStart);
+                if (objEnd > objStart) {
+                    String catsJson = json.substring(objStart, objEnd + 1);
+                    CodeReviewResponse.CategoryScores cats = new CodeReviewResponse.CategoryScores();
+
+                    String syntax = extractJsonString(catsJson, "syntax");
+                    if (syntax != null) {
+                        try { cats.setSyntax(Integer.parseInt(syntax)); } catch (NumberFormatException e) {}
+                    }
+                    String patterns = extractJsonString(catsJson, "patterns");
+                    if (patterns != null) {
+                        try { cats.setPatterns(Integer.parseInt(patterns)); } catch (NumberFormatException e) {}
+                    }
+                    String naming = extractJsonString(catsJson, "naming");
+                    if (naming != null) {
+                        try { cats.setNaming(Integer.parseInt(naming)); } catch (NumberFormatException e) {}
+                    }
+                    String performance = extractJsonString(catsJson, "performance");
+                    if (performance != null) {
+                        try { cats.setPerformance(Integer.parseInt(performance)); } catch (NumberFormatException e) {}
+                    }
+                    String security = extractJsonString(catsJson, "security");
+                    if (security != null) {
+                        try { cats.setSecurity(Integer.parseInt(security)); } catch (NumberFormatException e) {}
+                    }
+
+                    score.setCategories(cats);
+                }
+            }
+        }
+
+        return score;
+    }
+
+    /**
+     * Parse string array from JSON.
+     */
+    private java.util.List<String> parseStringArray(String json) {
+        java.util.List<String> result = new java.util.ArrayList<>();
+
+        int pos = 1; // Skip opening bracket
+        while (pos < json.length() - 1) {
+            // Skip whitespace
+            while (pos < json.length() && Character.isWhitespace(json.charAt(pos))) {
+                pos++;
+            }
+
+            if (pos >= json.length() || json.charAt(pos) == ']') break;
+
+            if (json.charAt(pos) == '"') {
+                int endQuote = findEndOfString(json, pos);
+                if (endQuote > pos) {
+                    result.add(unescapeJson(json.substring(pos + 1, endQuote)));
+                    pos = endQuote + 1;
+                } else {
+                    break;
+                }
+            } else if (json.charAt(pos) == ',') {
+                pos++;
+            } else {
+                pos++;
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Find matching bracket for array.
+     */
+    private int findMatchingBracket(String json, int start) {
+        int depth = 0;
+        boolean inString = false;
+        boolean escaped = false;
+
+        for (int i = start; i < json.length(); i++) {
+            char c = json.charAt(i);
+
+            if (escaped) {
+                escaped = false;
+                continue;
+            }
+
+            if (c == '\\' && inString) {
+                escaped = true;
+                continue;
+            }
+
+            if (c == '"') {
+                inString = !inString;
+                continue;
+            }
+
+            if (!inString) {
+                if (c == '[') {
+                    depth++;
+                } else if (c == ']') {
+                    depth--;
+                    if (depth == 0) {
+                        return i;
+                    }
+                }
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Parse Q&A response.
+     */
+    private QAResponse parseQAResponse(String json) {
+        QAResponse response = new QAResponse();
+
+        // Extract status
+        response.setStatus(extractJsonString(json, "status"));
+
+        // Extract error
+        response.setError(extractJsonString(json, "error"));
+
+        // Extract answer
+        int answerStart = json.indexOf("\"answer\"");
+        if (answerStart >= 0) {
+            int objStart = json.indexOf("{", answerStart);
+            if (objStart >= 0) {
+                int objEnd = findMatchingBrace(json, objStart);
+                if (objEnd > objStart) {
+                    String answerJson = json.substring(objStart, objEnd + 1);
+                    QAResponse.QAAnswer answer = parseQAAnswer(answerJson);
+                    response.setAnswer(answer);
+                }
+            }
+        }
+
+        // Extract references array
+        int refsStart = json.indexOf("\"references\"");
+        if (refsStart >= 0) {
+            int arrayStart = json.indexOf("[", refsStart);
+            if (arrayStart >= 0) {
+                int arrayEnd = findMatchingBracket(json, arrayStart);
+                if (arrayEnd > arrayStart) {
+                    String refsJson = json.substring(arrayStart, arrayEnd + 1);
+                    java.util.List<QAResponse.KnowledgeReference> refs = parseReferences(refsJson);
+                    response.setReferences(refs);
+                }
+            }
+        }
+
+        // Extract meta
+        int metaStart = json.indexOf("\"meta\"");
+        if (metaStart >= 0) {
+            QAResponse.ResponseMeta meta = new QAResponse.ResponseMeta();
+            int objStart = json.indexOf("{", metaStart);
+            if (objStart >= 0) {
+                int objEnd = findMatchingBrace(json, objStart);
+                if (objEnd > objStart) {
+                    String metaJson = json.substring(objStart, objEnd + 1);
+                    meta.setGenerator(extractJsonString(metaJson, "generator"));
+                    meta.setTimestamp(extractJsonString(metaJson, "timestamp"));
+                    String timeMs = extractJsonString(metaJson, "answer_time_ms");
+                    if (timeMs != null) {
+                        try {
+                            meta.setAnswerTimeMs(Long.parseLong(timeMs));
+                        } catch (NumberFormatException e) {
+                            // Ignore
+                        }
+                    }
+                }
+            }
+            response.setMeta(meta);
+        }
+
+        return response;
+    }
+
+    /**
+     * Parse Q&A answer from JSON.
+     */
+    private QAResponse.QAAnswer parseQAAnswer(String json) {
+        QAResponse.QAAnswer answer = new QAResponse.QAAnswer();
+
+        // Extract text
+        answer.setText(extractJsonString(json, "text"));
+
+        // Extract code_examples array
+        int examplesStart = json.indexOf("\"code_examples\"");
+        if (examplesStart >= 0) {
+            int arrayStart = json.indexOf("[", examplesStart);
+            if (arrayStart >= 0) {
+                int arrayEnd = findMatchingBracket(json, arrayStart);
+                if (arrayEnd > arrayStart) {
+                    String examplesJson = json.substring(arrayStart, arrayEnd + 1);
+                    java.util.List<QAResponse.CodeExample> examples = parseCodeExamples(examplesJson);
+                    answer.setCodeExamples(examples);
+                }
+            }
+        }
+
+        // Extract related_topics array
+        int topicsStart = json.indexOf("\"related_topics\"");
+        if (topicsStart >= 0) {
+            int arrayStart = json.indexOf("[", topicsStart);
+            if (arrayStart >= 0) {
+                int arrayEnd = findMatchingBracket(json, arrayStart);
+                if (arrayEnd > arrayStart) {
+                    String topicsJson = json.substring(arrayStart, arrayEnd + 1);
+                    java.util.List<String> topics = parseStringArray(topicsJson);
+                    answer.setRelatedTopics(topics);
+                }
+            }
+        }
+
+        return answer;
+    }
+
+    /**
+     * Parse code examples array from JSON.
+     */
+    private java.util.List<QAResponse.CodeExample> parseCodeExamples(String json) {
+        java.util.List<QAResponse.CodeExample> examples = new java.util.ArrayList<>();
+
+        int pos = 0;
+        while (pos < json.length()) {
+            int objStart = json.indexOf("{", pos);
+            if (objStart < 0) break;
+
+            int objEnd = findMatchingBrace(json, objStart);
+            if (objEnd <= objStart) break;
+
+            String exampleJson = json.substring(objStart, objEnd + 1);
+            QAResponse.CodeExample example = new QAResponse.CodeExample();
+            example.setLanguage(extractJsonString(exampleJson, "language"));
+            example.setCode(extractJsonString(exampleJson, "code"));
+            example.setDescription(extractJsonString(exampleJson, "description"));
+
+            examples.add(example);
+            pos = objEnd + 1;
+        }
+
+        return examples;
+    }
+
+    /**
+     * Parse knowledge references array from JSON.
+     */
+    private java.util.List<QAResponse.KnowledgeReference> parseReferences(String json) {
+        java.util.List<QAResponse.KnowledgeReference> refs = new java.util.ArrayList<>();
+
+        int pos = 0;
+        while (pos < json.length()) {
+            int objStart = json.indexOf("{", pos);
+            if (objStart < 0) break;
+
+            int objEnd = findMatchingBrace(json, objStart);
+            if (objEnd <= objStart) break;
+
+            String refJson = json.substring(objStart, objEnd + 1);
+            QAResponse.KnowledgeReference ref = new QAResponse.KnowledgeReference();
+            ref.setName(extractJsonString(refJson, "name"));
+            ref.setCategory(extractJsonString(refJson, "category"));
+            ref.setSection(extractJsonString(refJson, "section"));
+
+            String idStr = extractJsonString(refJson, "knowledge_id");
+            if (idStr != null) {
+                try {
+                    ref.setKnowledgeId(Integer.parseInt(idStr));
+                } catch (NumberFormatException e) {
+                    ref.setKnowledgeId(0);
+                }
+            }
+
+            String relevanceStr = extractJsonString(refJson, "relevance");
+            if (relevanceStr != null) {
+                try {
+                    ref.setRelevance(Float.parseFloat(relevanceStr));
+                } catch (NumberFormatException e) {
+                    ref.setRelevance(0f);
+                }
+            }
+
+            refs.add(ref);
+            pos = objEnd + 1;
+        }
+
+        return refs;
     }
 }

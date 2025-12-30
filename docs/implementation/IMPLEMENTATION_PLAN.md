@@ -958,9 +958,11 @@ services:
 | Phase 6: Testing & Integration | ✅ Complete | 1 day |
 | Phase 7: Deployment | ✅ Complete | 1 day |
 | Phase 8: Admin Panel (HTMX) | ✅ Complete | 1 day |
-| Phase 9: Spring Framework Support | 📋 Planned | 5 days |
+| Phase 9: Spring Framework Support | ✅ Complete | 2 days |
+| Phase 10: Code Review & Q&A | ✅ Complete | 1 day |
+| Phase 11: Docker All-in-One | ✅ Complete | 0.5 day |
 
-**Total Duration**: 14 days (9 complete + 5 planned)
+**Total Duration**: 11.5 days completed
 
 ---
 
@@ -1282,4 +1284,106 @@ src/
 
 ---
 
-**Last Updated:** 2025-12-28
+### Phase 10: Code Review & Q&A Features
+**Duration**: 1 day
+**Status**: ✅ Complete
+
+#### Overview
+Added two new AI-powered features:
+1. **Code Review**: Analyze xFrame5/Spring code for issues, patterns, and best practices
+2. **Q&A Chatbot**: Answer framework questions using knowledge base
+
+#### 10.1 Backend Implementation
+
+**New API Endpoints**:
+- `POST /api/agent/review` - Code review with severity levels
+- `POST /api/agent/qa` - Knowledge-based Q&A
+
+**New Files**:
+- `backend/src/controllers/review.rs` - Review controller
+- `backend/src/controllers/qa.rs` - Q&A controller
+- `backend/src/services/review_service.rs` - Review logic
+- `backend/src/services/qa_service.rs` - Q&A logic with knowledge retrieval
+- `backend/src/domain/review.rs` - Review domain types
+- `backend/src/domain/qa.rs` - Q&A domain types
+
+**New Prompt Templates** (seeded in database):
+- `code-review-xframe5` - xFrame5 code review
+- `code-review-spring` - Spring code review
+- `qa-xframe5` - xFrame5 Q&A
+- `qa-spring` - Spring Q&A
+
+#### 10.2 Eclipse Plugin Implementation
+
+**New Handlers**:
+- `XFrame5ReviewSelectionHandler` - Review selected code
+- `XFrame5ReviewCodeHandler` - Review via dialog input
+- `SpringReviewSelectionHandler` - Review selected Spring code
+- `SpringReviewCodeHandler` - Review via dialog input
+- `XFrame5QAHandler` - xFrame5 Q&A
+- `SpringQAHandler` - Spring Q&A
+
+**New Dialogs**:
+- `CodeReviewDialog` - Code input for review
+- `CodeReviewResultDialog` - Display review results
+- `QADialog` - Question input
+- `QAResultDialog` - Display answer with references
+
+**Menu Items** (plugin.xml):
+- xFrame5 > Review Selection
+- xFrame5 > Review Code...
+- xFrame5 > Ask Question...
+- Spring > Review Selection
+- Spring > Review Code...
+- Spring > Ask Question...
+
+---
+
+### Phase 11: Docker All-in-One
+**Duration**: 0.5 day
+**Status**: ✅ Complete
+
+#### Overview
+Single Docker image for easy testing and deployment, containing:
+- PostgreSQL database
+- Ollama LLM runtime
+- Backend server
+
+#### 11.1 Docker Files
+
+**Created Files**:
+- `docker/Dockerfile.allinone` - Multi-service Docker image
+- `docker/startup.sh` - Service orchestration script
+- `docker/supervisord.conf` - Process management
+- `docker/config.docker.yaml` - Backend config for Docker
+- `docker/build.sh` - Build script
+- `docker/run.sh` - Run script
+- `docker/run_prompt.sh` - CLI testing tool
+- `docker/README.md` - Documentation
+
+#### 11.2 Usage
+
+```bash
+# Build
+docker build -f docker/Dockerfile.allinone -t coder-allinone .
+
+# Run
+docker run -p 3000:3000 -p 11434:11434 coder-allinone
+
+# Test with CLI
+./docker/run_prompt.sh --mode gen --prompt "generate a member list"
+./docker/run_prompt.sh --mode qa --prompt "How do I use Dataset?"
+./docker/run_prompt.sh --mode review --prompt '<Screen>...</Screen>'
+```
+
+#### 11.3 Services
+
+| Service | Port | URL |
+|---------|------|-----|
+| Backend API | 3000 | http://localhost:3000 |
+| Admin Panel | 3000 | http://localhost:3000/admin |
+| Ollama API | 11434 | http://localhost:11434 |
+
+---
+
+**Last Updated:** 2025-12-30

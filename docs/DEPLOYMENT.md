@@ -9,6 +9,80 @@ This guide covers the deployment of the Enterprise Code Generator for on-premise
 - 20GB disk space (for models and data)
 - Network access between components (internal only)
 
+---
+
+## Docker All-in-One (Recommended for Testing)
+
+The easiest way to get started is with the all-in-one Docker image that includes PostgreSQL, Ollama, and the backend.
+
+### Quick Start
+
+```bash
+# Clone repository
+git clone <repository-url>
+cd coder
+
+# Build the image
+docker build -f docker/Dockerfile.allinone -t coder-allinone .
+
+# Run container
+docker run -p 3000:3000 -p 11434:11434 coder-allinone
+```
+
+### Access Points
+
+| Service | URL | Credentials |
+|---------|-----|-------------|
+| Backend API | http://localhost:3000 | - |
+| Admin Panel | http://localhost:3000/admin | admin@example.com / 12341234 |
+| Ollama API | http://localhost:11434 | - |
+
+### Persistent Data
+
+To preserve data between container restarts:
+
+```bash
+docker run -p 3000:3000 -p 11434:11434 \
+  -v coder-postgres-data:/var/lib/postgresql/14/main \
+  -v coder-ollama-data:/root/.ollama \
+  coder-allinone
+```
+
+### Custom Model
+
+```bash
+# Use a different Ollama model
+docker run -p 3000:3000 -p 11434:11434 \
+  -e OLLAMA_MODEL=codellama:7b \
+  coder-allinone
+```
+
+### CLI Testing Tool
+
+Test the APIs directly from command line:
+
+```bash
+# Code Generation
+./docker/run_prompt.sh --mode gen --prompt "generate a member list page"
+
+# Q&A
+./docker/run_prompt.sh --mode qa --prompt "How do I use Dataset in xFrame5?"
+
+# Code Review
+./docker/run_prompt.sh --mode review --prompt '<Screen id="test">...</Screen>'
+
+# Spring backend
+./docker/run_prompt.sh --mode gen --product spring-backend --prompt "create User CRUD"
+```
+
+See `docker/README.md` for full documentation.
+
+---
+
+## Production Deployment (Docker Compose)
+
+For production, use separate containers with Docker Compose.
+
 ## Quick Start
 
 ### 1. Clone and Configure
@@ -314,5 +388,5 @@ For issues and questions:
 
 ---
 
-**Version**: 1.0.0
-**Last Updated**: 2025-12-28
+**Version**: 1.1.0
+**Last Updated**: 2025-12-30

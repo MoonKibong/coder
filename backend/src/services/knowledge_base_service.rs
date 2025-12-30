@@ -272,6 +272,181 @@ impl KnowledgeBaseService {
 
         Ok(results.into_iter().map(KnowledgeEntry::from).collect())
     }
+
+    /// Search knowledge base by keywords (for Q&A)
+    /// Returns entries with relevance scores
+    pub async fn search_for_qa(
+        db: &DatabaseConnection,
+        question: &str,
+        product: &str,
+        max_results: usize,
+    ) -> Result<Vec<(KnowledgeEntry, f32)>> {
+        // Extract keywords from question
+        let keywords = Self::extract_keywords(question);
+
+        // Get all active entries
+        let all_entries = KnowledgeBases::find()
+            .filter(knowledge_bases::Column::IsActive.eq(true))
+            .all(db)
+            .await
+            .map_err(|e| Error::string(&format!("Failed to search knowledge base: {}", e)))?;
+
+        // Score each entry by relevance
+        let mut scored: Vec<(KnowledgeEntry, f32)> = all_entries
+            .into_iter()
+            .map(KnowledgeEntry::from)
+            .map(|entry| {
+                let score = Self::calculate_relevance(&entry, &keywords, product);
+                (entry, score)
+            })
+            .filter(|(_, score)| *score > 0.1) // Minimum threshold
+            .collect();
+
+        // Sort by score descending
+        scored.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+
+        // Return top N results
+        Ok(scored.into_iter().take(max_results).collect())
+    }
+
+    /// Extract keywords from a question
+    fn extract_keywords(question: &str) -> Vec<String> {
+        // Common stop words to filter out
+        let stop_words = [
+            "the", "a", "an", "is", "are", "was", "were", "be", "been", "being",
+            "have", "has", "had", "do", "does", "did", "will", "would", "could", "should",
+            "may", "might", "must", "shall", "can", "need", "dare", "ought", "used",
+            "to", "of", "in", "for", "on", "with", "at", "by", "from", "as", "into",
+            "through", "during", "before", "after", "above", "below", "between",
+            "under", "again", "further", "then", "once", "here", "there", "when",
+            "where", "why", "how", "all", "each", "every", "both", "few", "more",
+            "most", "other", "some", "such", "no", "nor", "not", "only", "own",
+            "same", "so", "than", "too", "very", "just", "also",
+            // Korean stop words
+            "은", "는", "이", "가", "을", "를", "에", "에서", "으로", "로",
+            "와", "과", "의", "도", "만", "까지", "부터", "하다", "있다", "되다",
+            "수", "것", "등", "및", "또는", "그리고", "하지만", "그러나",
+            // Common question words to keep context
+            "what", "how", "use", "create", "make", "add", "set",
+        ];
+
+        question
+            .to_lowercase()
+            // Split on word boundaries
+            .split(|c: char| !c.is_alphanumeric() && c != '_')
+            .filter(|word| {
+                let word = word.trim();
+                word.len() >= 2 && !stop_words.contains(&word)
+            })
+            .map(|s| s.to_string())
+            .collect()
+    }
+
+    /// Calculate relevance score for an entry
+    fn calculate_relevance(entry: &KnowledgeEntry, keywords: &[String], product: &str) -> f32 {
+        let mut score = 0.0f32;
+
+        // Check product match (boost if matches)
+        let product_lower = product.to_lowercase();
+        if entry.category.to_lowercase().contains(&product_lower)
+            || entry.name.to_lowercase().contains(&product_lower)
+        {
+            score += 0.3;
+        }
+
+        // Check keywords against entry name
+        let name_lower = entry.name.to_lowercase();
+        for keyword in keywords {
+            if name_lower.contains(keyword) {
+                score += 0.25;
+            }
+        }
+
+        // Check keywords against component
+        if let Some(ref component) = entry.component {
+            let component_lower = component.to_lowercase();
+            for keyword in keywords {
+                if component_lower.contains(keyword) {
+                    score += 0.2;
+                }
+            }
+        }
+
+        // Check keywords against section
+        if let Some(ref section) = entry.section {
+            let section_lower = section.to_lowercase();
+            for keyword in keywords {
+                if section_lower.contains(keyword) {
+                    score += 0.15;
+                }
+            }
+        }
+
+        // Check keywords against content (lower weight due to length)
+        let content_lower = entry.content.to_lowercase();
+        for keyword in keywords {
+            if content_lower.contains(keyword) {
+                // Count occurrences for density scoring
+                let count = content_lower.matches(keyword).count();
+                score += 0.05 * (count as f32).min(5.0);
+            }
+        }
+
+        // Check keywords against relevance tags
+        if let Some(ref tags) = entry.relevance_tags {
+            for tag in tags {
+                let tag_lower = tag.to_lowercase();
+                for keyword in keywords {
+                    if tag_lower.contains(keyword) || keyword.contains(&tag_lower) {
+                        score += 0.2;
+                    }
+                }
+            }
+        }
+
+        // Priority boost
+        if let Some(ref priority) = entry.priority {
+            match priority.as_str() {
+                "high" => score += 0.1,
+                "medium" => score += 0.05,
+                _ => {}
+            }
+        }
+
+        // Normalize to 0-1 range
+        score.min(1.0)
+    }
+
+    /// Get knowledge entries formatted for Q&A prompt
+    pub async fn get_qa_knowledge(
+        db: &DatabaseConnection,
+        question: &str,
+        product: &str,
+        max_entries: usize,
+    ) -> Result<(String, Vec<(i32, String, String, Option<String>, f32)>)> {
+        let scored_entries = Self::search_for_qa(db, question, product, max_entries).await?;
+
+        if scored_entries.is_empty() {
+            return Ok((String::new(), vec![]));
+        }
+
+        // Assemble content
+        let content = scored_entries
+            .iter()
+            .map(|(entry, _)| entry.content.as_str())
+            .collect::<Vec<_>>()
+            .join("\n\n---\n\n");
+
+        // Build references list
+        let references: Vec<(i32, String, String, Option<String>, f32)> = scored_entries
+            .into_iter()
+            .map(|(entry, score)| {
+                (entry.id, entry.name, entry.category, entry.section, score)
+            })
+            .collect();
+
+        Ok((content, references))
+    }
 }
 
 /// File-based fallback for reading knowledge from markdown files

@@ -63,6 +63,8 @@ impl Hooks for App {
             .add_route(controllers::home::routes())
             // API routes
             .add_route(controllers::generate::routes())
+            .add_route(controllers::review::routes())
+            .add_route(controllers::qa::routes())
             .add_route(controllers::jobs::routes())
             .add_route(controllers::llm_config::routes())
             .add_route(controllers::generation_log::routes())

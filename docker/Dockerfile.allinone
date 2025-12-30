@@ -1,0 +1,88 @@
+# All-in-One Docker Image for Code Generator
+# Includes: PostgreSQL, Ollama, and Backend
+#
+# Build: docker build -f docker/Dockerfile.allinone -t coder-allinone .
+# Run: docker run -p 3000:3000 -p 11434:11434 coder-allinone
+#
+# To use a specific model, set OLLAMA_MODEL env:
+# docker run -p 3000:3000 -e OLLAMA_MODEL=qwen2.5-coder:7b coder-allinone
+
+FROM ubuntu:22.04
+
+# Prevent interactive prompts during package installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    wget \
+    gnupg2 \
+    lsb-release \
+    ca-certificates \
+    supervisor \
+    postgresql \
+    postgresql-contrib \
+    libssl-dev \
+    pkg-config \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Rust
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+# Install Ollama
+RUN curl -fsSL https://ollama.com/install.sh | sh
+
+# Set up PostgreSQL
+USER postgres
+RUN /etc/init.d/postgresql start && \
+    psql --command "CREATE USER coder WITH SUPERUSER PASSWORD 'coder_password';" && \
+    createdb -O coder coder_development && \
+    /etc/init.d/postgresql stop
+
+USER root
+
+# Configure PostgreSQL to accept connections
+RUN echo "host all all 0.0.0.0/0 md5" >> /etc/postgresql/14/main/pg_hba.conf && \
+    echo "listen_addresses='*'" >> /etc/postgresql/14/main/postgresql.conf
+
+# Create app directory
+WORKDIR /app
+
+# Copy backend source
+COPY backend/ ./backend/
+
+# Build the backend
+WORKDIR /app/backend
+RUN cargo build --release
+
+# Create directories for Ollama
+RUN mkdir -p /root/.ollama
+
+# Copy startup scripts
+COPY docker/startup.sh /startup.sh
+COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+RUN chmod +x /startup.sh
+
+# Create Docker-specific config
+COPY docker/config.docker.yaml /app/backend/config/docker.yaml
+
+# Environment variables
+ENV LOCO_ENV=docker
+ENV DATABASE_URL=postgres://coder:coder_password@localhost:5432/coder_development
+ENV OLLAMA_HOST=http://localhost:11434
+ENV OLLAMA_MODEL=qwen2.5-coder:7b
+ENV RUST_LOG=info
+
+# Expose ports
+# 3000 - Backend API
+# 11434 - Ollama API
+EXPOSE 3000 11434
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:3000/api/_health || exit 1
+
+# Start all services
+CMD ["/startup.sh"]

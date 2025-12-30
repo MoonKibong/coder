@@ -13,6 +13,8 @@ pub mod system_monitor;
 pub mod analytics;
 pub mod metrics_history;
 mod knowledge_base_service;
+mod review_service;
+mod qa_service;
 
 pub use generation::GenerationService;
 pub use normalizer::NormalizerService;
@@ -28,3 +30,5 @@ pub use analytics::AnalyticsService;
 pub use knowledge_base_service::{
     KnowledgeBaseService, KnowledgeEntry, KnowledgeFileFallback, KnowledgeQuery,
 };
+pub use review_service::ReviewService;
+pub use qa_service::QAService;

@@ -306,6 +306,7 @@ fn test_xframe5_post_process_adds_stubs() {
         xml: "<Dataset />".to_string(),
         javascript: "// existing".to_string(),
         warnings: vec![],
+        screen_name: Some("test_list".to_string()),
     };
 
     XFrame5Validator::post_process(&mut artifacts, &intent);
