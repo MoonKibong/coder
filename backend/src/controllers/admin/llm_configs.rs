@@ -199,3 +199,29 @@ pub async fn delete(Path(id): Path<i32>, State(ctx): State<AppContext>) -> Resul
     LlmConfigService::delete(&ctx.db, id).await?;
     format::html("")
 }
+
+/// Activate item (deactivates all others)
+#[debug_handler]
+pub async fn activate(
+    ViewEngine(v): ViewEngine<TeraView>,
+    Path(id): Path<i32>,
+    State(ctx): State<AppContext>,
+) -> Result<Response> {
+    let _item = LlmConfigService::activate(&ctx.db, id).await?;
+
+    // Return the full list to replace #search-result
+    let query_params = QueryParams::default();
+    let response = LlmConfigService::search(&ctx.db, &query_params).await?;
+
+    format::render().view(
+        &v,
+        "admin/llm_config/list.html",
+        data!({
+            "items": response.items,
+            "page": response.page,
+            "page_size": response.page_size,
+            "total_pages": response.total_pages,
+            "total_items": response.total_items,
+        }),
+    )
+}

@@ -117,39 +117,11 @@ impl MigrationTrait for Migration {
             .to_owned();
         m.exec_stmt(insert).await?;
 
-        // 5. Qwen3 Next 80B
-        let insert = Query::insert()
-            .into_table(Alias::new("llm_configs"))
-            .columns([
-                Alias::new("name"),
-                Alias::new("provider"),
-                Alias::new("model_name"),
-                Alias::new("model_path"),
-                Alias::new("n_ctx"),
-                Alias::new("n_threads"),
-                Alias::new("temperature"),
-                Alias::new("max_tokens"),
-                Alias::new("is_active"),
-            ])
-            .values_panic([
-                "Qwen3 Next 80B".into(),
-                "local-llama-cpp".into(),
-                "Qwen3-Next-80B".into(),
-                "llm-models/Qwen3-Next-80B.gguf".into(),
-                16384.into(),
-                16.into(),
-                0.7f32.into(),
-                8192.into(),
-                false.into(),
-            ])
-            .to_owned();
-        m.exec_stmt(insert).await?;
-
         // ===========================================
         // Anthropic Models (Cloud API)
         // ===========================================
 
-        // 6. Claude Opus 4.5
+        // 5. Claude Opus 4.5
         let insert = Query::insert()
             .into_table(Alias::new("llm_configs"))
             .columns([
@@ -185,7 +157,6 @@ impl MigrationTrait for Migration {
                 "DeepSeek Coder V2 16B",
                 "Codestral 22B",
                 "MiniMax M2 Q5_K_M",
-                "Qwen3 Next 80B",
                 "Claude Opus 4.5",
             ]))
             .to_owned();

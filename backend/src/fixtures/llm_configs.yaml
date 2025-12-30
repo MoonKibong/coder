@@ -54,22 +54,11 @@
   max_tokens: 4096
   is_active: false
 
-- id: 5
-  name: "Qwen3 Next 80B"
-  provider: "local-llama-cpp"
-  model_name: "Qwen3-Next-80B"
-  model_path: "llm-models/Qwen3-Next-80B.gguf"
-  n_ctx: 16384
-  n_threads: 16
-  temperature: 0.7
-  max_tokens: 8192
-  is_active: false
-
 # =============================================================================
 # Anthropic Models (Cloud API)
 # =============================================================================
 
-- id: 6
+- id: 5
   name: "Claude Opus 4.5"
   provider: "anthropic"
   endpoint_url: "https://api.anthropic.com/v1"

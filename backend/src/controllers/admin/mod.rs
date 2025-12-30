@@ -64,6 +64,7 @@ pub fn routes() -> Routes {
         .add("llm-configs/{id}/edit", get(llm_configs::edit_form))
         .add("llm-configs/{id}", patch(llm_configs::update))
         .add("llm-configs/{id}", delete(llm_configs::delete))
+        .add("llm-configs/{id}/activate", post(llm_configs::activate))
         // Generation Logs (read only)
         .add("generation-logs", get(generation_logs::main))
         .add("generation-logs/list", get(generation_logs::list))

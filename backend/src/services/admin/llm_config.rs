@@ -347,4 +347,33 @@ impl LlmConfigService {
         item.delete(db).await?;
         Ok(())
     }
+
+    /// Activate a specific LLM config and deactivate all others
+    ///
+    /// This ensures only one LLM config is active at a time.
+    pub async fn activate(db: &DatabaseConnection, id: i32) -> Result<Model> {
+        // First, verify the item exists
+        let _item = Self::find_by_id(db, id).await?;
+
+        // Deactivate all currently active configs
+        use sea_orm::QueryFilter;
+        let active_configs = Entity::find()
+            .filter(Column::IsActive.eq(Some(true)))
+            .all(db)
+            .await?;
+
+        for config in active_configs {
+            let mut active_model: ActiveModel = config.into();
+            active_model.is_active = Set(Some(false));
+            active_model.update(db).await?;
+        }
+
+        // Now activate the specified config
+        let item = Self::find_by_id(db, id).await?;
+        let mut item: ActiveModel = item.into();
+        item.is_active = Set(Some(true));
+        let item = item.update(db).await?;
+
+        Ok(item)
+    }
 }
