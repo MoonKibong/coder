@@ -19,6 +19,7 @@ pub use mock::{MockLlmBackend, MockResponse};
 use async_trait::async_trait;
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
 use std::env;
+use std::path::PathBuf;
 
 use crate::models::_entities::llm_configs;
 
@@ -121,35 +122,56 @@ fn create_backend_from_config(config: &llm_configs::Model) -> Box<dyn LlmBackend
 
     match config.provider.as_str() {
         "ollama" => Box::new(OllamaBackend::new(
-            config.endpoint_url.clone(),
+            config.endpoint_url.clone().unwrap_or_else(|| "http://localhost:11434".to_string()),
             config.model_name.clone(),
             timeout_seconds,
         )),
         "llama-cpp" => Box::new(LlamaCppBackend::new(
-            config.endpoint_url.clone(),
+            config.endpoint_url.clone().unwrap_or_else(|| "http://localhost:8080".to_string()),
             config.model_name.clone(),
             timeout_seconds,
         )),
+        "local-llama-cpp" => {
+            // Use model_path from config, or fall back to model_name in default directory
+            let model_path = config.model_path.clone()
+                .map(PathBuf::from)
+                .unwrap_or_else(|| {
+                    PathBuf::from("llm-models").join(&config.model_name)
+                });
+
+            let n_ctx = config.n_ctx.unwrap_or(4096) as u32;
+            let n_threads = config.n_threads.unwrap_or(4) as u32;
+            let max_tokens = config.max_tokens.unwrap_or(4096) as u32;
+            let temperature = config.temperature.unwrap_or(0.7);
+
+            Box::new(LocalLlamaCppBackend::with_config(
+                model_path,
+                n_ctx,
+                n_threads,
+                max_tokens,
+                temperature,
+            ))
+        },
         "vllm" => Box::new(VllmBackend::new(
-            config.endpoint_url.clone(),
+            config.endpoint_url.clone().unwrap_or_else(|| "http://localhost:8000".to_string()),
             config.model_name.clone(),
             config.api_key.clone(), // Optional<String>
             timeout_seconds,
         )),
         "groq" => Box::new(GroqBackend::new(
-            config.endpoint_url.clone(),
+            config.endpoint_url.clone().unwrap_or_else(|| "https://api.groq.com/openai/v1".to_string()),
             config.model_name.clone(),
             config.api_key.clone().unwrap_or_default(),
             timeout_seconds,
         )),
         "openai" => Box::new(OpenAIBackend::new(
-            config.endpoint_url.clone(),
+            config.endpoint_url.clone().unwrap_or_else(|| "https://api.openai.com/v1".to_string()),
             config.model_name.clone(),
             config.api_key.clone().unwrap_or_default(),
             timeout_seconds,
         )),
         "anthropic" => Box::new(AnthropicBackend::new(
-            config.endpoint_url.clone(),
+            config.endpoint_url.clone().unwrap_or_else(|| "https://api.anthropic.com/v1".to_string()),
             config.model_name.clone(),
             config.api_key.clone().unwrap_or_default(),
             timeout_seconds,
@@ -160,7 +182,7 @@ fn create_backend_from_config(config: &llm_configs::Model) -> Box<dyn LlmBackend
                 config.provider
             );
             Box::new(OllamaBackend::new(
-                config.endpoint_url.clone(),
+                config.endpoint_url.clone().unwrap_or_else(|| "http://localhost:11434".to_string()),
                 config.model_name.clone(),
                 timeout_seconds,
             ))

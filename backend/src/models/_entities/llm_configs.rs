@@ -12,13 +12,19 @@ pub struct Model {
     pub id: i32,
     pub name: String,
     pub provider: String,
-    pub endpoint_url: String,
+    pub endpoint_url: Option<String>,
     pub model_name: String,
     pub api_key: Option<String>,
     #[sea_orm(column_type = "Float", nullable)]
     pub temperature: Option<f32>,
     pub max_tokens: Option<i32>,
     pub is_active: Option<bool>,
+    /// Path to GGUF model file (for local-llama-cpp provider)
+    pub model_path: Option<String>,
+    /// Context window size (for local-llama-cpp provider)
+    pub n_ctx: Option<i32>,
+    /// Number of CPU threads (for local-llama-cpp provider)
+    pub n_threads: Option<i32>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

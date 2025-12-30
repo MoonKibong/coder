@@ -31,13 +31,14 @@
                 <div class="space-y-2">
                     <label for="provider" class="text-sm font-medium">Provider</label>
                     <select id="provider" name="provider" required
+                        onchange="toggleLocalLlmFields()"
                         class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm
                                focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
                         <option value="">Select provider...</option>
                         <optgroup label="On-Premise (Production)">
                             <option value="ollama">Ollama</option>
-                            <option value="llama_cpp">llama.cpp Server (HTTP)</option>
-                            <option value="local_llama_cpp">llama.cpp Native (In-Process)</option>
+                            <option value="llama-cpp">llama.cpp Server (HTTP)</option>
+                            <option value="local-llama-cpp">llama.cpp Native (In-Process)</option>
                             <option value="vllm">vLLM</option>
                         </optgroup>
                         <optgroup label="Remote (Development)">
@@ -51,10 +52,10 @@
                     </p>
                 </div>
 
-                <!-- Endpoint URL -->
-                <div class="space-y-2">
+                <!-- Endpoint URL (hidden for local-llama-cpp) -->
+                <div id="endpoint_url_section" class="space-y-2">
                     <label for="endpoint_url" class="text-sm font-medium">Endpoint URL</label>
-                    <input type="url" id="endpoint_url" name="endpoint_url" required
+                    <input type="url" id="endpoint_url" name="endpoint_url"
                         class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm font-mono
                                placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                         placeholder="http://localhost:11434" />
@@ -62,6 +63,56 @@
                         The LLM server endpoint. Must be accessible from this server.
                     </p>
                 </div>
+
+                <!-- Local LLM Settings (only for local-llama-cpp) -->
+                <div id="local_llm_section" class="space-y-4 p-4 rounded-lg border bg-blue-50 dark:bg-blue-950" style="display: none;">
+                    <h3 class="text-sm font-medium text-blue-700 dark:text-blue-300">Local LLM Settings</h3>
+
+                    <!-- Model Path -->
+                    <div class="space-y-2">
+                        <label for="model_path" class="text-sm font-medium">Model Path</label>
+                        <input type="text" id="model_path" name="model_path"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm font-mono
+                                   placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                            placeholder="llm-models/your-model.gguf" />
+                        <p class="text-xs text-muted-foreground">
+                            Path to GGUF model file. Relative paths are from backend directory.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <!-- Context Size -->
+                        <div class="space-y-2">
+                            <label for="n_ctx" class="text-sm font-medium">Context Size</label>
+                            <input type="number" id="n_ctx" name="n_ctx" value="4096" min="512" max="32768"
+                                class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm
+                                       focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+                            <p class="text-xs text-muted-foreground">Context window size</p>
+                        </div>
+
+                        <!-- CPU Threads -->
+                        <div class="space-y-2">
+                            <label for="n_threads" class="text-sm font-medium">CPU Threads</label>
+                            <input type="number" id="n_threads" name="n_threads" value="4" min="1" max="64"
+                                class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm
+                                       focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+                            <p class="text-xs text-muted-foreground">Number of CPU threads</p>
+                        </div>
+                    </div>
+                </div>
+
+                <script>
+                function toggleLocalLlmFields() {
+                    const provider = document.getElementById('provider').value;
+                    const isLocalLlm = provider === 'local-llama-cpp';
+
+                    document.getElementById('endpoint_url_section').style.display = isLocalLlm ? 'none' : 'block';
+                    document.getElementById('local_llm_section').style.display = isLocalLlm ? 'block' : 'none';
+
+                    // Make endpoint_url not required for local-llama-cpp
+                    document.getElementById('endpoint_url').required = !isLocalLlm;
+                }
+                </script>
 
                 <!-- Model Name -->
                 <div class="space-y-2">

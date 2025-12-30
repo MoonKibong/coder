@@ -10,25 +10,33 @@ use crate::models::_entities::llm_configs::{ActiveModel, Entity, Model};
 pub struct Params {
     pub name: String,
     pub provider: String,
-    pub endpoint_url: String,
+    /// Optional for local-llama-cpp provider
+    pub endpoint_url: Option<String>,
     pub model_name: String,
     pub api_key: Option<String>,
     pub temperature: Option<f32>,
     pub max_tokens: Option<i32>,
     pub is_active: Option<bool>,
-    }
+    // Local LLM fields (for local-llama-cpp provider)
+    pub model_path: Option<String>,
+    pub n_ctx: Option<i32>,
+    pub n_threads: Option<i32>,
+}
 
 impl Params {
     fn update(&self, item: &mut ActiveModel) {
-      item.name = Set(self.name.clone());
-      item.provider = Set(self.provider.clone());
-      item.endpoint_url = Set(self.endpoint_url.clone());
-      item.model_name = Set(self.model_name.clone());
-      item.api_key = Set(self.api_key.clone());
-      item.temperature = Set(self.temperature);
-      item.max_tokens = Set(self.max_tokens);
-      item.is_active = Set(self.is_active);
-      }
+        item.name = Set(self.name.clone());
+        item.provider = Set(self.provider.clone());
+        item.endpoint_url = Set(self.endpoint_url.clone());
+        item.model_name = Set(self.model_name.clone());
+        item.api_key = Set(self.api_key.clone());
+        item.temperature = Set(self.temperature);
+        item.max_tokens = Set(self.max_tokens);
+        item.is_active = Set(self.is_active);
+        item.model_path = Set(self.model_path.clone());
+        item.n_ctx = Set(self.n_ctx);
+        item.n_threads = Set(self.n_threads);
+    }
 }
 
 async fn load_item(ctx: &AppContext, id: i32) -> Result<Model> {

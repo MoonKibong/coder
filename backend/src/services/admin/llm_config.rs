@@ -48,7 +48,8 @@ pub struct CreateParams {
     pub name: String,
     pub provider: String,
     pub model_name: String,
-    pub endpoint_url: String,
+    /// Optional for local-llama-cpp provider (which uses model_path instead)
+    pub endpoint_url: Option<String>,
     pub api_key: Option<String>,
     #[serde(default, deserialize_with = "f32_from_str_or_number")]
     pub temperature: Option<f32>,
@@ -56,6 +57,16 @@ pub struct CreateParams {
     pub max_tokens: Option<i32>,
     #[serde(default, deserialize_with = "bool_from_str_or_bool")]
     pub is_active: Option<bool>,
+
+    // Local LLM fields (for local-llama-cpp provider)
+    /// Path to GGUF model file
+    pub model_path: Option<String>,
+    /// Context window size
+    #[serde(default, deserialize_with = "i32_from_str_or_number")]
+    pub n_ctx: Option<i32>,
+    /// Number of CPU threads
+    #[serde(default, deserialize_with = "i32_from_str_or_number")]
+    pub n_threads: Option<i32>,
 }
 
 /// Update parameters
@@ -77,6 +88,14 @@ pub struct UpdateParams {
     pub max_tokens: OptionalField<i32>,
     #[serde(default, deserialize_with = "optional_bool_from_str_or_bool")]
     pub is_active: OptionalField<bool>,
+
+    // Local LLM fields (for local-llama-cpp provider)
+    #[serde(default)]
+    pub model_path: OptionalField<String>,
+    #[serde(default, deserialize_with = "optional_i32_from_str_or_number")]
+    pub n_ctx: OptionalField<i32>,
+    #[serde(default, deserialize_with = "optional_i32_from_str_or_number")]
+    pub n_threads: OptionalField<i32>,
 }
 
 /// Paginated response
@@ -179,8 +198,19 @@ impl LlmConfigService {
         if params.model_name.trim().is_empty() {
             return Err(Error::BadRequest("Model name is required".to_string()));
         }
-        if params.endpoint_url.trim().is_empty() {
-            return Err(Error::BadRequest("Endpoint URL is required".to_string()));
+
+        let is_local_llm = params.provider == "local-llama-cpp";
+
+        // Endpoint URL is required for non-local providers
+        if !is_local_llm {
+            if params.endpoint_url.as_ref().map_or(true, |url| url.trim().is_empty()) {
+                return Err(Error::BadRequest("Endpoint URL is required for this provider".to_string()));
+            }
+        }
+
+        // Model path is recommended for local-llama-cpp
+        if is_local_llm && params.model_path.as_ref().map_or(true, |p| p.trim().is_empty()) {
+            return Err(Error::BadRequest("Model path is required for local-llama-cpp provider".to_string()));
         }
 
         // Validate temperature range
@@ -197,15 +227,32 @@ impl LlmConfigService {
             }
         }
 
+        // Validate n_ctx
+        if let Some(n_ctx) = params.n_ctx {
+            if n_ctx < 512 || n_ctx > 32768 {
+                return Err(Error::BadRequest("Context size must be between 512 and 32768".to_string()));
+            }
+        }
+
+        // Validate n_threads
+        if let Some(n_threads) = params.n_threads {
+            if n_threads < 1 || n_threads > 64 {
+                return Err(Error::BadRequest("CPU threads must be between 1 and 64".to_string()));
+            }
+        }
+
         let item = ActiveModel {
             name: Set(params.name.trim().to_string()),
             provider: Set(params.provider.trim().to_string()),
             model_name: Set(params.model_name.trim().to_string()),
-            endpoint_url: Set(params.endpoint_url.trim().to_string()),
+            endpoint_url: Set(params.endpoint_url.map(|url| url.trim().to_string())),
             api_key: Set(params.api_key),
             temperature: Set(params.temperature),
             max_tokens: Set(params.max_tokens),
             is_active: Set(params.is_active),
+            model_path: Set(params.model_path.map(|p| p.trim().to_string())),
+            n_ctx: Set(params.n_ctx),
+            n_threads: Set(params.n_threads),
             ..Default::default()
         };
 
@@ -236,7 +283,13 @@ impl LlmConfigService {
             item.model_name = Set(model_name);
         }
         if let Some(endpoint_url) = params.endpoint_url {
-            item.endpoint_url = Set(endpoint_url);
+            // endpoint_url is now Option<String> in entity
+            let url = if endpoint_url.trim().is_empty() {
+                None
+            } else {
+                Some(endpoint_url.trim().to_string())
+            };
+            item.endpoint_url = Set(url);
         }
 
         // Optional fields - only update if Present (not Missing)
@@ -261,6 +314,27 @@ impl LlmConfigService {
         }
         if let OptionalField::Present(opt_value) = params.is_active {
             item.is_active = Set(opt_value);
+        }
+
+        // Local LLM fields
+        if let OptionalField::Present(opt_value) = params.model_path {
+            item.model_path = Set(opt_value.map(|p| p.trim().to_string()));
+        }
+        if let OptionalField::Present(opt_value) = params.n_ctx {
+            if let Some(n_ctx) = opt_value {
+                if n_ctx < 512 || n_ctx > 32768 {
+                    return Err(Error::BadRequest("Context size must be between 512 and 32768".to_string()));
+                }
+            }
+            item.n_ctx = Set(opt_value);
+        }
+        if let OptionalField::Present(opt_value) = params.n_threads {
+            if let Some(n_threads) = opt_value {
+                if n_threads < 1 || n_threads > 64 {
+                    return Err(Error::BadRequest("CPU threads must be between 1 and 64".to_string()));
+                }
+            }
+            item.n_threads = Set(opt_value);
         }
 
         let item = item.update(db).await?;
