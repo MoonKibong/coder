@@ -747,8 +747,8 @@ eclipse-plugin/
 ├── plugin.xml
 ├── src/
 │   └── com/
-│       └── softbase/
-│           └── xframe5/
+│       └── kosac/
+│           └── ai/
 │               └── codegen/
 │                   ├── Activator.java
 │                   ├── actions/

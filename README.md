@@ -160,7 +160,7 @@ This system is designed for **on-premise deployment only**:
 
 ## License
 
-Proprietary - Softbase Co., Ltd.
+Proprietary - KoSAC, Inc.
 
 ---
 

@@ -127,7 +127,7 @@ mvn clean package
 ### 3.3: Plugin Artifacts
 After successful build, the plugin JAR is at:
 ```
-eclipse-plugin/target/com.softbase.xframe5.codegen-1.0.0-SNAPSHOT.jar
+eclipse-plugin/target/com.kosac.ai.codegen-1.0.0-SNAPSHOT.jar
 ```
 
 ---
