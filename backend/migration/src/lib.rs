@@ -16,6 +16,7 @@ mod m20251229_113109_seed_xframe5_prompt_templates_v3;
 mod m20251230_005747_seed_review_prompt_templates;
 mod m20251230_012654_seed_qa_prompt_templates;
 mod m20251230_120000_add_local_llm_columns;
+mod m20251230_130000_seed_llm_configs;
 pub struct Migrator;
 
 #[async_trait::async_trait]
@@ -36,6 +37,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20251230_005747_seed_review_prompt_templates::Migration),
             Box::new(m20251230_012654_seed_qa_prompt_templates::Migration),
             Box::new(m20251230_120000_add_local_llm_columns::Migration),
+            Box::new(m20251230_130000_seed_llm_configs::Migration),
             // inject-above (do not remove this comment)
         ]
     }
