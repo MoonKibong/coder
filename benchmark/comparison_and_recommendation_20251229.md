@@ -1,177 +1,264 @@
-  Quality Gap Analysis
+# LLM Model Comparison for xFrame5 Code Generation
 
-  | Aspect          | LLM Output (llama3.1) | Benchmark                          | Gap             |
-  |-----------------|-----------------------|------------------------------------|-----------------|
-  | Components      | 4 (grid, 3 buttons)   | 40+ (panels, fields, combos, etc.) | Missing 90%     |
-  | Dataset columns | 3                     | 11                                 | Missing context |
-  | Positioning     | None                  | Full x,y,width,height              | Broken layout   |
-  | Event syntax    | onclick="fn_search"   | on_click="eventfunc:fn_search()"   | Wrong syntax    |
-  | Edit button     | Missing               | Present                            | Incomplete      |
-  | Editor popup    | Not mentioned         | Full integration                   | No association  |
-  | JavaScript      | None                  | 650+ lines                         | No behavior     |
+**Date:** 2025-12-30 (Updated)
+**Test:** xFrame5 List Screen Generation
+**Prompt:** "generate a simple task list" (natural language)
 
-  Root Causes & Fixes
+---
 
-  1. Prompt Template Needs Concrete XML Examples
+## 🏆 Model Rankings
 
-  Current prompt likely has vague instructions. Add explicit syntax:
+```
+Rank  Model              Score   Progress Bar
+─────────────────────────────────────────────────────
+ 1    devstral-2:123b    68%    ███████░░░  CORRECT button syntax! New leader
+ 2    llama3.1:70b       62%    ██████░░░░  Best structure, missing button events
+ 3    qwen3-coder:30b    56%    ██████░░░░  Most complete output, onclick issue
+ 4    codestral:22b      28%    ███░░░░░░░  Minimal output, multiple errors
+```
 
-  system_prompt: |
-    # EXACT COMPONENT SYNTAX (use these patterns)
+---
 
-    ## Button (MUST include all attributes):
-    <pushbutton control_id="1" name="btn_query"
-                x="10" y="10" width="100" height="30"
-                text="Query"
-                font="Malgun Gothic,9,0,0,0,0"
-                on_click="eventfunc:fn_search()"/>
+## 📊 Detailed Comparison Matrix
 
-    ## Grid with dataset binding:
-    <grid control_id="0" name="grid_list"
-          x="0" y="0" width="800" height="400"
-          link_data="ds_list"
-          linenumber_show="1"
-          use_checkrow="1"
-          version="1.1"
-          on_itemdblclick="eventfunc:grid_list_on_itemdblclick(objInst, nRow, nColumn, buttonClick, imageIndex)">
+| Metric | devstral-2:123b | llama3.1:70b | qwen3-coder:30b | codestral:22b | Benchmark |
+|--------|:---------------:|:------------:|:---------------:|:-------------:|:---------:|
+| **Overall Score** | **68%** | 62% | 56% | 28% | 100% |
+| Components | 15 | 15 | 20+ | 8 | 40+ |
+| Grid columns | 4 | 3 | 7 | 0 (TODO) | 11 |
+| Search panel | ✅ | ✅ | ✅ | ❌ | ✅ |
+| Screen ID format | ✅ `SCREEN_*` | ✅ `SCREEN_*` | ✅ `SCREEN_*` | ❌ lowercase | ✅ |
+| Grid event syntax | ✅ `on_itemdblclick` | ✅ `on_itemdblclick` | ⚠️ `onclick` | ❌ `onclick` | ✅ |
+| Button event syntax | ✅ **`on_click`** | ❌ missing | ⚠️ `onclick` | ❌ `onclick` + no prefix | ✅ `on_click` |
+| JavaScript funcs | 3 stubs | 3 stubs | 4 stubs | 3 stubs | 8 full |
+| Korean labels | ✅ (typo) | ✅ | ✅ | ✅ | ✅ |
+| Popup integration | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Position attributes | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Data types | ✅ | ✅ | ✅ | ❌ | ✅ |
 
-  2. Enforce Both XML and JS Output
+---
 
-  Add explicit output format instruction:
+## 🔍 Key Findings by Model
 
-  system_prompt: |
-    # OUTPUT FORMAT (MANDATORY)
-    You MUST generate BOTH files:
+### 1️⃣ devstral-2:123b (68%) - New Best Overall
 
-    --- XML ---
-    [Complete screen XML with all components]
+**Strengths:**
+- ✅ **Only model with correct `on_click` button syntax** - no post-processing needed
+- ✅ Correct `on_itemdblclick` grid event syntax
+- ✅ Proper `SCREEN_TASK_LIST` ID format
+- ✅ Complete panel hierarchy with search
+- ✅ 4 grid columns with proper bindings
 
-    --- JS ---
-    [Complete JavaScript with all functions]
+**Weaknesses:**
+- ⚠️ Font name typo: `맑은 고딭` instead of `맑은 고딕`
+- ⚠️ Duplicate search button (in both pnl_search and pnl_buttons)
+- ❌ Missing edit button
+- ❌ JavaScript output contains malformed artifacts (`]]>`, `</script>`)
 
-    NEVER skip JavaScript. Every button needs a corresponding fn_* function.
+**Verdict:** Best model - correct event syntax eliminates the most critical post-processing need.
 
-  3. Add Component Checklist for Screen Types
+---
 
-  system_prompt: |
-    # LIST SCREEN REQUIREMENTS (check all)
-    - [ ] Dataset for list data (ds_list)
-    - [ ] Dataset for search criteria (ds_search)
-    - [ ] Search panel with filters
-    - [ ] Button panel with CRUD buttons
-    - [ ] Grid panel with columns matching dataset
-    - [ ] All buttons have on_click handlers
-    - [ ] Grid has on_itemdblclick for detail popup
-    - [ ] JavaScript has fn_search, fn_create, fn_edit, fn_delete
-    - [ ] Popup callback fn_onEditorClose for refresh
+### 2️⃣ llama3.1:70b (62%) - Best Structure
 
-  4. Add Popup Association Pattern
+**Strengths:**
+- ✅ Only model with correct `on_itemdblclick` syntax on grid
+- ✅ Proper `SCREEN_TASK_LIST` ID format
+- ✅ Clean panel hierarchy with search
+- ✅ Correct `data_type` values (0, 2, 3)
 
-  The LLM didn't know how to associate editor popup. Add this pattern:
+**Weaknesses:**
+- ❌ Buttons have NO event handlers at all
+- ❌ Missing edit button
+- ❌ Only 3 grid columns vs 7-11 expected
 
-  system_prompt: |
-    # POPUP ASSOCIATION PATTERN
-    When user requests "associate editor with create/edit button":
+**Verdict:** Best structure but buttons are non-functional without post-processing.
 
-    Create button opens popup in CREATE mode:
-    this.fn_create = function() {
-        loadpopup({
-            url: "/screens/task_editor.xml",
-            modal: true,
-            extra_data: { mode: "create", taskId: null },
-            on_popupdestroy: "fn_onEditorClose"
-        });
-    };
+---
 
-    Edit button opens popup in EDIT mode:
-    this.fn_edit = function() {
-        var taskId = ds_list.getitemtext(selectedRow, "TASK_ID");
-        loadpopup({
-            url: "/screens/task_editor.xml",
-            modal: true,
-            extra_data: { mode: "edit", taskId: taskId },
-            on_popupdestroy: "fn_onEditorClose"
-        });
-    };
+### 3️⃣ qwen3-coder:30b (56%) - Most Complete
 
-  5. Include Knowledge Base in Prompt
+**Strengths:**
+- ✅ Most components generated (20+)
+- ✅ 7 grid columns with formatters
+- ✅ Combobox with status options
+- ✅ Status code formatter (nice touch)
 
-  Your XFRAME5_XML_PATTERNS.md should be included in the system prompt:
+**Weaknesses:**
+- ❌ Uses `onclick` instead of `on_click`
+- ❌ `<xdataset>` instead of `<xlinkdataset>`
+- ❌ Missing grid `version="1.1"`
 
-  // In prompt_compiler.rs
-  fn compile_prompt(request: &GenerateRequest) -> String {
-      let knowledge = load_relevant_knowledge(request.screen_type);
-      let template = load_template(request.product);
+**Verdict:** Most complete but wrong event attribute breaks all interactivity.
 
-      format!("{}\n\n{}\n\n{}",
-          template.system_prompt,
-          knowledge,  // XML patterns from knowledge base
-          request.user_input
-      )
-  }
+---
 
-  6. Model Capability Issue
+### 4️⃣ codestral:22b (28%) - Not Recommended
 
-  llama3.1:latest (8B) may lack capacity for complex structured output. Consider:
+**Strengths:**
+- ✅ Korean button labels
+- ✅ Basic panel structure
 
-  | Model           | Parameters | Expected Quality                 |
-  |-----------------|------------|----------------------------------|
-  | llama3.1:8b     | 8B         | Basic structure, missing details |
-  | qwen3-coder:30b | 30B        | Good structure, some gaps        |
-  | codestral:22b   | 22B        | Good for code generation         |
-  | llama3.1:70b    | 70B        | Near-benchmark quality           |
-  | claude-opus     | -          | Benchmark level                  |
+**Weaknesses:**
+- ❌ `onclick="fn_search"` - THREE errors in one attribute
+- ❌ `<script>` tag embedded in XML (wrong)
+- ❌ Grid has 0 columns (just TODO comment)
+- ❌ Missing search panel entirely
+- ❌ Wrong screen ID format
 
-  7. Add Validation Rules to Prompt
+**Verdict:** Too many fundamental errors. Not suitable for xFrame5 generation.
 
-  system_prompt: |
-    # VALIDATION RULES (MUST follow)
-    1. Every component MUST have x, y, width, height
-    2. Every button MUST have on_click="eventfunc:fn_name()"
-    3. Grid MUST have version="1.1"
-    4. Dataset IDs MUST start with ds_
-    5. Grid names MUST start with grid_
-    6. NEVER use onclick (wrong) - use on_click (correct)
-    7. Include TODO comments for unknown API endpoints
+---
 
-  Recommended Prompt Template Update
+## ⚠️ Common Issues Across All Models
 
-  name: xframe5-list-v2
-  version: 2
-  system_prompt: |
-    You are an expert xFrame5 code generator.
+| Issue | All Models | Fix |
+|-------|------------|-----|
+| No working button events | All fail here | Post-process to add `on_click` |
+| TODO-only JavaScript | Stubs only | Enhance JS examples in prompt |
+| Missing popup patterns | None generate | Add `loadpopup()` examples |
+| No `on_load` handler | All missing | Add to prompt template |
 
-    # CRITICAL RULES
-    1. Generate BOTH XML and JavaScript files
-    2. Use EXACT syntax patterns shown below
-    3. Include ALL required component attributes
-    4. Add TODO placeholders for unknown values
+---
 
-    # XML PATTERNS (from XFRAME5_XML_PATTERNS.md)
-    [Include 50-100 lines of concrete examples]
+## 📈 Score Breakdown by Category
 
-    # JAVASCRIPT PATTERNS
-    [Include fn_search, fn_create, fn_edit, fn_delete, popup callbacks]
+```
+Category             devstral:123b  llama3.1:70b  qwen3:30b  codestral:22b
+─────────────────────────────────────────────────────────────────────────────
+Structure & Layout      85%            85%          80%         40%
+XML Syntax              80%            65%          60%         20%
+JavaScript Quality      25%            30%          40%         20%
+xFrame5 Conventions     75%            70%          60%         30%
+Production Readiness    55%            50%          40%         15%
+Korean Localization     85%            90%          90%         70%
+Grid Implementation     80%            80%          80%          0%
+─────────────────────────────────────────────────────────────────────────────
+OVERALL                 68%            62%          56%         28%
+```
 
-    # OUTPUT FORMAT
-    --- XML ---
-    <?xml version="1.0" encoding="UTF-8"?>
-    <screen id="SCREEN_..." ...>
-    ...
-    </screen>
+---
 
-    --- JS ---
-    this.on_load = function() { ... };
-    this.fn_search = function() { ... };
-    ...
+## 💡 Recommendations
 
-  Summary: Priority Improvements
+### Immediate Actions
 
-  1. Add concrete XML/JS examples to prompt template (highest impact)
-  2. Enforce dual output (XML + JS mandatory)
-  3. Include knowledge base content in prompts
-  4. Add component checklist for completeness
-  5. Consider larger model (30B+ for better quality)
-  6. Add post-generation validation to catch syntax errors
+1. **Use devstral-2:123b as primary model**
+   - Only model with correct `on_click` button syntax out of the box
+   - Eliminates need for event syntax post-processing
+   - Add minor post-processor for font typo and JS cleanup
 
-  Would you like me to update the xframe5-list prompt template in the database with these improvements?
+2. **Implement Minimal Post-Processing Pipeline**
+   ```rust
+   fn post_process_devstral(xml: &str, js: &str) -> (String, String) {
+       let fixed_xml = xml
+           // Fix font name typo
+           .replace("맑은 고딭", "맑은 고딕");
+
+       let fixed_js = js
+           // Remove malformed artifacts
+           .replace("]]>", "")
+           .replace("</script>", "");
+
+       (fixed_xml, fixed_js)
+   }
+   ```
+
+3. **Fallback: llama3.1:70b with aggressive post-processing**
+   ```rust
+   fn post_process_llama(xml: &str) -> String {
+       xml
+           // Fix event attribute names
+           .replace("onclick=", "on_click=")
+           // Ensure eventfunc prefix
+           .replace("on_click=\"fn_", "on_click=\"eventfunc:fn_")
+   }
+   ```
+
+4. **Update Prompt Template** (for all models)
+   ```
+   CRITICAL RULES:
+   - NEVER use "onclick" → ALWAYS use "on_click"
+   - Every button MUST have: on_click="eventfunc:fn_name()"
+   - Grid MUST have: version="1.1"
+   - Font name is "맑은 고딕" (NOT "고딭")
+   ```
+
+### Medium-Term Improvements
+
+1. **Enhance Knowledge Base**
+   - Add more xFrame5 code samples for few-shot learning
+   - Include complete screen examples with all patterns
+
+2. **Consider Hybrid Approach**
+   - Use llama3.1:70b for structure
+   - Apply qwen3-coder patterns for completeness
+   - Post-process all outputs for consistency
+
+3. **Add Validation Gates**
+   - [ ] No `onclick` attributes present
+   - [ ] All grids have `version="1.1"`
+   - [ ] All buttons have `on_click` handlers
+   - [ ] JavaScript includes required functions
+
+---
+
+## 🎯 Quality Gap Analysis (vs Benchmark)
+
+| Aspect | Best LLM (devstral-2:123b) | Benchmark | Gap |
+|--------|----------------------------|-----------|-----|
+| Components | 15 | 40+ | -62% |
+| Grid columns | 4 | 11 | -64% |
+| JS functions | 3 stubs | 8 full impl | -100% logic |
+| Button events | ✅ Working syntax | All working | Minor fixes |
+| Popup integration | None | Full | Missing |
+
+---
+
+## 📋 Test Configuration
+
+| Parameter | Value |
+|-----------|-------|
+| Temperature | 0.7 |
+| Max tokens | 8192 |
+| Response time (avg) | 45-90 seconds |
+| Ollama version | Latest |
+
+---
+
+## 📁 Related Files
+
+- `devstral2_123b_evaluation_20251230.md` - Detailed devstral-2 evaluation (NEW LEADER)
+- `llama31_70b_evaluation_20251230.md` - Detailed llama3.1 evaluation
+- `qwen3_coder_30b_evaluation_20251230.md` - Detailed qwen3 evaluation
+- `codestral_22b_evaluation_20251230.md` - Detailed codestral evaluation
+- `samples/` - Generated XML/JS samples from each model
+
+---
+
+## Conclusion
+
+**devstral-2:123b is the recommended model** for xFrame5 code generation. It is the **only model that generates correct `on_click` button event syntax** out of the box, eliminating the most critical post-processing need.
+
+### Model Selection Guide
+
+| Use Case | Recommended Model | Reason |
+|----------|-------------------|--------|
+| Production | devstral-2:123b | Correct event syntax, minimal fixes needed |
+| Fallback | llama3.1:70b | Good structure, needs event syntax fixes |
+| Most components | qwen3-coder:30b | Generates more, but all events wrong |
+
+### Post-Processing Requirements
+
+| Model | Event Syntax Fix | Font Fix | JS Cleanup | Effort |
+|-------|:----------------:|:--------:|:----------:|:------:|
+| devstral-2:123b | ❌ Not needed | ✅ Required | ✅ Required | Low |
+| llama3.1:70b | ✅ Required | ❌ | ❌ | Medium |
+| qwen3-coder:30b | ✅ Required | ❌ | ❌ | Medium |
+| codestral:22b | ✅ Heavy fixes | ❌ | ❌ | High |
+
+**Next Steps:**
+1. Configure devstral-2:123b as primary model in LLM Config
+2. Implement minimal post-processing (font fix + JS cleanup)
+3. Update prompt templates with explicit rules for all models
+4. Add quality validation gates before returning generated code

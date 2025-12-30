@@ -10,6 +10,7 @@ LLM 런타임을 완전히 추상화하여 모델 교체 시 플러그인/API �
 |----------|----------|------------------|
 | `ollama` | Self-hosted Ollama server | No |
 | `llama-cpp` | llama.cpp server (OpenAI-compatible) | No |
+| `local-llm` | Embedded llama.cpp (no server needed) | No |
 | `vllm` | vLLM server (OpenAI-compatible) | Optional |
 
 ### Remote (Development/Testing)
@@ -63,6 +64,13 @@ LLM_MODEL=codellama
 LLM_PROVIDER=vllm
 LLM_ENDPOINT=http://localhost:8000
 LLM_MODEL=codellama/CodeLlama-13b-hf
+
+# Local LLM (embedded llama.cpp - requires --features local-llm)
+LLM_MODEL_PATH=./llm-models/your-model.gguf
+LLM_CONTEXT_SIZE=4096
+LLM_THREADS=4
+LLM_MAX_TOKENS=4096
+LLM_TEMPERATURE=0.7
 
 # === REMOTE PROVIDERS (Development/Testing Only) ===
 
@@ -233,6 +241,71 @@ impl LlmBackend for LlamaCppBackend {
     }
 }
 ```
+
+### LocalLlamaCppBackend (Embedded - No Server)
+
+> **Note**: Requires `--features local-llm` at build time.
+
+```rust
+/// Embedded llama.cpp backend - runs GGUF models directly in-process
+/// No separate server required, simpler deployment
+pub struct LocalLlamaCppBackend {
+    model_path: PathBuf,
+    n_ctx: u32,
+    n_threads: u32,
+    max_tokens: u32,
+    temperature: f32,
+}
+
+impl LocalLlamaCppBackend {
+    pub fn from_env() -> Self {
+        Self {
+            model_path: PathBuf::from(
+                env::var("LLM_MODEL_PATH")
+                    .unwrap_or_else(|_| "llm-models/codellama.gguf".to_string())
+            ),
+            n_ctx: env::var("LLM_CONTEXT_SIZE")
+                .ok().and_then(|s| s.parse().ok()).unwrap_or(4096),
+            n_threads: env::var("LLM_THREADS")
+                .ok().and_then(|s| s.parse().ok()).unwrap_or(4),
+            max_tokens: env::var("LLM_MAX_TOKENS")
+                .ok().and_then(|s| s.parse().ok()).unwrap_or(4096),
+            temperature: env::var("LLM_TEMPERATURE")
+                .ok().and_then(|s| s.parse().ok()).unwrap_or(0.7),
+        }
+    }
+}
+
+#[async_trait]
+impl LlmBackend for LocalLlamaCppBackend {
+    fn name(&self) -> &str { "local-llama-cpp" }
+    fn model(&self) -> &str { self.model_name() }
+
+    async fn generate(&self, prompt: &str) -> anyhow::Result<String> {
+        // Runs inference directly using llama-cpp-2 crate
+        // Model is loaded lazily on first request
+        // Uses spawn_blocking for async compatibility
+    }
+
+    async fn health_check(&self) -> anyhow::Result<()> {
+        // Checks if model file exists
+    }
+}
+```
+
+**Build & Run**:
+```bash
+# Build with local-llm feature
+cargo build --features local-llm
+
+# Run with model path
+export LLM_MODEL_PATH=./llm-models/your-model.gguf
+cargo loco start --features local-llm
+```
+
+**Model Directory**: Place GGUF files in `backend/llm-models/` (git-ignored).
+
+---
 
 ### VllmBackend (OpenAI-compatible)
 
@@ -692,4 +765,4 @@ Configure LLM settings at runtime via `/admin/llm-configs`:
 
 ---
 
-**Last Updated**: 2025-12-29
+**Last Updated**: 2025-12-30

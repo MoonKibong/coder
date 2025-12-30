@@ -66,13 +66,11 @@
                 <!-- Model Name -->
                 <div class="space-y-2">
                     <label for="model_name" class="text-sm font-medium">Model Name</label>
+                    {% if available_models | length > 0 %}
                     <select id="model_name" name="model_name" required
                         class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm font-mono
                                focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
                         <option value="">Select model...</option>
-                        {% if item.model_name and available_models | length == 0 %}
-                        <option value="{{ item.model_name }}" selected>{{ item.model_name }} (server unavailable)</option>
-                        {% endif %}
                         {% for model in available_models %}
                         <option value="{{ model.name }}" {% if model.name == item.model_name %}selected{% endif %}>{{ model.name }}{% if model.details and model.details.parameter_size %} ({{ model.details.parameter_size }}){% endif %}</option>
                         {% endfor %}
@@ -80,6 +78,15 @@
                     <p class="text-xs text-muted-foreground">
                         Available models from the Ollama server.
                     </p>
+                    {% else %}
+                    <input type="text" id="model_name" name="model_name" value="{{ item.model_name }}" required
+                        class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm font-mono
+                               placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        placeholder="e.g., llama3.1:latest, codellama:13b" />
+                    <p class="text-xs text-muted-foreground text-amber-600">
+                        Could not fetch models from Ollama server. Enter model name manually.
+                    </p>
+                    {% endif %}
                 </div>
 
                 <!-- API Key (Optional) -->

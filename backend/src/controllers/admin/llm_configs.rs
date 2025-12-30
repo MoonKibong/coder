@@ -71,9 +71,17 @@ pub async fn list(
 /// New form
 #[debug_handler]
 pub async fn new_form(ViewEngine(v): ViewEngine<TeraView>) -> Result<Response> {
-    // Fetch available models from Ollama
+    // Try to fetch available models from Ollama with a short timeout
+    // If server is not reachable, show empty list (user can still enter manually)
     let ollama = OllamaBackend::from_env();
-    let available_models = ollama.list_models().await.unwrap_or_default();
+    let available_models = tokio::time::timeout(
+        std::time::Duration::from_secs(2),
+        ollama.list_models(),
+    )
+    .await
+    .ok()
+    .and_then(|r| r.ok())
+    .unwrap_or_default();
 
     format::render().view(
         &v,
@@ -111,9 +119,16 @@ pub async fn edit_form(
 ) -> Result<Response> {
     let item = LlmConfigService::find_by_id(&ctx.db, id).await?;
 
-    // Fetch available models from Ollama
+    // Try to fetch available models from Ollama with a short timeout
     let ollama = OllamaBackend::from_env();
-    let available_models = ollama.list_models().await.unwrap_or_default();
+    let available_models = tokio::time::timeout(
+        std::time::Duration::from_secs(2),
+        ollama.list_models(),
+    )
+    .await
+    .ok()
+    .and_then(|r| r.ok())
+    .unwrap_or_default();
 
     format::render().view(
         &v,
@@ -132,13 +147,21 @@ pub async fn create(
     State(ctx): State<AppContext>,
     Json(params): Json<CreateParams>,
 ) -> Result<Response> {
-    let item = LlmConfigService::create(&ctx.db, params).await?;
+    let _item = LlmConfigService::create(&ctx.db, params).await?;
+
+    // Return the full list to replace #search-result
+    let query_params = QueryParams::default();
+    let response = LlmConfigService::search(&ctx.db, &query_params).await?;
 
     format::render().view(
         &v,
-        "admin/llm_config/row.html",
+        "admin/llm_config/list.html",
         data!({
-            "item": item,
+            "items": response.items,
+            "page": response.page,
+            "page_size": response.page_size,
+            "total_pages": response.total_pages,
+            "total_items": response.total_items,
         }),
     )
 }

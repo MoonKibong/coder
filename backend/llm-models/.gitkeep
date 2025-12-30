@@ -1,0 +1,17 @@
+# LLM Models Directory
+
+Place your GGUF model files here.
+
+This directory is git-ignored. Model files are not committed to the repository.
+
+## Usage
+
+Set the LLM_MODEL_PATH environment variable:
+```bash
+export LLM_MODEL_PATH=./llm-models/your-model.gguf
+```
+
+Or use the default path (llm-models/codellama.gguf):
+```bash
+cargo loco start --features local-llm
+```

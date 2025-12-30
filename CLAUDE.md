@@ -107,10 +107,21 @@ Plugin Request
     ↓
 ③ LLM Generate (trait-based)
     ↓
-④ Parse & Validate (product-specific validation)
+④ Post-Processing Pipeline (6-pass deterministic)
     ↓
 ⑤ Response (artifacts + warnings)
 ```
+
+### Post-Processing Pipeline
+After LLM generation, output passes through 6 deterministic passes:
+1. **Output Parser** - Split raw output into XML/JS sections
+2. **Canonicalizer** - Normalize syntax (`onclick` → `on_click`)
+3. **Symbol Linker** - Match XML events to JS functions
+4. **API Allowlist** - Block hallucinated APIs
+5. **Graph Validator** - Validate Dataset ↔ UI bindings
+6. **Minimalism Pass** - Remove unused functions
+
+See `docs/features/CODEGEN_POST_PROCESSING.md` for details.
 
 ### Core Trait (제품의 심장)
 ```rust
@@ -179,15 +190,17 @@ LLM receives structured intent, not raw input.
 
 ### Generate Endpoint
 ```
-POST /api/agent/generate
+POST /agent/generate
 ```
 
 **Request**:
 ```json
 {
   "product": "spring-backend | xframe5-ui",
-  "inputType": "db-schema | query-sample | natural-language",
-  "input": { "description": "..." },
+  "input": {
+    "type": "db_schema | query_sample | natural_language",
+    "description": "..."
+  },
   "options": { "language": "ko", "strictMode": true },
   "context": {
     "project": "my-project",
@@ -199,7 +212,7 @@ POST /api/agent/generate
 
 ### Code Review Endpoint
 ```
-POST /api/agent/review
+POST /agent/review
 ```
 
 **Request**:
@@ -220,7 +233,7 @@ POST /api/agent/review
 
 ### Q&A Endpoint
 ```
-POST /api/agent/qa
+POST /agent/qa
 ```
 
 **Request**:
@@ -263,7 +276,8 @@ backend/
 │   ├── controllers/         # Thin - request/response only
 │   │   └── admin/           # HTMX admin panel controllers
 │   ├── services/            # Fat - business logic
-│   │   └── admin/           # Admin CRUD services (pagination, validation)
+│   │   ├── admin/           # Admin CRUD services (pagination, validation)
+│   │   └── pipeline/        # Post-processing pipeline (6 passes)
 │   ├── middleware/          # Custom extractors (cookie_auth)
 │   ├── domain/              # Request, Artifact, InputKind types
 │   ├── prompt/              # Prompt compiler + templates
@@ -373,6 +387,10 @@ cargo loco start
 # Run with specific config
 LOCO_ENV=development cargo loco start
 
+# Run with embedded llama.cpp (local-llm feature)
+export LLM_MODEL_PATH=./llm-models/your-model.gguf
+cargo loco start --features local-llm
+
 # Generate migration
 cargo loco generate migration create_generation_logs
 
@@ -433,12 +451,14 @@ docker run -p 3000:3000 -p 11434:11434 \
 8. **CONTROLLER_SERVICE_SEPARATION.md** - Thin controller, fat service pattern
 9. **COOKIE_AUTH.md** - Cookie-based JWT auth for admin pages
 10. **OPTIONALFIELD_PATTERN.md** - Proper PATCH updates with OptionalField<T>
+11. **POST_PROCESSING_PIPELINE.md** - 6-pass deterministic post-processing for LLM output
 
 ### Feature Documentation (docs/features/)
 1. **SCREEN_GENERATION.md** - List/Detail screen generation
 2. **SCHEMA_INPUT.md** - DB schema input processing
 3. **CODE_REVIEW.md** - AI-powered code review for xFrame5/Spring
 4. **QA_CHATBOT.md** - Knowledge-based Q&A chatbot
+5. **CODEGEN_POST_PROCESSING.md** - 6-pass deterministic pipeline for LLM output
 
 ### Knowledge Base Documentation (docs/)
 1. **KNOWLEDGE_BASE_ARCHITECTURE.md** - Knowledge base system architecture and design

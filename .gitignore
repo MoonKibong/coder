@@ -55,3 +55,8 @@ node_modules/
 
 # Claude Code
 .claude/
+
+# LLM Model files (GGUF, etc.)
+llm-models/*
+!llm-models/.gitkeep
+*.gguf

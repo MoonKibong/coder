@@ -15,6 +15,7 @@ pub mod metrics_history;
 mod knowledge_base_service;
 mod review_service;
 mod qa_service;
+pub mod pipeline;
 
 pub use generation::GenerationService;
 pub use normalizer::NormalizerService;

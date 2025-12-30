@@ -117,7 +117,7 @@ impl LocalLlamaCppBackend {
     /// - LLM_TEMPERATURE: Sampling temperature (default: 0.7)
     pub fn from_env() -> Self {
         let model_path = PathBuf::from(
-            env::var("LLM_MODEL_PATH").unwrap_or_else(|_| "models/codellama.gguf".to_string()),
+            env::var("LLM_MODEL_PATH").unwrap_or_else(|_| "llm-models/codellama.gguf".to_string()),
         );
 
         let n_ctx = env::var("LLM_CONTEXT_SIZE")

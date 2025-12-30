@@ -116,13 +116,21 @@ pub async fn create(
     State(ctx): State<AppContext>,
     Json(params): Json<CreateParams>,
 ) -> Result<Response> {
-    let item = CompanyRuleService::create(&ctx.db, params).await?;
+    CompanyRuleService::create(&ctx.db, params).await?;
+
+    // Return the full list to replace #search-result
+    let query_params = QueryParams::default();
+    let response = CompanyRuleService::search(&ctx.db, &query_params).await?;
 
     format::render().view(
         &v,
-        "admin/company_rule/row.html",
+        "admin/company_rule/list.html",
         data!({
-            "item": item,
+            "items": response.items,
+            "page": response.page,
+            "page_size": response.page_size,
+            "total_pages": response.total_pages,
+            "total_items": response.total_items,
         }),
     )
 }
@@ -135,13 +143,21 @@ pub async fn update(
     State(ctx): State<AppContext>,
     Json(params): Json<UpdateParams>,
 ) -> Result<Response> {
-    let item = CompanyRuleService::update(&ctx.db, id, params).await?;
+    CompanyRuleService::update(&ctx.db, id, params).await?;
+
+    // Return the full list to replace #search-result
+    let query_params = QueryParams::default();
+    let response = CompanyRuleService::search(&ctx.db, &query_params).await?;
 
     format::render().view(
         &v,
-        "admin/company_rule/row.html",
+        "admin/company_rule/list.html",
         data!({
-            "item": item,
+            "items": response.items,
+            "page": response.page,
+            "page_size": response.page_size,
+            "total_pages": response.total_pages,
+            "total_items": response.total_items,
         }),
     )
 }

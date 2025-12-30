@@ -5,7 +5,7 @@ use crate::domain::{
 use crate::llm::{create_backend_from_db_or_env, create_backend_from_env};
 use crate::models::_entities::generation_logs;
 use crate::services::{NormalizerService, PromptCompiler, TemplateService};
-use crate::services::xframe5_validator::XFrame5Validator;
+use crate::services::pipeline::{PostProcessingPipeline, ExecutionMode};
 use anyhow::{anyhow, Result};
 use chrono::Utc;
 use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
@@ -62,26 +62,37 @@ impl GenerationService {
         };
         tracing::debug!("LLM raw output preview:\n{}", output_preview);
 
-        // 5. Parse and validate
-        let validation_result = XFrame5Validator::parse_and_validate(&raw_output, &intent);
+        // 5. Run through post-processing pipeline
+        // Execution mode is derived from strictMode option
+        let execution_mode = ExecutionMode::from_strict_mode(options.strict_mode);
 
-        let (artifacts, warnings, status, error_message) = match validation_result {
-            Ok(mut validated) => {
-                // Post-process to add missing stubs
-                XFrame5Validator::post_process(&mut validated, &intent);
+        let pipeline_result = PostProcessingPipeline::run(
+            raw_output.clone(),
+            &intent,
+            execution_mode,
+        );
 
-                let warnings = validated.warnings.clone();
-                let status = if warnings.iter().any(|w| w.starts_with("Warning:")) {
+        let (artifacts, warnings, status, error_message) = match pipeline_result {
+            Ok(result) => {
+                // Convert pipeline result to GeneratedArtifacts
+                let artifacts = GeneratedArtifacts {
+                    xml: Some(result.xml),
+                    javascript: Some(result.javascript),
+                    xml_filename: Some(format!("{}.xml", intent.screen_name.to_lowercase().replace(' ', "_"))),
+                    js_filename: Some(format!("{}.js", intent.screen_name.to_lowercase().replace(' ', "_"))),
+                };
+
+                let status = if result.warnings.iter().any(|w| w.contains("Warning") || w.contains("Error")) {
                     GenerateStatus::PartialSuccess
                 } else {
                     GenerateStatus::Success
                 };
 
-                (Some(validated.into()), warnings, status, None)
+                (Some(artifacts), result.warnings, status, None)
             }
             Err(e) => {
-                // Validation failed - try retry once
-                tracing::warn!("First generation failed validation: {}", e);
+                // Pipeline failed - try retry once
+                tracing::warn!("First generation failed pipeline: {}", e);
 
                 // Retry with more explicit instructions
                 let retry_prompt = format!(
@@ -93,15 +104,21 @@ impl GenerationService {
 
                 match llm.generate(&retry_prompt).await {
                     Ok(retry_output) => {
-                        match XFrame5Validator::parse_and_validate(&retry_output, &intent) {
-                            Ok(mut validated) => {
-                                XFrame5Validator::post_process(&mut validated, &intent);
-                                let mut warnings = validated.warnings.clone();
+                        // Use Relaxed mode for retry to be more permissive
+                        match PostProcessingPipeline::run(retry_output, &intent, ExecutionMode::Relaxed) {
+                            Ok(result) => {
+                                let artifacts = GeneratedArtifacts {
+                                    xml: Some(result.xml),
+                                    javascript: Some(result.javascript),
+                                    xml_filename: Some(format!("{}.xml", intent.screen_name.to_lowercase().replace(' ', "_"))),
+                                    js_filename: Some(format!("{}.js", intent.screen_name.to_lowercase().replace(' ', "_"))),
+                                };
+                                let mut warnings = result.warnings;
                                 warnings.push("Note: Generation required retry".to_string());
-                                (Some(validated.into()), warnings, GenerateStatus::PartialSuccess, None)
+                                (Some(artifacts), warnings, GenerateStatus::PartialSuccess, None)
                             }
                             Err(retry_err) => {
-                                (None, vec![], GenerateStatus::Error, Some(format!("Validation failed after retry: {}", retry_err)))
+                                (None, vec![], GenerateStatus::Error, Some(format!("Pipeline failed after retry: {}", retry_err)))
                             }
                         }
                     }
@@ -168,25 +185,32 @@ impl GenerationService {
 
         let raw_output = llm.generate(&prompt.full()).await?;
 
-        // 4. Parse and validate
-        let mut validated = XFrame5Validator::parse_and_validate(&raw_output, &intent)?;
-        XFrame5Validator::post_process(&mut validated, &intent);
+        // 4. Run through post-processing pipeline (Relaxed mode for defaults)
+        let result = PostProcessingPipeline::run(
+            raw_output,
+            &intent,
+            ExecutionMode::Relaxed,
+        )?;
 
         let generation_time_ms = start.elapsed().as_millis() as u64;
 
-        let status = if validated.warnings.iter().any(|w| w.starts_with("Warning:")) {
+        let status = if result.warnings.iter().any(|w| w.contains("Warning") || w.contains("Error")) {
             GenerateStatus::PartialSuccess
         } else {
             GenerateStatus::Success
         };
 
-        // Extract warnings before moving validated
-        let warnings = validated.warnings.clone();
+        let artifacts = GeneratedArtifacts {
+            xml: Some(result.xml),
+            javascript: Some(result.javascript),
+            xml_filename: Some(format!("{}.xml", intent.screen_name.to_lowercase().replace(' ', "_"))),
+            js_filename: Some(format!("{}.js", intent.screen_name.to_lowercase().replace(' ', "_"))),
+        };
 
         Ok(GenerateResponse {
             status,
-            artifacts: Some(validated.into()),
-            warnings,
+            artifacts: Some(artifacts),
+            warnings: result.warnings,
             error: None,
             meta: ResponseMeta {
                 generator: format!("{}-v1", product),

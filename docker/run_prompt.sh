@@ -77,6 +77,47 @@ escape_json() {
 
 ESCAPED_PROMPT=$(escape_json "$PROMPT")
 
+# Create temp file for output
+TEMP_OUTPUT=$(mktemp)
+trap "rm -f $TEMP_OUTPUT" EXIT
+
+# Function to run curl with timing
+run_api_call() {
+    local url="$1"
+    local data="$2"
+
+    local start_time=$(date +%s)
+    echo "  Waiting for LLM response (this may take 1-3 minutes)..."
+    echo ""
+
+    # Run curl and save to temp file
+    local http_code
+    http_code=$(curl -s -w "%{http_code}" --max-time 300 -X POST "$url" \
+        -H "Content-Type: application/json" \
+        -d "$data" \
+        -o "$TEMP_OUTPUT" 2>&1)
+    local curl_exit=$?
+
+    local end_time=$(date +%s)
+    local elapsed=$((end_time - start_time))
+
+    echo "  [✓] Response received in ${elapsed}s (HTTP: $http_code)"
+    echo ""
+    echo "--- Response ---"
+
+    # Pretty print if jq is available, otherwise cat
+    if command -v jq &> /dev/null; then
+        jq . "$TEMP_OUTPUT" 2>/dev/null || cat "$TEMP_OUTPUT"
+    else
+        cat "$TEMP_OUTPUT"
+    fi
+
+    echo ""
+    echo "--- End ---"
+
+    return $curl_exit
+}
+
 case $MODE in
     gen|generate)
         echo "=== Code Generation ==="
@@ -84,24 +125,22 @@ case $MODE in
         echo "Prompt: $PROMPT"
         echo ""
 
-        curl -s -X POST "${SERVER_URL}/api/agent/generate" \
-            -H "Content-Type: application/json" \
-            -d "{
-                \"product\": \"${PRODUCT}\",
-                \"inputType\": \"natural-language\",
-                \"input\": {
-                    \"description\": \"${ESCAPED_PROMPT}\"
-                },
-                \"options\": {
-                    \"language\": \"${LANGUAGE}\",
-                    \"strictMode\": false
-                },
-                \"context\": {
-                    \"project\": \"test\",
-                    \"target\": \"frontend\",
-                    \"output\": [\"xml\", \"javascript\"]
-                }
-            }" | jq . 2>/dev/null || cat
+        run_api_call "${SERVER_URL}/agent/generate" "{
+            \"product\": \"${PRODUCT}\",
+            \"input\": {
+                \"type\": \"natural_language\",
+                \"description\": \"${ESCAPED_PROMPT}\"
+            },
+            \"options\": {
+                \"language\": \"${LANGUAGE}\",
+                \"strictMode\": false
+            },
+            \"context\": {
+                \"project\": \"test\",
+                \"target\": \"frontend\",
+                \"output\": [\"xml\", \"javascript\"]
+            }
+        }"
         ;;
 
     qa|question)
@@ -110,20 +149,18 @@ case $MODE in
         echo "Question: $PROMPT"
         echo ""
 
-        curl -s -X POST "${SERVER_URL}/api/agent/qa" \
-            -H "Content-Type: application/json" \
-            -d "{
-                \"product\": \"${PRODUCT}\",
-                \"input\": {
-                    \"question\": \"${ESCAPED_PROMPT}\",
-                    \"context\": \"\"
-                },
-                \"options\": {
-                    \"language\": \"${LANGUAGE}\",
-                    \"includeExamples\": true,
-                    \"maxReferences\": 5
-                }
-            }" | jq . 2>/dev/null || cat
+        run_api_call "${SERVER_URL}/agent/qa" "{
+            \"product\": \"${PRODUCT}\",
+            \"input\": {
+                \"question\": \"${ESCAPED_PROMPT}\",
+                \"context\": \"\"
+            },
+            \"options\": {
+                \"language\": \"${LANGUAGE}\",
+                \"includeExamples\": true,
+                \"maxReferences\": 5
+            }
+        }"
         ;;
 
     review)
@@ -140,20 +177,18 @@ case $MODE in
             FILE_TYPE="java"
         fi
 
-        curl -s -X POST "${SERVER_URL}/api/agent/review" \
-            -H "Content-Type: application/json" \
-            -d "{
-                \"product\": \"${PRODUCT}\",
-                \"input\": {
-                    \"code\": \"${ESCAPED_PROMPT}\",
-                    \"fileType\": \"${FILE_TYPE}\",
-                    \"context\": \"\"
-                },
-                \"options\": {
-                    \"language\": \"${LANGUAGE}\",
-                    \"reviewFocus\": [\"syntax\", \"patterns\", \"performance\", \"security\"]
-                }
-            }" | jq . 2>/dev/null || cat
+        run_api_call "${SERVER_URL}/agent/review" "{
+            \"product\": \"${PRODUCT}\",
+            \"input\": {
+                \"code\": \"${ESCAPED_PROMPT}\",
+                \"fileType\": \"${FILE_TYPE}\",
+                \"context\": \"\"
+            },
+            \"options\": {
+                \"language\": \"${LANGUAGE}\",
+                \"reviewFocus\": [\"syntax\", \"patterns\", \"performance\", \"security\"]
+            }
+        }"
         ;;
 
     *)
@@ -162,4 +197,4 @@ case $MODE in
         ;;
 esac
 
-echo ""
+echo "Done."
