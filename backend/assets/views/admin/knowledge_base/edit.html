@@ -1,11 +1,10 @@
 <!-- Edit Knowledge Base Entry Modal -->
-<div class="fixed inset-0 z-50 bg-black/50" onclick="if(event.target === this) this.remove()">
-    <div class="fixed inset-y-0 right-0 w-full max-w-3xl bg-background shadow-xl overflow-hidden flex flex-col"
-         onclick="event.stopPropagation()">
+<div class="fixed inset-0 z-[60] bg-black/50">
+    <div class="fixed inset-y-0 right-0 w-full max-w-3xl bg-background shadow-xl overflow-hidden flex flex-col">
         <!-- Header -->
         <div class="flex items-center justify-between px-6 py-4 border-b">
             <h2 class="text-lg font-semibold">Edit Knowledge Base Entry</h2>
-            <button onclick="this.closest('.fixed').remove()"
+            <button onclick="document.getElementById('modal-container').innerHTML = ''"
                 class="inline-flex items-center justify-center rounded-md h-8 w-8 hover:bg-accent">
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -15,7 +14,7 @@
 
         <!-- Form -->
         <form hx-patch="/admin/knowledge-bases/{{ item.id }}" hx-ext="json-enc" hx-target="#search-result" hx-swap="outerHTML"
-              hx-on::after-request="if(event.detail.successful) this.closest('.fixed').remove()"
+              hx-on::after-request="if(event.detail.successful) document.getElementById('modal-container').innerHTML = ''"
               class="flex-1 overflow-y-auto p-6">
             <div class="space-y-6">
                 <!-- Name -->
@@ -126,7 +125,7 @@
 
         <!-- Footer -->
         <div class="flex items-center justify-end gap-2 px-6 py-4 border-t bg-muted/30">
-            <button onclick="this.closest('.fixed').remove()"
+            <button onclick="document.getElementById('modal-container').innerHTML = ''"
                 class="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-4 py-2
                        border bg-background shadow-sm hover:bg-accent hover:text-accent-foreground">
                 Cancel
