@@ -226,6 +226,78 @@
 </div>
 ```
 
+### Pattern 6: Dynamic Field Loading (Dependent Fields)
+
+Use this pattern when one form field should update another based on user input. Example: fetching available models when endpoint URL changes.
+
+```html
+<!-- Trigger field: fetches data on change -->
+<div class="space-y-2">
+    <label for="endpoint_url" class="text-sm font-medium">Endpoint URL</label>
+    <div class="flex gap-2">
+        <input type="url" id="endpoint_url" name="endpoint_url"
+            hx-get="/admin/llm-configs/models"
+            hx-trigger="change, keyup delay:500ms changed"
+            hx-target="#model_name_container"
+            hx-include="[name='endpoint_url']"
+            hx-vals='{"current_model": "{{ item.model_name }}"}'
+            hx-indicator="#model-loading"
+            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+            placeholder="http://localhost:11434" />
+        <!-- Loading spinner (hidden by default, shown during request) -->
+        <span id="model-loading" class="htmx-indicator flex items-center">
+            <svg class="animate-spin h-5 w-5 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+        </span>
+    </div>
+</div>
+
+<!-- Target container: replaced with server response -->
+<div class="space-y-2">
+    <label for="model_name" class="text-sm font-medium">Model Name</label>
+    <div id="model_name_container">
+        <!-- Initial state or dynamically loaded content -->
+        <input type="text" id="model_name" name="model_name" required
+            placeholder="Enter endpoint URL above to fetch models" />
+    </div>
+</div>
+```
+
+**Server-side partial template** (`model_options.html`):
+
+```html
+{% if error %}
+<!-- Error state: show text input with error message -->
+<input type="text" id="model_name" name="model_name" value="{{ current_model }}" required />
+<p class="text-xs text-amber-600 mt-1">{{ error }}. Enter manually.</p>
+{% elif available_models | length > 0 %}
+<!-- Success state: show select dropdown -->
+<select id="model_name" name="model_name" required>
+    <option value="">Select model...</option>
+    {% for model in available_models %}
+    <option value="{{ model.name }}" {% if model.name == current_model %}selected{% endif %}>
+        {{ model.name }}
+    </option>
+    {% endfor %}
+</select>
+<p class="text-xs text-muted-foreground mt-1">Found {{ available_models | length }} model(s).</p>
+{% else %}
+<!-- Empty state: prompt user -->
+<input type="text" id="model_name" name="model_name" required placeholder="Enter endpoint URL above" />
+{% endif %}
+```
+
+**Key HTMX attributes for this pattern**:
+
+| Attribute | Purpose |
+|-----------|---------|
+| `hx-trigger="change, keyup delay:500ms changed"` | Fire on change or after typing stops |
+| `hx-include="[name='endpoint_url']"` | Include this field's value in request |
+| `hx-vals='{"current_model": "..."}'` | Add extra static values to request |
+| `hx-indicator="#model-loading"` | Show/hide loading spinner |
+
 ---
 
 ## Loco.rs View Controllers
@@ -911,5 +983,5 @@ The shadcn styling is based on **starshare-app**:
 
 ---
 
-**Version**: 1.1.0
-**Last Updated**: 2025-12-28
+**Version**: 1.2.0
+**Last Updated**: 2025-12-31
