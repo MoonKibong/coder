@@ -3,8 +3,22 @@
 //! HTMX-based CRUD for knowledge base entries.
 //! Thin controller - delegates to AdminKnowledgeBaseService.
 
-use axum::http::HeaderMap;
+use axum::http::{header, HeaderMap, StatusCode};
 use loco_rs::prelude::*;
+
+/// Helper to check if request is from HTMX
+fn is_htmx_request(headers: &HeaderMap) -> bool {
+    headers.get("HX-Request").is_some()
+}
+
+/// Redirect response for non-HTMX requests to modal endpoints
+fn redirect_to_main_page() -> Result<Response> {
+    Ok(Response::builder()
+        .status(StatusCode::SEE_OTHER)
+        .header(header::LOCATION, "/admin/knowledge-bases")
+        .body(axum::body::Body::empty())?
+        .into_response())
+}
 
 use crate::middleware::cookie_auth::AuthUser;
 use crate::services::admin::{
@@ -73,10 +87,16 @@ pub async fn list(
 /// Show single item
 #[debug_handler]
 pub async fn show(
+    headers: HeaderMap,
     ViewEngine(v): ViewEngine<TeraView>,
     Path(id): Path<i32>,
     State(ctx): State<AppContext>,
 ) -> Result<Response> {
+    // Redirect to main page if not an HTMX request (direct URL access)
+    if !is_htmx_request(&headers) {
+        return redirect_to_main_page();
+    }
+
     let item = AdminKnowledgeBaseService::find_by_id(&ctx.db, id).await?;
 
     format::render().view(
@@ -90,17 +110,31 @@ pub async fn show(
 
 /// New form
 #[debug_handler]
-pub async fn new_form(ViewEngine(v): ViewEngine<TeraView>) -> Result<Response> {
+pub async fn new_form(
+    headers: HeaderMap,
+    ViewEngine(v): ViewEngine<TeraView>,
+) -> Result<Response> {
+    // Redirect to main page if not an HTMX request (direct URL access)
+    if !is_htmx_request(&headers) {
+        return redirect_to_main_page();
+    }
+
     format::render().view(&v, "admin/knowledge_base/create.html", data!({}))
 }
 
 /// Edit form
 #[debug_handler]
 pub async fn edit_form(
+    headers: HeaderMap,
     ViewEngine(v): ViewEngine<TeraView>,
     Path(id): Path<i32>,
     State(ctx): State<AppContext>,
 ) -> Result<Response> {
+    // Redirect to main page if not an HTMX request (direct URL access)
+    if !is_htmx_request(&headers) {
+        return redirect_to_main_page();
+    }
+
     let item = AdminKnowledgeBaseService::find_by_id(&ctx.db, id).await?;
 
     format::render().view(

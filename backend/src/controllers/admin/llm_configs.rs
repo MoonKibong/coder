@@ -3,7 +3,7 @@
 //! HTMX-based CRUD for LLM configurations.
 //! Thin controller - delegates to LlmConfigService.
 
-use axum::http::HeaderMap;
+use axum::http::{header, HeaderMap, StatusCode};
 use loco_rs::prelude::*;
 use serde::Deserialize;
 use tracing::debug;
@@ -19,6 +19,20 @@ use crate::services::admin::llm_config::{
 pub struct FetchModelsParams {
     pub endpoint_url: Option<String>,
     pub current_model: Option<String>,
+}
+
+/// Helper to check if request is from HTMX
+fn is_htmx_request(headers: &HeaderMap) -> bool {
+    headers.get("HX-Request").is_some()
+}
+
+/// Redirect response for non-HTMX requests to modal endpoints
+fn redirect_to_main_page() -> Result<Response> {
+    Ok(Response::builder()
+        .status(StatusCode::SEE_OTHER)
+        .header(header::LOCATION, "/admin/llm-configs")
+        .body(axum::body::Body::empty())?
+        .into_response())
 }
 
 /// Main page - renders full layout for direct access, partial for HTMX
@@ -79,7 +93,15 @@ pub async fn list(
 
 /// New form
 #[debug_handler]
-pub async fn new_form(ViewEngine(v): ViewEngine<TeraView>) -> Result<Response> {
+pub async fn new_form(
+    headers: HeaderMap,
+    ViewEngine(v): ViewEngine<TeraView>,
+) -> Result<Response> {
+    // Redirect to main page if not an HTMX request (direct URL access)
+    if !is_htmx_request(&headers) {
+        return redirect_to_main_page();
+    }
+
     // Try to fetch available models from Ollama with a short timeout
     // If server is not reachable, show empty list (user can still enter manually)
     let ollama = OllamaBackend::from_env();
@@ -104,10 +126,16 @@ pub async fn new_form(ViewEngine(v): ViewEngine<TeraView>) -> Result<Response> {
 /// Show item details
 #[debug_handler]
 pub async fn show(
+    headers: HeaderMap,
     ViewEngine(v): ViewEngine<TeraView>,
     Path(id): Path<i32>,
     State(ctx): State<AppContext>,
 ) -> Result<Response> {
+    // Redirect to main page if not an HTMX request (direct URL access)
+    if !is_htmx_request(&headers) {
+        return redirect_to_main_page();
+    }
+
     let item = LlmConfigService::find_by_id(&ctx.db, id).await?;
 
     format::render().view(
@@ -122,10 +150,16 @@ pub async fn show(
 /// Edit form
 #[debug_handler]
 pub async fn edit_form(
+    headers: HeaderMap,
     ViewEngine(v): ViewEngine<TeraView>,
     Path(id): Path<i32>,
     State(ctx): State<AppContext>,
 ) -> Result<Response> {
+    // Redirect to main page if not an HTMX request (direct URL access)
+    if !is_htmx_request(&headers) {
+        return redirect_to_main_page();
+    }
+
     let item = LlmConfigService::find_by_id(&ctx.db, id).await?;
 
     // Try to fetch available models from Ollama with a short timeout

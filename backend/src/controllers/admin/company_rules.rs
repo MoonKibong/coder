@@ -3,9 +3,23 @@
 //! HTMX-based CRUD for company rules.
 //! Thin controller - delegates to CompanyRuleService.
 
-use axum::http::HeaderMap;
+use axum::http::{header, HeaderMap, StatusCode};
 use loco_rs::prelude::*;
 use tracing::{debug, error};
+
+/// Helper to check if request is from HTMX
+fn is_htmx_request(headers: &HeaderMap) -> bool {
+    headers.get("HX-Request").is_some()
+}
+
+/// Redirect response for non-HTMX requests to modal endpoints
+fn redirect_to_main_page() -> Result<Response> {
+    Ok(Response::builder()
+        .status(StatusCode::SEE_OTHER)
+        .header(header::LOCATION, "/admin/company-rules")
+        .body(axum::body::Body::empty())?
+        .into_response())
+}
 
 use crate::middleware::cookie_auth::AuthUser;
 use crate::services::admin::company_rule::{
@@ -95,10 +109,16 @@ pub async fn list(
 /// Show single item
 #[debug_handler]
 pub async fn show(
+    headers: HeaderMap,
     ViewEngine(v): ViewEngine<TeraView>,
     Path(id): Path<i32>,
     State(ctx): State<AppContext>,
 ) -> Result<Response> {
+    // Redirect to main page if not an HTMX request (direct URL access)
+    if !is_htmx_request(&headers) {
+        return redirect_to_main_page();
+    }
+
     debug!("company_rules::show - id: {}", id);
 
     let item = match CompanyRuleService::find_by_id(&ctx.db, id).await {
@@ -123,7 +143,15 @@ pub async fn show(
 
 /// New form
 #[debug_handler]
-pub async fn new_form(ViewEngine(v): ViewEngine<TeraView>) -> Result<Response> {
+pub async fn new_form(
+    headers: HeaderMap,
+    ViewEngine(v): ViewEngine<TeraView>,
+) -> Result<Response> {
+    // Redirect to main page if not an HTMX request (direct URL access)
+    if !is_htmx_request(&headers) {
+        return redirect_to_main_page();
+    }
+
     debug!("company_rules::new_form - rendering create form");
     format::render().view(&v, "admin/company_rule/create.html", data!({}))
 }
@@ -131,10 +159,16 @@ pub async fn new_form(ViewEngine(v): ViewEngine<TeraView>) -> Result<Response> {
 /// Edit form
 #[debug_handler]
 pub async fn edit_form(
+    headers: HeaderMap,
     ViewEngine(v): ViewEngine<TeraView>,
     Path(id): Path<i32>,
     State(ctx): State<AppContext>,
 ) -> Result<Response> {
+    // Redirect to main page if not an HTMX request (direct URL access)
+    if !is_htmx_request(&headers) {
+        return redirect_to_main_page();
+    }
+
     debug!("company_rules::edit_form - id: {}", id);
 
     let item = match CompanyRuleService::find_by_id(&ctx.db, id).await {
