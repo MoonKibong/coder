@@ -5,12 +5,21 @@
 
 use axum::http::HeaderMap;
 use loco_rs::prelude::*;
+use serde::Deserialize;
+use tracing::debug;
 
 use crate::llm::OllamaBackend;
 use crate::middleware::cookie_auth::AuthUser;
 use crate::services::admin::llm_config::{
     CreateParams, LlmConfigService, QueryParams, UpdateParams,
 };
+
+/// Query parameters for fetching models from a remote endpoint
+#[derive(Debug, Deserialize)]
+pub struct FetchModelsParams {
+    pub endpoint_url: Option<String>,
+    pub current_model: Option<String>,
+}
 
 /// Main page - renders full layout for direct access, partial for HTMX
 #[debug_handler]
@@ -208,6 +217,66 @@ pub async fn activate(
             "page_size": response.page_size,
             "total_pages": response.total_pages,
             "total_items": response.total_items,
+        }),
+    )
+}
+
+/// Fetch available models from a remote Ollama endpoint
+/// Returns HTML options for the model dropdown
+#[debug_handler]
+pub async fn fetch_models(
+    ViewEngine(v): ViewEngine<TeraView>,
+    Query(params): Query<FetchModelsParams>,
+) -> Result<Response> {
+    debug!("llm_configs::fetch_models - params: {:?}", params);
+
+    let endpoint_url = params.endpoint_url.unwrap_or_default();
+
+    if endpoint_url.is_empty() {
+        debug!("llm_configs::fetch_models - empty endpoint_url, returning empty options");
+        return format::render().view(
+            &v,
+            "admin/llm_config/model_options.html",
+            data!({
+                "available_models": Vec::<String>::new(),
+                "current_model": params.current_model,
+                "error": null,
+            }),
+        );
+    }
+
+    // Create an OllamaBackend with the specified endpoint
+    let ollama = OllamaBackend::new(endpoint_url.clone(), String::new(), 10);
+
+    // Try to fetch models with a short timeout
+    let result = tokio::time::timeout(
+        std::time::Duration::from_secs(3),
+        ollama.list_models(),
+    )
+    .await;
+
+    let (available_models, error) = match result {
+        Ok(Ok(models)) => {
+            debug!("llm_configs::fetch_models - found {} models", models.len());
+            (models, None)
+        }
+        Ok(Err(e)) => {
+            debug!("llm_configs::fetch_models - error fetching models: {:?}", e);
+            (Vec::new(), Some(format!("Failed to connect: {}", e)))
+        }
+        Err(_) => {
+            debug!("llm_configs::fetch_models - timeout fetching models");
+            (Vec::new(), Some("Connection timeout".to_string()))
+        }
+    };
+
+    format::render().view(
+        &v,
+        "admin/llm_config/model_options.html",
+        data!({
+            "available_models": available_models,
+            "current_model": params.current_model,
+            "error": error,
         }),
     )
 }

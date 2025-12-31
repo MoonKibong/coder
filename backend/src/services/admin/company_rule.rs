@@ -5,6 +5,7 @@
 use loco_rs::prelude::*;
 use sea_orm::{query::*, DatabaseConnection, PaginatorTrait};
 use serde::{Deserialize, Serialize};
+use tracing::{debug, error};
 
 use crate::models::_entities::company_rules::{ActiveModel, Column, Entity, Model};
 use crate::utils::OptionalField;
@@ -98,15 +99,49 @@ impl CompanyRuleService {
         db: &DatabaseConnection,
         params: &QueryParams,
     ) -> Result<PageResponse<Model>> {
+        debug!("CompanyRuleService::search - params: {:?}", params);
+
         let page = params.page.unwrap_or(1).max(1);
         let page_size = params.page_size.unwrap_or(DEFAULT_PAGE_SIZE).min(MAX_PAGE_SIZE);
+        debug!("CompanyRuleService::search - page: {}, page_size: {}", page, page_size);
 
         let query = Self::build_query(params);
         let paginator = query.paginate(db, page_size);
 
-        let total_items = paginator.num_items().await?;
-        let total_pages = paginator.num_pages().await?;
-        let items = paginator.fetch_page(page - 1).await?;
+        debug!("CompanyRuleService::search - counting items");
+        let total_items = match paginator.num_items().await {
+            Ok(n) => {
+                debug!("CompanyRuleService::search - total_items: {}", n);
+                n
+            }
+            Err(e) => {
+                error!("CompanyRuleService::search - num_items failed: {:?}", e);
+                return Err(e.into());
+            }
+        };
+
+        let total_pages = match paginator.num_pages().await {
+            Ok(n) => {
+                debug!("CompanyRuleService::search - total_pages: {}", n);
+                n
+            }
+            Err(e) => {
+                error!("CompanyRuleService::search - num_pages failed: {:?}", e);
+                return Err(e.into());
+            }
+        };
+
+        debug!("CompanyRuleService::search - fetching page {}", page - 1);
+        let items = match paginator.fetch_page(page - 1).await {
+            Ok(i) => {
+                debug!("CompanyRuleService::search - fetched {} items", i.len());
+                i
+            }
+            Err(e) => {
+                error!("CompanyRuleService::search - fetch_page failed: {:?}", e);
+                return Err(e.into());
+            }
+        };
 
         Ok(PageResponse {
             items,

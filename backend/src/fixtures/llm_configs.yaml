@@ -2,7 +2,7 @@
   max_tokens: 8192
   created_at: 2025-12-30T15:35:51.135810+00:00
   endpoint_url: http://localhost:11434
-  temperature: 0.699999988079071
+  temperature: 0.7
   name: Qwen3 Coder 30B (Default)
   model_name: qwen3-coder:30b
   is_active: true
@@ -17,7 +17,7 @@
   name: DeepSeek Coder V2 16B
   endpoint_url: http://localhost:11434
   provider: ollama
-  temperature: 0.699999988079071
+  temperature: 0.7
 - is_active: false
   endpoint_url: http://localhost:11434
   model_name: codestral:22b
@@ -25,13 +25,13 @@
   created_at: 2025-12-30T15:35:51.135810+00:00
   name: Codestral 22B
   provider: ollama
-  temperature: 0.699999988079071
+  temperature: 0.7
   max_tokens: 8192
   id: 3
 - id: 4
   n_ctx: 8192
   created_at: 2025-12-30T15:35:51.135810+00:00
-  temperature: 0.699999988079071
+  temperature: 0.7
   model_name: MiniMax-M2-Q5_K_M
   name: MiniMax M2 Q5_K_M
   model_path: llm-models/MiniMax-M2-Q5_K_M.gguf
@@ -42,7 +42,7 @@
   max_tokens: 4096
 - name: Claude Opus 4.5
   is_active: false
-  temperature: 0.699999988079071
+  temperature: 0.7
   provider: anthropic
   updated_at: 2025-12-30T15:35:51.135810+00:00
   max_tokens: 8192
@@ -50,3 +50,13 @@
   endpoint_url: https://api.anthropic.com/v1
   id: 5
   model_name: claude-opus-4-5-20251101
+- id: 6
+  name: Devstral 2 123B
+  model_name: devstral-2:123b
+  provider: ollama
+  endpoint_url: http://localhost:11434
+  temperature: 0.7
+  max_tokens: 8192
+  is_active: false
+  created_at: 2025-12-30T15:35:51.135810+00:00
+  updated_at: 2025-12-30T15:35:51.135810+00:00

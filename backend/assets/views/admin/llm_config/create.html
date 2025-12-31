@@ -56,12 +56,25 @@
                 <!-- Endpoint URL (hidden for local-llama-cpp) -->
                 <div id="endpoint_url_section" class="space-y-2">
                     <label for="endpoint_url" class="text-sm font-medium">Endpoint URL</label>
-                    <input type="url" id="endpoint_url" name="endpoint_url"
-                        class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm font-mono
-                               placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                        placeholder="http://localhost:11434" />
+                    <div class="flex gap-2">
+                        <input type="url" id="endpoint_url" name="endpoint_url"
+                            hx-get="/admin/llm-configs/models"
+                            hx-trigger="change, keyup delay:500ms changed"
+                            hx-target="#model_name_container"
+                            hx-include="[name='endpoint_url']"
+                            hx-indicator="#model-loading"
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm font-mono
+                                   placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                            placeholder="http://localhost:11434" />
+                        <span id="model-loading" class="htmx-indicator flex items-center">
+                            <svg class="animate-spin h-5 w-5 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </span>
+                    </div>
                     <p class="text-xs text-muted-foreground">
-                        The LLM server endpoint. Must be accessible from this server.
+                        The LLM server endpoint. Models will be fetched automatically.
                     </p>
                 </div>
 
@@ -118,27 +131,29 @@
                 <!-- Model Name -->
                 <div class="space-y-2">
                     <label for="model_name" class="text-sm font-medium">Model Name</label>
-                    {% if available_models | length > 0 %}
-                    <select id="model_name" name="model_name" required
-                        class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm font-mono
-                               focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
-                        <option value="">Select model...</option>
-                        {% for model in available_models %}
-                        <option value="{{ model.name }}">{{ model.name }}{% if model.details and model.details.parameter_size %} ({{ model.details.parameter_size }}){% endif %}</option>
-                        {% endfor %}
-                    </select>
-                    <p class="text-xs text-muted-foreground">
-                        Available models from the Ollama server.
-                    </p>
-                    {% else %}
-                    <input type="text" id="model_name" name="model_name" required
-                        class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm font-mono
-                               placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                        placeholder="e.g., llama3.1:latest, codellama:13b" />
-                    <p class="text-xs text-muted-foreground text-amber-600">
-                        Could not fetch models from Ollama server. Enter model name manually.
-                    </p>
-                    {% endif %}
+                    <div id="model_name_container">
+                        {% if available_models | length > 0 %}
+                        <select id="model_name" name="model_name" required
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm font-mono
+                                   focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                            <option value="">Select model...</option>
+                            {% for model in available_models %}
+                            <option value="{{ model.name }}">{{ model.name }}{% if model.details and model.details.parameter_size %} ({{ model.details.parameter_size }}){% endif %}</option>
+                            {% endfor %}
+                        </select>
+                        <p class="text-xs text-muted-foreground mt-1">
+                            Found {{ available_models | length }} model(s) on the server.
+                        </p>
+                        {% else %}
+                        <input type="text" id="model_name" name="model_name" required
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm font-mono
+                                   placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                            placeholder="e.g., llama3.1:latest, codellama:13b" />
+                        <p class="text-xs text-muted-foreground mt-1">
+                            Enter the endpoint URL above to fetch available models.
+                        </p>
+                        {% endif %}
+                    </div>
                 </div>
 
                 <!-- API Key (Optional) -->
