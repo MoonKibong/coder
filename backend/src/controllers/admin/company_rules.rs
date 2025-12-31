@@ -116,21 +116,14 @@ pub async fn create(
     State(ctx): State<AppContext>,
     Json(params): Json<CreateParams>,
 ) -> Result<Response> {
-    CompanyRuleService::create(&ctx.db, params).await?;
+    let item = CompanyRuleService::create(&ctx.db, params).await?;
 
-    // Return the full list to replace #search-result
-    let query_params = QueryParams::default();
-    let response = CompanyRuleService::search(&ctx.db, &query_params).await?;
-
+    // Return just the row to insert at the beginning of tbody
     format::render().view(
         &v,
-        "admin/company_rule/list.html",
+        "admin/company_rule/row.html",
         data!({
-            "items": response.items,
-            "page": response.page,
-            "page_size": response.page_size,
-            "total_pages": response.total_pages,
-            "total_items": response.total_items,
+            "item": item,
         }),
     )
 }
@@ -143,21 +136,14 @@ pub async fn update(
     State(ctx): State<AppContext>,
     Json(params): Json<UpdateParams>,
 ) -> Result<Response> {
-    CompanyRuleService::update(&ctx.db, id, params).await?;
+    let item = CompanyRuleService::update(&ctx.db, id, params).await?;
 
-    // Return the full list to replace #search-result
-    let query_params = QueryParams::default();
-    let response = CompanyRuleService::search(&ctx.db, &query_params).await?;
-
+    // Return just the updated row to replace the specific row
     format::render().view(
         &v,
-        "admin/company_rule/list.html",
+        "admin/company_rule/row.html",
         data!({
-            "items": response.items,
-            "page": response.page,
-            "page_size": response.page_size,
-            "total_pages": response.total_pages,
-            "total_items": response.total_items,
+            "item": item,
         }),
     )
 }

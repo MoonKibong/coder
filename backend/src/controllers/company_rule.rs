@@ -8,17 +8,17 @@ use crate::models::_entities::company_rules::{ActiveModel, Entity, Model};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Params {
-    pub company_id: String,
+    pub name: String,
     pub naming_convention: Option<String>,
     pub additional_rules: Option<String>,
-    }
+}
 
 impl Params {
     fn update(&self, item: &mut ActiveModel) {
-      item.company_id = Set(self.company_id.clone());
-      item.naming_convention = Set(self.naming_convention.clone());
-      item.additional_rules = Set(self.additional_rules.clone());
-      }
+        item.name = Set(self.name.clone());
+        item.naming_convention = Set(self.naming_convention.clone());
+        item.additional_rules = Set(self.additional_rules.clone());
+    }
 }
 
 async fn load_item(ctx: &AppContext, id: i32) -> Result<Model> {

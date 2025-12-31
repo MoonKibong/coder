@@ -14,7 +14,8 @@
         </div>
 
         <!-- Form -->
-        <form hx-patch="/admin/llm-configs/{{ item.id }}" hx-ext="json-enc" hx-target="#search-result" hx-swap="outerHTML"
+        <form hx-patch="/admin/llm-configs/{{ item.id }}" hx-ext="json-enc"
+              hx-target="#llm-config-row-{{ item.id }}" hx-swap="outerHTML"
               hx-on::after-request="if(event.detail.successful) this.closest('.fixed').remove()"
               class="flex-1 overflow-y-auto p-6">
             <div class="space-y-6">

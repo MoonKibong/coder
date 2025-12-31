@@ -1,5 +1,5 @@
 <!-- LLM Config Row -->
-<tr class="border-b transition-colors hover:bg-muted/50">
+<tr id="llm-config-row-{{ item.id }}" class="tr_{{ item.id }} border-b transition-colors hover:bg-muted/50">
     <td class="p-4 align-middle">
         <div class="flex items-center gap-2">
             <div class="font-medium">{{ item.name }}</div>
@@ -11,10 +11,15 @@
             <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
             Ollama
         </span>
-        {% elif item.provider == "llama_cpp" %}
+        {% elif item.provider == "llama_cpp" or item.provider == "local-llama-cpp" %}
         <span class="inline-flex items-center gap-1 rounded-md bg-orange-500/10 px-2 py-1 text-xs font-medium text-orange-600">
             <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
             llama.cpp
+        </span>
+        {% elif item.provider == "anthropic" %}
+        <span class="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-2 py-1 text-xs font-medium text-amber-700">
+            <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+            Anthropic
         </span>
         {% else %}
         <span class="inline-flex items-center gap-1 rounded-md bg-secondary px-2 py-1 text-xs font-medium">
@@ -23,7 +28,13 @@
         {% endif %}
     </td>
     <td class="p-4 align-middle hidden sm:table-cell">
+        {% if item.endpoint_url %}
         <code class="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">{{ item.endpoint_url | truncate(length=30) }}</code>
+        {% elif item.model_path %}
+        <code class="text-xs bg-muted px-1.5 py-0.5 rounded font-mono" title="{{ item.model_path }}">{{ item.model_path | truncate(length=30) }}</code>
+        {% else %}
+        <span class="text-xs text-muted-foreground">-</span>
+        {% endif %}
     </td>
     <td class="p-4 align-middle hidden md:table-cell">
         <span class="text-sm text-muted-foreground">{{ item.model_name }}</span>

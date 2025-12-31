@@ -4,14 +4,14 @@
         <table class="w-full text-sm">
             <thead class="border-b bg-muted/50">
                 <tr>
-                    <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Company ID</th>
+                    <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Name</th>
                     <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground hidden sm:table-cell">Naming Convention</th>
                     <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground hidden md:table-cell">Additional Rules</th>
                     <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Created</th>
                     <th class="h-10 px-4 text-right align-middle font-medium text-muted-foreground">Actions</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="company-rule-tbody">
                 {% if items %}
                     {% for item in items %}
                     {% include "admin/company_rule/row.html" %}

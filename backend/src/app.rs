@@ -15,7 +15,9 @@ use std::path::Path;
 
 #[allow(unused_imports)]
 use crate::{
-    controllers, initializers, models::_entities::{users, knowledge_bases}, services, tasks,
+    controllers, initializers,
+    models::_entities::{users, knowledge_bases, llm_configs, prompt_templates},
+    services, tasks,
     workers::downloader::DownloadWorker,
 };
 
@@ -87,12 +89,19 @@ impl Hooks for App {
     async fn truncate(ctx: &AppContext) -> Result<()> {
         truncate_table(&ctx.db, users::Entity).await?;
         truncate_table(&ctx.db, knowledge_bases::Entity).await?;
+        truncate_table(&ctx.db, llm_configs::Entity).await?;
+        truncate_table(&ctx.db, prompt_templates::Entity).await?;
         Ok(())
     }
+
     async fn seed(ctx: &AppContext, base: &Path) -> Result<()> {
         db::seed::<users::ActiveModel>(&ctx.db, &base.join("users.yaml").display().to_string())
             .await?;
         db::seed::<knowledge_bases::ActiveModel>(&ctx.db, &base.join("knowledge_bases.yaml").display().to_string())
+            .await?;
+        db::seed::<llm_configs::ActiveModel>(&ctx.db, &base.join("llm_configs.yaml").display().to_string())
+            .await?;
+        db::seed::<prompt_templates::ActiveModel>(&ctx.db, &base.join("prompt_templates.yaml").display().to_string())
             .await?;
         Ok(())
     }

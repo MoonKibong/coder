@@ -32,6 +32,10 @@ pub struct Model {
     pub started_at: Option<DateTimeWithTimeZone>,
     pub completed_at: Option<DateTimeWithTimeZone>,
     pub priority: i32,
+    /// LLM model name used for generation (internal audit only)
+    pub model_name: Option<String>,
+    /// LLM provider used for generation (internal audit only)
+    pub provider: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

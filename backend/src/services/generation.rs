@@ -47,6 +47,10 @@ impl GenerationService {
         // 4. Generate via LLM (DB config takes priority, falls back to env)
         let llm = create_backend_from_db_or_env(db).await;
 
+        // Capture LLM info for audit logging (internal only)
+        let llm_provider = llm.name().to_string();
+        let llm_model = llm.model().to_string();
+
         // Health check
         llm.health_check().await.map_err(|e| {
             anyhow!("LLM server not available: {}. Please check your LLM configuration.", e)
@@ -144,6 +148,8 @@ impl GenerationService {
             error_message.as_deref(),
             generation_time_ms as i32,
             user_id,
+            Some(&llm_provider),
+            Some(&llm_model),
         )
         .await;
 
@@ -233,6 +239,8 @@ impl GenerationService {
         error_message: Option<&str>,
         generation_time_ms: i32,
         user_id: Option<i32>,
+        provider: Option<&str>,
+        model_name: Option<&str>,
     ) -> Result<()> {
         // Determine input type (without storing actual input data - 개인정보 보호)
         let input_type = match input {
@@ -271,6 +279,8 @@ impl GenerationService {
             error_message: Set(error_message.map(|s| s.to_string())),
             generation_time_ms: Set(Some(generation_time_ms)),
             user_id: Set(user_id.unwrap_or(1)), // Default to system user
+            provider: Set(provider.map(|s| s.to_string())),
+            model_name: Set(model_name.map(|s| s.to_string())),
             ..Default::default()
         };
 

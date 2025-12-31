@@ -32,6 +32,10 @@ pub struct GenerationLogWithUser {
     pub warnings: Vec<String>,
     pub error_message: Option<String>,
     pub template_version: i32,
+    /// LLM provider used (internal audit)
+    pub provider: Option<String>,
+    /// LLM model name used (internal audit)
+    pub model_name: Option<String>,
 }
 
 impl GenerationLogWithUser {
@@ -63,6 +67,8 @@ impl GenerationLogWithUser {
             warnings,
             error_message: log.error_message,
             template_version: log.template_version,
+            provider: log.provider,
+            model_name: log.model_name,
         }
     }
 }

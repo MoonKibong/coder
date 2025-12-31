@@ -1,7 +1,14 @@
-//! Pass 1: Canonicalizer
+//! Pass 2: Canonicalizer
 //!
 //! Normalizes framework-specific naming differences.
 //! This is HIGH PRIORITY based on benchmark findings.
+//!
+//! Fixes applied:
+//! - Event attribute: onclick → on_click
+//! - Font names: typo corrections
+//! - Dataset type: <xdataset> → <xlinkdataset> (with columns attr)
+//! - Grid version: adds version="1.1" if missing
+//! - Event handler: ensures eventfunc: prefix
 
 use crate::services::pipeline::{GenerationContext, Pass, PassResult};
 use regex::Regex;
@@ -66,6 +73,68 @@ impl Canonicalizer {
         .to_string()
     }
 
+    /// Convert <xdataset> to <xlinkdataset> for proper xFrame5 syntax
+    /// Note: Only converts if not already xlinkdataset
+    fn fix_dataset_type(&self, xml: &str) -> (String, Vec<String>) {
+        let mut result = xml.to_string();
+        let mut fixes = Vec::new();
+
+        // Count occurrences of <xdataset (not xlinkdataset)
+        // Match <xdataset but not <xlinkdataset
+        let re = Regex::new(r"<xdataset(\s)").unwrap();
+        let count = re.find_iter(&result).count();
+
+        if count > 0 {
+            // Replace opening tags
+            result = re.replace_all(&result, "<xlinkdataset$1").to_string();
+            // Replace closing tags
+            result = result.replace("</xdataset>", "</xlinkdataset>");
+
+            fixes.push(format!(
+                "Converted {} <xdataset> element(s) to <xlinkdataset>",
+                count
+            ));
+        }
+
+        (result, fixes)
+    }
+
+    /// Add version="1.1" to grid elements if missing
+    fn fix_grid_version(&self, xml: &str) -> (String, Vec<String>) {
+        let mut result = xml.to_string();
+        let mut fixes = Vec::new();
+
+        // Match <grid ... > without version attribute
+        // Use regex to find grid tags without version
+        let grid_re = Regex::new(r#"<grid\s+([^>]*?)(/?>)"#).unwrap();
+
+        let fixed = grid_re.replace_all(&result, |caps: &regex::Captures| {
+            let attrs = &caps[1];
+            let closing = &caps[2];
+
+            // Check if version already exists
+            if attrs.contains("version=") {
+                format!("<grid {}{}", attrs, closing)
+            } else {
+                // Add version before closing
+                let trimmed = attrs.trim_end();
+                format!("<grid {} version=\"1.1\"{}", trimmed, closing)
+            }
+        });
+
+        if fixed != result {
+            let count = grid_re.find_iter(&result)
+                .filter(|m| !m.as_str().contains("version="))
+                .count();
+            if count > 0 {
+                fixes.push(format!("Added version=\"1.1\" to {} grid element(s)", count));
+            }
+            result = fixed.to_string();
+        }
+
+        (result, fixes)
+    }
+
     /// Normalize XML content
     fn canonicalize_xml(&self, xml: &str) -> (String, Vec<String>) {
         let mut result = xml.to_string();
@@ -109,21 +178,98 @@ impl Canonicalizer {
             fixes.push("Added missing '()' to function calls in event handlers".to_string());
         }
 
+        // Fix dataset type (<xdataset> → <xlinkdataset>)
+        let (fixed_ds, ds_fixes) = self.fix_dataset_type(&result);
+        result = fixed_ds;
+        fixes.extend(ds_fixes);
+
+        // Fix grid version (add version="1.1" if missing)
+        let (fixed_grid, grid_fixes) = self.fix_grid_version(&result);
+        result = fixed_grid;
+        fixes.extend(grid_fixes);
+
         (result, fixes)
     }
 
     /// Normalize JavaScript content
     fn canonicalize_js(&self, js: &str) -> (String, Vec<String>) {
-        let result = js.to_string();
-        let fixes = Vec::new();
+        let mut result = js.to_string();
+        let mut fixes = Vec::new();
 
-        // Remove duplicate function definitions (keep first)
-        // This is a simple check - could be enhanced with AST parsing
+        // Convert function declarations to xFrame5 method style
+        // function fn_xxx(...) { → this.fn_xxx = function(...) {
+        let (normalized, count) = self.normalize_function_style(&result);
+        if count > 0 {
+            result = normalized;
+            fixes.push(format!(
+                "Converted {} function(s) to xFrame5 method style (this.fn_xxx = function())",
+                count
+            ));
+        }
 
-        // Fix common JS patterns
-        // (placeholder for future enhancements)
+        // Add on_load handler if missing but fn_init exists
+        let (with_onload, added_onload) = self.ensure_on_load_handler(&result);
+        if added_onload {
+            result = with_onload;
+            fixes.push("Added on_load handler calling fn_init and fn_search".to_string());
+        }
 
         (result, fixes)
+    }
+
+    /// Convert `function fn_xxx(...)` to `this.fn_xxx = function(...)`
+    fn normalize_function_style(&self, js: &str) -> (String, usize) {
+        // Match: function fn_xxx(...) { or function fn_xxx(...){
+        let re = Regex::new(r"(?m)^function\s+(fn_\w+|on_\w+|grid_\w+)\s*\(([^)]*)\)\s*\{").unwrap();
+
+        let mut count = 0;
+        let result = re.replace_all(js, |caps: &regex::Captures| {
+            count += 1;
+            let func_name = &caps[1];
+            let params = &caps[2];
+            format!("this.{} = function({}) {{", func_name, params)
+        });
+
+        (result.to_string(), count)
+    }
+
+    /// Ensure on_load handler exists
+    fn ensure_on_load_handler(&self, js: &str) -> (String, bool) {
+        // Check if on_load already exists
+        if js.contains("this.on_load") || js.contains("function on_load") {
+            return (js.to_string(), false);
+        }
+
+        // Check if there are any functions that should be called on load
+        let has_fn_init = js.contains("fn_init");
+        let has_fn_search = js.contains("fn_search");
+
+        if !has_fn_init && !has_fn_search {
+            return (js.to_string(), false);
+        }
+
+        // Build on_load handler
+        let mut on_load_body = Vec::new();
+        if has_fn_init {
+            on_load_body.push("    fn_init();");
+        }
+        if has_fn_search {
+            on_load_body.push("    fn_search();");
+        }
+
+        let on_load_handler = format!(
+            r#"
+// Screen initialization
+this.on_load = function() {{
+{}
+}};
+"#,
+            on_load_body.join("\n")
+        );
+
+        // Prepend to the JS
+        let result = format!("{}{}", on_load_handler, js);
+        (result, true)
     }
 }
 
@@ -247,5 +393,108 @@ mod tests {
 
         let result = ctx.xml.unwrap();
         assert_eq!(result, xml);
+    }
+
+    #[test]
+    fn test_xdataset_to_xlinkdataset() {
+        let xml = r#"<xdataset id="ds_list" desc="Task List"/>"#;
+        let mut ctx = create_context_with_xml(xml, "");
+
+        Canonicalizer::new().run(&mut ctx);
+
+        let result = ctx.xml.unwrap();
+        assert!(result.contains("<xlinkdataset"));
+        assert!(!result.contains("<xdataset"));
+    }
+
+    #[test]
+    fn test_xdataset_preserves_xlinkdataset() {
+        let xml = r#"<xlinkdataset id="ds_list" columns="..."/>"#;
+        let mut ctx = create_context_with_xml(xml, "");
+
+        Canonicalizer::new().run(&mut ctx);
+
+        let result = ctx.xml.unwrap();
+        assert!(result.contains("<xlinkdataset"));
+        assert_eq!(result.matches("<xlinkdataset").count(), 1);
+    }
+
+    #[test]
+    fn test_grid_version_injection() {
+        let xml = r#"<grid control_id="1" name="grid_list" link_data="ds_list">"#;
+        let mut ctx = create_context_with_xml(xml, "");
+
+        Canonicalizer::new().run(&mut ctx);
+
+        let result = ctx.xml.unwrap();
+        assert!(result.contains(r#"version="1.1""#));
+    }
+
+    #[test]
+    fn test_grid_version_preserves_existing() {
+        let xml = r#"<grid control_id="1" name="grid_list" version="1.0">"#;
+        let mut ctx = create_context_with_xml(xml, "");
+
+        Canonicalizer::new().run(&mut ctx);
+
+        let result = ctx.xml.unwrap();
+        assert!(result.contains(r#"version="1.0""#));
+        assert!(!result.contains(r#"version="1.1""#));
+    }
+
+    #[test]
+    fn test_function_style_normalization() {
+        let js = r#"function fn_search(objInst) {
+    console.log('search');
+}"#;
+        let mut ctx = create_context_with_xml("", js);
+
+        Canonicalizer::new().run(&mut ctx);
+
+        let result = ctx.javascript.unwrap();
+        assert!(result.contains("this.fn_search = function(objInst)"));
+        assert!(!result.contains("function fn_search"));
+    }
+
+    #[test]
+    fn test_multiple_function_normalization() {
+        let js = r#"function fn_search() {}
+function fn_add() {}
+function fn_delete() {}"#;
+        let mut ctx = create_context_with_xml("", js);
+
+        Canonicalizer::new().run(&mut ctx);
+
+        let result = ctx.javascript.unwrap();
+        assert!(result.contains("this.fn_search = function()"));
+        assert!(result.contains("this.fn_add = function()"));
+        assert!(result.contains("this.fn_delete = function()"));
+    }
+
+    #[test]
+    fn test_on_load_handler_injection() {
+        let js = r#"this.fn_search = function() {
+    console.log('search');
+};"#;
+        let mut ctx = create_context_with_xml("", js);
+
+        Canonicalizer::new().run(&mut ctx);
+
+        let result = ctx.javascript.unwrap();
+        assert!(result.contains("this.on_load = function()"));
+        assert!(result.contains("fn_search();"));
+    }
+
+    #[test]
+    fn test_on_load_not_added_if_exists() {
+        let js = r#"this.on_load = function() { fn_init(); };
+this.fn_search = function() {};"#;
+        let mut ctx = create_context_with_xml("", js);
+
+        Canonicalizer::new().run(&mut ctx);
+
+        let result = ctx.javascript.unwrap();
+        // Should only have one on_load
+        assert_eq!(result.matches("this.on_load").count(), 1);
     }
 }

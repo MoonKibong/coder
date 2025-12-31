@@ -15,7 +15,7 @@ const MAX_PAGE_SIZE: u64 = 100;
 /// Query parameters for search with pagination
 #[derive(Debug, Deserialize, Serialize, Default)]
 pub struct QueryParams {
-    /// Search keyword (matches company_id)
+    /// Search keyword (matches name)
     pub keyword: Option<String>,
 
     /// Sort column
@@ -34,7 +34,7 @@ pub struct QueryParams {
 /// Create parameters
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CreateParams {
-    pub company_id: String,
+    pub name: String,
     pub naming_convention: Option<String>,
     pub additional_rules: Option<String>,
 }
@@ -43,7 +43,7 @@ pub struct CreateParams {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct UpdateParams {
     // Required field
-    pub company_id: Option<String>,
+    pub name: Option<String>,
 
     // Optional fields - use OptionalField for proper PATCH semantics
     #[serde(default)]
@@ -72,7 +72,7 @@ impl CompanyRuleService {
         // Keyword search
         if let Some(keyword) = &params.keyword {
             if !keyword.is_empty() {
-                condition = condition.add(Column::CompanyId.contains(keyword));
+                condition = condition.add(Column::Name.contains(keyword));
             }
         }
 
@@ -85,7 +85,7 @@ impl CompanyRuleService {
         };
 
         query = match params.sort_by.as_deref() {
-            Some("company_id") => query.order_by(Column::CompanyId, order),
+            Some("name") => query.order_by(Column::Name, order),
             Some("created_at") => query.order_by(Column::CreatedAt, order),
             _ => query.order_by(Column::UpdatedAt, Order::Desc), // Default
         };
@@ -128,12 +128,12 @@ impl CompanyRuleService {
     /// Create new company rule
     pub async fn create(db: &DatabaseConnection, params: CreateParams) -> Result<Model> {
         // Validation
-        if params.company_id.trim().is_empty() {
-            return Err(Error::BadRequest("Company ID is required".to_string()));
+        if params.name.trim().is_empty() {
+            return Err(Error::BadRequest("Name is required".to_string()));
         }
 
         let item = ActiveModel {
-            company_id: Set(params.company_id.trim().to_string()),
+            name: Set(params.name.trim().to_string()),
             naming_convention: Set(params.naming_convention),
             additional_rules: Set(params.additional_rules),
             ..Default::default()
@@ -153,11 +153,11 @@ impl CompanyRuleService {
         let mut item: ActiveModel = item.into();
 
         // Required field
-        if let Some(company_id) = params.company_id {
-            if company_id.trim().is_empty() {
-                return Err(Error::BadRequest("Company ID cannot be empty".to_string()));
+        if let Some(name) = params.name {
+            if name.trim().is_empty() {
+                return Err(Error::BadRequest("Name cannot be empty".to_string()));
             }
-            item.company_id = Set(company_id.trim().to_string());
+            item.name = Set(name.trim().to_string());
         }
 
         // Optional fields - only update if Present (not Missing)

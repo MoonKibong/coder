@@ -1,7 +1,7 @@
 <!-- Company Rule Row -->
-<tr class="border-b transition-colors hover:bg-muted/50">
+<tr id="company-rule-row-{{ item.id }}" class="tr_{{ item.id }} border-b transition-colors hover:bg-muted/50">
     <td class="p-4 align-middle">
-        <div class="font-medium font-mono">{{ item.company_id }}</div>
+        <div class="font-medium">{{ item.name }}</div>
     </td>
     <td class="p-4 align-middle hidden sm:table-cell">
         {% if item.naming_convention %}

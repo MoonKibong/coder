@@ -14,19 +14,20 @@
         </div>
 
         <!-- Form -->
-        <form hx-post="/admin/company-rules" hx-ext="json-enc" hx-target="#search-result" hx-swap="outerHTML"
+        <form hx-post="/admin/company-rules" hx-ext="json-enc"
+              hx-target="#company-rule-tbody" hx-swap="afterbegin"
               hx-on::after-request="if(event.detail.successful) this.closest('.fixed').remove()"
               class="flex-1 overflow-y-auto p-6">
             <div class="space-y-6">
-                <!-- Company ID -->
+                <!-- Name -->
                 <div class="space-y-2">
-                    <label for="company_id" class="text-sm font-medium">Company ID <span class="text-destructive">*</span></label>
-                    <input type="text" id="company_id" name="company_id" required
+                    <label for="name" class="text-sm font-medium">Name <span class="text-destructive">*</span></label>
+                    <input type="text" id="name" name="name" required
                         class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm
                                placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                        placeholder="e.g., acme-corp" />
+                        placeholder="e.g., Java Naming Rules" />
                     <p class="text-xs text-muted-foreground">
-                        Unique identifier for the company these rules apply to.
+                        A descriptive name for this rule set.
                     </p>
                 </div>
 

@@ -101,15 +101,16 @@ impl PromptCompiler {
     }
 
     /// Load company rules from database
+    /// In single-company on-premise mode, we load rules by name
     async fn load_company_rules(
         db: &DatabaseConnection,
-        company_id: &str,
+        rule_name: &str,
     ) -> Result<company_rules::Model> {
         company_rules::Entity::find()
-            .filter(company_rules::Column::CompanyId.eq(company_id))
+            .filter(company_rules::Column::Name.eq(rule_name))
             .one(db)
             .await?
-            .ok_or_else(|| anyhow::anyhow!("Company rules not found for: {}", company_id))
+            .ok_or_else(|| anyhow::anyhow!("Company rules not found for: {}", rule_name))
     }
 
     /// Load knowledge base for screen type
