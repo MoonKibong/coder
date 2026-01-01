@@ -72,7 +72,13 @@ fi
 
 # Escape JSON special characters in prompt
 escape_json() {
-    echo "$1" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed 's/\t/\\t/g' | sed ':a;N;$!ba;s/\n/\\n/g'
+    local input="$1"
+    # Escape backslashes, quotes, tabs, and newlines for JSON
+    input="${input//\\/\\\\}"    # backslash
+    input="${input//\"/\\\"}"    # double quote
+    input="${input//$'\t'/\\t}"  # tab
+    input="${input//$'\n'/\\n}"  # newline
+    echo "$input"
 }
 
 ESCAPED_PROMPT=$(escape_json "$PROMPT")
