@@ -118,11 +118,16 @@ async fn get_active_llm_config(db: &DatabaseConnection) -> Option<llm_configs::M
 
 /// Create LLM backend from database configuration
 fn create_backend_from_config(config: &llm_configs::Model) -> Box<dyn LlmBackend> {
-    // Use environment variable if set, otherwise default to 120 seconds
-    let timeout_seconds: u64 = env::var("LLM_TIMEOUT_SECONDS")
-        .ok()
-        .and_then(|s| s.parse().ok())
+    // Priority: 1) config.timeout_secs, 2) LLM_TIMEOUT_SECONDS env var, 3) default 120
+    let timeout_seconds: u64 = config.timeout_secs
+        .map(|t| t as u64)
+        .or_else(|| env::var("LLM_TIMEOUT_SECONDS").ok().and_then(|s| s.parse().ok()))
         .unwrap_or(120);
+
+    tracing::debug!("LLM timeout: {}s (from {})",
+        timeout_seconds,
+        if config.timeout_secs.is_some() { "config" } else { "env/default" }
+    );
 
     match config.provider.as_str() {
         "ollama" => Box::new(OllamaBackend::new(

@@ -109,11 +109,6 @@
                     document.getElementById('endpoint_url_section').style.display = isLocalLlm ? 'none' : 'block';
                     document.getElementById('local_llm_section').style.display = isLocalLlm ? 'block' : 'none';
                     document.getElementById('model_name_section').style.display = isLocalLlm ? 'none' : 'block';
-
-                    // Make endpoint_url and model_name not required for local-llama-cpp
-                    document.getElementById('endpoint_url').required = !isLocalLlm;
-                    const modelNameField = document.getElementById('model_name');
-                    if (modelNameField) modelNameField.required = !isLocalLlm;
                 }
                 </script>
 
@@ -143,7 +138,7 @@
                     </div>
                     <div id="model_name_container">
                         {% if available_models | length > 0 %}
-                        <select id="model_name" name="model_name" required
+                        <select id="model_name" name="model_name"
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm font-mono
                                    focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
                             <option value="">Select model...</option>
@@ -155,7 +150,7 @@
                             Found {{ available_models | length }} model(s). Or type a model name manually below.
                         </p>
                         {% else %}
-                        <input type="text" id="model_name" name="model_name" required
+                        <input type="text" id="model_name" name="model_name"
                             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm font-mono
                                    placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                             placeholder="e.g., llama3.1:latest, codellama:13b" />
@@ -182,7 +177,7 @@
                 <div class="space-y-4 p-4 rounded-lg border bg-muted/30">
                     <h3 class="text-sm font-medium">Generation Parameters</h3>
 
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-3 gap-4">
                         <!-- Temperature -->
                         <div class="space-y-2">
                             <label for="temperature" class="text-sm font-medium">Temperature</label>
@@ -197,6 +192,15 @@
                             <input type="number" id="max_tokens" name="max_tokens" value="4096" min="256" max="32768"
                                 class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm
                                        focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+                        </div>
+
+                        <!-- Timeout -->
+                        <div class="space-y-2">
+                            <label for="timeout_secs" class="text-sm font-medium">Timeout (sec)</label>
+                            <input type="number" id="timeout_secs" name="timeout_secs" value="300" min="10" max="600"
+                                class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm
+                                       focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+                            <p class="text-xs text-muted-foreground">Request timeout (10-600s)</p>
                         </div>
                     </div>
                 </div>

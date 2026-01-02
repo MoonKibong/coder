@@ -2,7 +2,7 @@
 {% if error %}
 <!-- Error: show text input for manual entry -->
 <input type="text" id="model_name" name="model_name"
-    value="{{ current_model | default(value='') }}" required
+    value="{{ current_model | default(value='') }}"
     class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm font-mono
            placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
     placeholder="e.g., llama3.1:latest, codellama:13b" />
@@ -11,7 +11,7 @@
 </p>
 {% elif available_models | length > 0 %}
 <!-- Success: show select dropdown -->
-<select id="model_name" name="model_name" required
+<select id="model_name" name="model_name"
     class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm font-mono
            focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
     <option value="">Select model...</option>
@@ -25,7 +25,7 @@
 {% else %}
 <!-- No models found: show text input -->
 <input type="text" id="model_name" name="model_name"
-    value="{{ current_model | default(value='') }}" required
+    value="{{ current_model | default(value='') }}"
     class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm font-mono
            placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
     placeholder="e.g., llama3.1:latest, codellama:13b" />

@@ -8,6 +8,7 @@
   is_active: true
   updated_at: 2025-12-30T15:35:51.135810+00:00
   id: 1
+  timeout_secs: 300
 - updated_at: 2025-12-30T15:35:51.135810+00:00
   model_name: deepseek-coder-v2:16b
   id: 2
@@ -18,6 +19,7 @@
   endpoint_url: http://localhost:11434
   provider: ollama
   temperature: 0.7
+  timeout_secs: 180
 - is_active: false
   endpoint_url: http://localhost:11434
   model_name: codestral:22b
@@ -28,6 +30,7 @@
   temperature: 0.7
   max_tokens: 8192
   id: 3
+  timeout_secs: 180
 - id: 4
   n_ctx: 8192
   created_at: 2025-12-30T15:35:51.135810+00:00
@@ -40,6 +43,7 @@
   updated_at: 2025-12-30T15:35:51.135810+00:00
   is_active: false
   max_tokens: 4096
+  timeout_secs: 300
 - name: Claude Opus 4.5
   is_active: false
   temperature: 0.7
@@ -50,6 +54,7 @@
   endpoint_url: https://api.anthropic.com/v1
   id: 5
   model_name: claude-opus-4-5-20251101
+  timeout_secs: 120
 - id: 6
   name: Devstral 2 123B
   model_name: devstral-2:123b
@@ -60,3 +65,4 @@
   is_active: false
   created_at: 2025-12-30T15:35:51.135810+00:00
   updated_at: 2025-12-30T15:35:51.135810+00:00
+  timeout_secs: 600

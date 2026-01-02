@@ -47,7 +47,9 @@ pub struct QueryParams {
 pub struct CreateParams {
     pub name: String,
     pub provider: String,
-    pub model_name: String,
+    /// Optional for local-llama-cpp provider (derived from model_path)
+    #[serde(default)]
+    pub model_name: Option<String>,
     /// Optional for local-llama-cpp provider (which uses model_path instead)
     pub endpoint_url: Option<String>,
     pub api_key: Option<String>,
@@ -67,6 +69,10 @@ pub struct CreateParams {
     /// Number of CPU threads
     #[serde(default, deserialize_with = "i32_from_str_or_number")]
     pub n_threads: Option<i32>,
+
+    /// Request timeout in seconds (NULL = use LLM_TIMEOUT_SECONDS env var, default 120)
+    #[serde(default, deserialize_with = "i32_from_str_or_number")]
+    pub timeout_secs: Option<i32>,
 }
 
 /// Update parameters
@@ -96,6 +102,10 @@ pub struct UpdateParams {
     pub n_ctx: OptionalField<i32>,
     #[serde(default, deserialize_with = "optional_i32_from_str_or_number")]
     pub n_threads: OptionalField<i32>,
+
+    /// Request timeout in seconds (NULL = use LLM_TIMEOUT_SECONDS env var, default 120)
+    #[serde(default, deserialize_with = "optional_i32_from_str_or_number")]
+    pub timeout_secs: OptionalField<i32>,
 }
 
 /// Paginated response
@@ -195,22 +205,41 @@ impl LlmConfigService {
         if params.provider.trim().is_empty() {
             return Err(Error::BadRequest("Provider is required".to_string()));
         }
-        if params.model_name.trim().is_empty() {
-            return Err(Error::BadRequest("Model name is required".to_string()));
-        }
 
         let is_local_llm = params.provider == "local-llama-cpp";
+
+        // Model path is required for local-llama-cpp
+        if is_local_llm && params.model_path.as_ref().map_or(true, |p| p.trim().is_empty()) {
+            return Err(Error::BadRequest("Model path is required for local-llama-cpp provider".to_string()));
+        }
+
+        // For local-llama-cpp, derive model_name from model_path if not provided
+        // For other providers, model_name is required
+        let model_name = if is_local_llm {
+            params.model_name
+                .filter(|n| !n.trim().is_empty())
+                .or_else(|| {
+                    // Derive from model_path filename (without extension)
+                    params.model_path.as_ref().and_then(|p| {
+                        std::path::Path::new(p)
+                            .file_stem()
+                            .and_then(|s| s.to_str())
+                            .map(|s| s.to_string())
+                    })
+                })
+                .unwrap_or_else(|| "local-model".to_string())
+        } else {
+            match &params.model_name {
+                Some(name) if !name.trim().is_empty() => name.trim().to_string(),
+                _ => return Err(Error::BadRequest("Model name is required".to_string())),
+            }
+        };
 
         // Endpoint URL is required for non-local providers
         if !is_local_llm {
             if params.endpoint_url.as_ref().map_or(true, |url| url.trim().is_empty()) {
                 return Err(Error::BadRequest("Endpoint URL is required for this provider".to_string()));
             }
-        }
-
-        // Model path is recommended for local-llama-cpp
-        if is_local_llm && params.model_path.as_ref().map_or(true, |p| p.trim().is_empty()) {
-            return Err(Error::BadRequest("Model path is required for local-llama-cpp provider".to_string()));
         }
 
         // Validate temperature range
@@ -241,10 +270,17 @@ impl LlmConfigService {
             }
         }
 
+        // Validate timeout_secs
+        if let Some(timeout) = params.timeout_secs {
+            if timeout < 10 || timeout > 600 {
+                return Err(Error::BadRequest("Timeout must be between 10 and 600 seconds".to_string()));
+            }
+        }
+
         let item = ActiveModel {
             name: Set(params.name.trim().to_string()),
             provider: Set(params.provider.trim().to_string()),
-            model_name: Set(params.model_name.trim().to_string()),
+            model_name: Set(model_name),
             endpoint_url: Set(params.endpoint_url.map(|url| url.trim().to_string())),
             api_key: Set(params.api_key),
             temperature: Set(params.temperature),
@@ -253,6 +289,7 @@ impl LlmConfigService {
             model_path: Set(params.model_path.map(|p| p.trim().to_string())),
             n_ctx: Set(params.n_ctx),
             n_threads: Set(params.n_threads),
+            timeout_secs: Set(params.timeout_secs),
             ..Default::default()
         };
 
@@ -335,6 +372,14 @@ impl LlmConfigService {
                 }
             }
             item.n_threads = Set(opt_value);
+        }
+        if let OptionalField::Present(opt_value) = params.timeout_secs {
+            if let Some(timeout) = opt_value {
+                if timeout < 10 || timeout > 600 {
+                    return Err(Error::BadRequest("Timeout must be between 10 and 600 seconds".to_string()));
+                }
+            }
+            item.timeout_secs = Set(opt_value);
         }
 
         let item = item.update(db).await?;

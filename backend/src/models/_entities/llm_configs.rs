@@ -25,6 +25,8 @@ pub struct Model {
     pub n_ctx: Option<i32>,
     /// Number of CPU threads (for local-llama-cpp provider)
     pub n_threads: Option<i32>,
+    /// Request timeout in seconds (NULL = use LLM_TIMEOUT_SECONDS env var, default 120)
+    pub timeout_secs: Option<i32>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

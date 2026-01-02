@@ -19,6 +19,7 @@ mod m20251230_150000_add_llm_info_to_generation_logs;
 //   cargo loco db seed --reset
 // Fixture files: src/fixtures/*.yaml
 
+mod m20260102_094239_add_timeout_secs_to_llm_configs;
 pub struct Migrator;
 
 #[async_trait::async_trait]
@@ -36,6 +37,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20251230_120000_add_local_llm_columns::Migration),
             Box::new(m20251230_140000_remove_company_id_from_company_rules::Migration),
             Box::new(m20251230_150000_add_llm_info_to_generation_logs::Migration),
+            Box::new(m20260102_094239_add_timeout_secs_to_llm_configs::Migration),
             // inject-above (do not remove this comment)
         ]
     }
